@@ -1,0 +1,93 @@
+/* ==========================================================================
+   Drift · Responsive — tablet & phone refinements (desktop-first base)
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+  .view-inner { padding: 1.4rem 1.2rem 3rem; }
+}
+
+@media (max-width: 900px) {
+  /* Shell switches to top bar + bottom nav (see app.css) */
+  .view-inner { padding: 1.2rem 1rem 2.5rem; }
+  .home-hero { flex-direction: column; align-items: flex-start; }
+
+  /* Room view fills the screen; right panel becomes an overlay */
+  .msg-scroll { padding: 1rem .8rem .5rem; }
+  .composer-zone { padding: .55rem .7rem calc(.7rem + env(safe-area-inset-bottom, 0)); }
+  .room-head { padding: .6rem .7rem; }
+  .rh-actions .hide-m { display: none; }
+  .m-body { max-width: 88%; }
+
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  :root { --topbar-h: 54px; --bottomnav-h: 60px; }
+
+  h1,h2 { letter-spacing: -.025em; }
+  .rooms-grid { grid-template-columns: 1fr; }
+  .people-grid { grid-template-columns: repeat(2, 1fr); gap:.7rem; }
+  .achv-grid { grid-template-columns: 1fr; }
+
+  .toolbar { align-items: stretch; }
+  .chip-row { flex-wrap: nowrap; }
+
+  /* Messages get tighter */
+  .msg { gap: .55rem; }
+  .msg .m-side { width: 32px; }
+  .m-actions { position: static; display: none; }
+  .msg:hover .m-actions { display: none; }
+
+  /* Composer full-bleed */
+  .ai-composer { border-radius: 15px; }
+  .toast-root { bottom: calc(var(--bottomnav-h) + .9rem); }
+
+  .profile-head { margin-top: -40px; padding: 0 1rem 1rem; gap: .8rem; }
+  .pc-stats { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+
+  .modal-card { border-radius: 18px; }
+  .modal-body { padding: .6rem 1.05rem 1rem; }
+  .modal-head { padding: 1rem 1.05rem .4rem; }
+  .modal-foot { padding: .7rem 1.05rem 1rem; }
+
+  /* Landing */
+  .hero-ctas .btn-lg { width: 100%; max-width: 320px; }
+  .footer-grid { grid-template-columns: 1fr; row-gap: 1.6rem; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .people-grid { grid-template-columns: 1fr; }
+  .bottomnav-inner { grid-template-columns: repeat(5, 1fr); }
+  .bn-item span { display: none; }
+}
+
+/* Touch devices: bigger hit targets */
+@media (pointer: coarse) {
+  .icon-btn { width: 42px; height: 42px; }
+  .rail-btn { width: 50px; height: 50px; }
+  button.chip, .reaction-pill { padding-block: .38rem; }
+}
+
+/* Hover-capable devices only get hover tooltips */
+@media (hover: none) {
+  [data-tip]::after { display: none !important; }
+}
+
+/* Back arrows / desktop-only chrome */
+.hide-d { display: none !important; }
+@media (max-width: 900px) {
+  .hide-d.inline-flex, button.hide-d { display: inline-flex !important; }
+}
+
+/* Compact mode density */
+body.compact-mode .view-inner { padding-top: 1rem; padding-bottom: 2rem; }
+body.compact-mode .card { padding: .85rem 1rem; }
+body.compact-mode .msg { padding-block: .18rem; }
+body.compact-mode .dash-stats { gap: .6rem; }
+
+/* Landscape phones: shrink chrome */
+@media (max-height: 480px) and (orientation: landscape) {
+  :root { --topbar-h: 46px; --bottomnav-h: 48px; }
+}

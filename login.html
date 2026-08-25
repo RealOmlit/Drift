@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="violet" data-font="m">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in · Drift</title>
+  <meta name="description" content="Log in to Drift — conversations in motion.">
+  <meta name="theme-color" content="#05060c">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/animations.css">
+  <link rel="stylesheet" href="./css/auth.css">
+</head>
+<body class="auth-body">
+  <div class="aurora"></div>
+
+  <main class="auth-shell anim-in">
+    <!-- Brand side -->
+    <aside class="auth-side">
+      <div class="auth-orbit"></div>
+      <span class="logo">
+        <svg width="32" height="32" viewBox="0 0 48 48"><defs><linearGradient id="lga" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lga)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 19c4-9 9-9 13 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+        <span class="logo-name">Dri<b>ft</b></span>
+      </span>
+      <div class="auth-quote">
+        <h2>Welcome back to the current.</h2>
+        <p>Your rooms kept the momentum. Zephyr saved you a recap. The memes, tragically, cannot be unread.</p>
+      </div>
+      <div class="auth-mini-stats">
+        <div><b data-count-online>1,284</b><span>online now</span></div>
+        <div><b>480</b><span>live rooms</span></div>
+        <div><b>✨</b><span>Zephyr inside</span></div>
+      </div>
+    </aside>
+
+    <!-- Form side -->
+    <section class="auth-main">
+      <h1>Log in</h1>
+      <p class="auth-sub">New here? <a href="./signup.html">Create an account</a></p>
+
+      <form class="auth-form" id="loginForm" novalidate>
+        <div class="field" id="fId">
+          <label for="loginId">Username or email</label>
+          <div class="input-wrap">
+            <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+            <input class="input" id="loginId" placeholder="nova or nova@drift.chat" autocomplete="username">
+          </div>
+          <span class="input-error">Enter your username or email.</span>
+        </div>
+
+        <div class="field" id="fPw">
+          <label for="loginPw">Password</label>
+          <div class="input-wrap">
+            <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.4"/><path d="M8.2 10.4V7.9a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>
+            <input class="input" id="loginPw" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pw-toggle icon-btn sm" data-pw-toggle="loginPw" aria-label="Show password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 12S6.2 5.8 12 5.8 21.4 12 21.4 12 17.8 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="2.9"/></svg>
+            </button>
+          </div>
+          <span class="input-error">Password is required.</span>
+        </div>
+
+        <div class="remember-row">
+          <label><input type="checkbox" id="rememberMe" checked> Remember me</label>
+          <a href="#" onclick="return false;" title="Demo build — no email flow yet">Forgot password?</a>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" id="loginBtn" type="submit">Dive back in →</button>
+      </form>
+
+      <div class="demo-hint">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5M12 7.6h.01"/></svg>
+        <span>Demo mode: accounts live only in your browser. <button type="button" id="demoBtn">Try instant demo →</button></span>
+      </div>
+
+      <p class="form-foot">Just looking around? <a href="./index.html">Back to home</a></p>
+    </section>
+  </main>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/store.js"></script>
+  <script src="./js/demo-data.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/auth.js"></script>
+  <script>
+    // Auth pages bootstrap: restore session or show login form.
+    (() => {
+      'use strict';
+      Store.init();
+
+      if (Auth.redirectIfAuthed()) return;
+
+      const form = document.getElementById('loginForm');
+      const btn = document.getElementById('loginBtn');
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('loginId').value.trim();
+        const pw = document.getElementById('loginPw').value;
+        const remember = document.getElementById('rememberMe').checked;
+        let ok = true;
+        document.getElementById('fId').classList.toggle('invalid', !id && !(ok = false));
+        document.getElementById('fPw').classList.toggle('invalid', !pw && !(ok = false));
+        if (!ok) return;
+
+        btn.disabled = true; btn.textContent = 'Checking…';
+        try {
+          await Auth.signIn(id, pw, remember);
+          location.href = './app.html';
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'Dive back in →';
+          UI.toast({ title: 'Couldn\u2019t log in', body: err.message, type: 'bad', icon: 'alert' });
+        }
+      });
+
+      document.getElementById('demoBtn').addEventListener('click', () => {
+        Auth.signInDemo();
+      });
+
+      // Arriving from the landing "Explore Rooms" button → spotlight the demo option
+      if (location.search.includes('demo=1')) {
+        const b = document.getElementById('demoBtn');
+        b.style.animation = 'pulse-ring 1.6s ease-out 3';
+        setTimeout(() => b.click && window.scrollTo({ top: 0 }), 300);
+        b.closest('.demo-hint').style.borderColor = 'var(--ac2)';
+      }
+
+      // Password visibility toggles
+      document.querySelectorAll('[data-pw-toggle]').forEach(b => b.addEventListener('click', () => {
+        const inp = document.getElementById(b.dataset.pwToggle);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        b.style.color = inp.type === 'text' ? 'var(--ac2)' : '';
+      }));
+
+      // Living counter on brand panel
+      let base = window.DriftConfig.PRESENCE_BASELINE;
+      setInterval(() => {
+        base += Math.round((Math.random() - .45) * 12);
+        base = Math.max(1150, Math.min(1500, base));
+        const el = document.querySelector('[data-count-online]');
+        if (el) el.textContent = base.toLocaleString();
+      }, 3800);
+    })();
+  </script>
+</body>
+</html>

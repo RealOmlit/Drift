@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="violet" data-font="m">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create account · Drift</title>
+  <meta name="description" content="Join Drift — conversations in motion.">
+  <meta name="theme-color" content="#05060c">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/animations.css">
+  <link rel="stylesheet" href="./css/auth.css">
+</head>
+<body class="auth-body">
+  <div class="aurora"></div>
+
+  <main class="auth-shell anim-in">
+    <!-- Brand side -->
+    <aside class="auth-side">
+      <div class="auth-orbit"></div>
+      <span class="logo">
+        <svg width="32" height="32" viewBox="0 0 48 48"><defs><linearGradient id="lgb" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgb)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 19c4-9 9-9 13 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+        <span class="logo-name">Dri<b>ft</b></span>
+      </span>
+      <div class="auth-quote">
+        <h2>Pick a name.<br>Catch a current.</h2>
+        <p>Rooms with real momentum, an AI companion on tap, and XP for being a good human. Sixty seconds to your first conversation.</p>
+      </div>
+      <div class="auth-mini-stats">
+        <div><b>10+</b><span>room categories</span></div>
+        <div><b>🏆</b><span>quests & badges</span></div>
+        <div><b>100%</b><span>yours to remix</span></div>
+      </div>
+    </aside>
+
+    <!-- Form side -->
+    <section class="auth-main">
+      <h1>Create your account</h1>
+      <p class="auth-sub">Already drifting? <a href="./login.html">Log in</a></p>
+
+      <form class="auth-form" id="signupForm" novalidate>
+        <div class="row" style="gap:.9rem;align-items:flex-end;">
+          <div style="text-align:center;">
+            <span id="suAvatarWrap"></span>
+            <button type="button" class="chip btn-sm" id="suEmoji" style="margin-top:.45rem;">Pick emoji ✨</button>
+          </div>
+          <div class="field grow" id="fUser">
+            <label for="suUser">Username</label>
+            <div class="input-wrap">
+              <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+              <input class="input" id="suUser" placeholder="stardust_kid" autocomplete="username" maxlength="20">
+            </div>
+            <span class="input-error" id="userErr">3–20 chars · letters, numbers, underscores.</span>
+          </div>
+        </div>
+
+        <div class="field" id="fName">
+          <label for="suName">Display name <span class="faint">(optional)</span></label>
+          <input class="input" id="suName" placeholder="How should we call you?" maxlength="30">
+        </div>
+
+        <div class="field" id="fEmail">
+          <label for="suEmail">Email</label>
+          <div class="input-wrap">
+            <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.4" width="18" height="13.2" rx="2.2"/><path d="m3.6 7.2 8.4 6 8.4-6"/></svg>
+            <input class="input" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <span class="input-error">Enter a valid email address.</span>
+        </div>
+
+        <div class="field" id="fPass">
+          <label for="suPass">Password</label>
+          <div class="input-wrap">
+            <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.4"/><path d="M8.2 10.4V7.9a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>
+            <input class="input" id="suPass" type="password" placeholder="8+ characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle icon-btn sm" data-pw-toggle="suPass" aria-label="Show password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 12S6.2 5.8 12 5.8 21.4 12 21.4 12 17.8 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="2.9"/></svg>
+            </button>
+          </div>
+          <div class="strength" id="pwStrength"><i></i><i></i><i></i><i></i></div>
+          <span class="input-hint" id="pwHint">Use 8+ chars — mix cases & numbers for a stronger drift.</span>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" id="signupBtn" type="submit">Create account 🚀</button>
+      </form>
+
+      <div class="demo-hint">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5M12 7.6h.01"/></svg>
+        <span>Demo build: accounts are stored only in this browser's localStorage. Never reuse a real password here.</span>
+      </div>
+
+      <p class="form-foot">Just looking around? <a href="./index.html">Back to home</a></p>
+    </section>
+  </main>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/store.js"></script>
+  <script src="./js/demo-data.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/auth.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      Store.init();
+      if (Auth.redirectIfAuthed()) return;
+
+      const $ = id => document.getElementById(id);
+      let chosenEmoji = '';
+      const hue = U.randInt(0, 359);
+
+      // Live avatar preview
+      function drawAvatar() {
+        $('suAvatarWrap').innerHTML = U.avatar({
+          username: $('suUser').value || 'you',
+          avatarEmoji: chosenEmoji, hue
+        }, { size: 64 });
+      }
+      drawAvatar();
+      $('suUser').addEventListener('input', drawAvatar);
+      $('suEmoji').addEventListener('click', e => {
+        UI.emojiPicker(e.currentTarget, em => {
+          chosenEmoji = em;
+          $('suEmoji').textContent = em + ' change';
+          drawAvatar();
+        });
+      });
+
+      // Password strength meter
+      $('suPass').addEventListener('input', () => {
+        const s = Auth.passwordStrength($('suPass').value);
+        const el = $('pwStrength');
+        el.className = 'strength' + (s ? ' s' + s : '');
+        $('pwHint').textContent = ['', 'Weak — add length & variety', 'Getting there…', 'Solid.', 'Excellent. Fort Knox approves.'][s];
+      });
+
+      // Submit
+      $('signupForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        ['fUser', 'fEmail', 'fPass'].forEach(f => $(f).classList.remove('invalid'));
+        const username = $('suUser').value.trim();
+        const email = $('suEmail').value.trim();
+        const pw = $('suPass').value;
+        let ok = true;
+
+        const uErr = Auth.validateUsername(username) || (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? null : 'Enter a valid email address.') || (pw.length >= 8 ? null : 'Password needs at least 8 characters.');
+        if (Auth.validateUsername(username)) { $('userErr').textContent = Auth.validateUsername(username); $('fUser').classList.add('invalid'); ok = false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $('fEmail').classList.add('invalid'); ok = false; }
+        if (pw.length < 8) { $('fPass').classList.add('invalid'); ok = false; }
+        if (!ok) return;
+
+        const btn = $('signupBtn');
+        btn.disabled = true; btn.textContent = 'Building your room key…';
+        try {
+          await Auth.signUp({
+            username, email, password: pw,
+            displayName: $('suName').value.trim() || username,
+            avatarEmoji: chosenEmoji, hue
+          });
+          location.href = './app.html?welcome=1';
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'Create account 🚀';
+          UI.toast({ title: 'Sign-up failed', body: err.message, type: 'bad', icon: 'alert' });
+        }
+      });
+
+      document.querySelectorAll('[data-pw-toggle]').forEach(b => b.addEventListener('click', () => {
+        const inp = $(b.dataset.pwToggle);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        b.style.color = inp.type === 'text' ? 'var(--ac2)' : '';
+      }));
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Drift · Design Tokens — the single source of truth for the visual system
+   Theme: dark (default) / light · Accents: violet, cyan, emerald, amber, rose
+   ========================================================================== */
+
+:root {
+  /* Typography */
+  --font-d: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-b: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  /* Radii */
+  --r-sm: 9px; --r-md: 12px; --r-lg: 17px; --r-xl: 22px;
+
+  /* Elevation */
+  --sh1: 0 2px 10px rgba(0,0,0,.25);
+  --sh2: 0 12px 34px -10px rgba(0,0,0,.45);
+  --sh3: 0 24px 70px -18px rgba(0,0,0,.6);
+  --glow: 0 0 26px -4px var(--ring);
+
+  /* Motion */
+  --ease: cubic-bezier(.33,.85,.4,1);
+  --spring: cubic-bezier(.3,1.35,.45,1);
+
+  /* Layout */
+  --rail-w: 70px;
+  --topbar-h: 58px;
+  --bottomnav-h: 62px;
+  --maxw: 1180px;
+
+  z-index: 0;
+}
+
+/* ---------- Dark theme (default) ---------- */
+:root, :root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg0: #05060c;
+  --bg1: #0b0e19;
+  --bg2: #12172a;
+  --glass: rgba(148, 163, 216, .07);
+  --glass-2: rgba(148, 163, 216, .13);
+  --brd-1: rgba(148, 163, 216, .14);
+  --brd-2: rgba(148, 163, 216, .28);
+  --txt1: #eaeefb;
+  --txt2: #9aa5c4;
+  --txt3: #5d6787;
+
+  --ok: #34d399; --warn: #fbbf24; --bad: #fb7185;
+}
+
+/* ---------- Light theme ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg0: #eef1f9;
+  --bg1: #f8f9ff;
+  --bg2: #ffffff;
+  --glass: rgba(38, 52, 110, .05);
+  --glass-2: rgba(38, 52, 110, .1);
+  --brd-1: rgba(38, 52, 110, .14);
+  --brd-2: rgba(38, 52, 110, .26);
+  --txt1: #171d33;
+  --txt2: #55608a;
+  --txt3: #8a93b5;
+  --sh1: 0 2px 10px rgba(30,40,90,.08);
+  --sh2: 0 12px 34px -12px rgba(30,40,90,.16);
+  --sh3: 0 24px 70px -20px rgba(30,40,90,.24);
+}
+
+/* ---------- Accent palettes ---------- */
+:root[data-accent='violet'], :root {
+  --ac1: #7c5cff; --ac2: #22d3ee; --ac3: #f472b6;
+  --grad: linear-gradient(120deg, var(--ac1), var(--ac2));
+  --ring: rgba(124, 92, 255, .3);
+}
+:root[data-accent='cyan']   { --ac1:#0ea5e9; --ac2:#22d3ee; --ac3:#818cf8; --grad:linear-gradient(120deg,#0ea5e9,#22d3ee); --ring:rgba(14,165,233,.32); }
+:root[data-accent='emerald']{ --ac1:#10b981; --ac2:#84cc16; --ac3:#22d3ee; --grad:linear-gradient(120deg,#10b981,#84cc16); --ring:rgba(16,185,129,.32); }
+:root[data-accent='amber']  { --ac1:#f59e0b; --ac2:#fb7185; --ac3:#fbbf24; --grad:linear-gradient(120deg,#f59e0b,#fb7185); --ring:rgba(245,158,11,.32); }
+:root[data-accent='rose']   { --ac1:#f43f5e; --ac2:#f472b6; --ac3:#a78bfa; --grad:linear-gradient(120deg,#f43f5e,#f472b6); --ring:rgba(244,63,94,.32); }
+
+/* ---------- Font scale ---------- */
+:root[data-font='s'] { font-size: 14.5px; }
+:root[data-font='m'] { font-size: 16px; }
+:root[data-font='l'] { font-size: 17.75px; }
+
+/* ---------- Contrast mode ---------- */
+:root[data-contrast='high'] { --txt2: color-mix(in srgb, var(--txt2) 60%, var(--txt1)); --brd-1: var(--brd-2); }
+
+/* ---------- Reduced motion (user preference or OS) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+:root[data-motion='reduced'] *, :root[data-motion='reduced'] *::before, :root[data-motion='reduced'] *::after {
+  animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important;
+}

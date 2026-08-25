@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="violet" data-font="m">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drift — Conversations in motion</title>
+  <meta name="description" content="Drift is a modern real-time chat platform with rooms, live presence, a built-in AI companion and community XP. Open source demo — deployable to GitHub Pages.">
+  <meta name="theme-color" content="#05060c">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/animations.css">
+  <link rel="stylesheet" href="./css/landing.css">
+</head>
+<body class="land-body">
+  <div class="aurora"></div>
+
+  <!-- ===================== NAV ===================== -->
+  <nav class="land-nav" id="landNav">
+    <div class="container">
+      <span class="logo">
+        <svg width="30" height="30" viewBox="0 0 48 48"><defs><linearGradient id="lg1" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lg1)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 19c4-9 9-9 13 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+        <span class="logo-name">Dri<b>ft</b></span>
+      </span>
+      <div class="land-links">
+        <a href="#features">Features</a>
+        <a href="#unique">Unique</a>
+        <a href="#zephyr">Zephyr AI</a>
+        <a href="#rooms">Rooms</a>
+      </div>
+      <div class="land-cta">
+        <a class="btn btn-glass btn-sm" href="./login.html">Log in</a>
+        <a class="btn btn-primary btn-sm" href="./signup.html">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================== HERO ===================== -->
+  <header class="hero container">
+    <div class="hero-badges anim-in">
+      <span class="chip"><span class="chip-dot"></span> Real-time rooms</span>
+      <span class="chip badge-ai" style="border:none;">✨ Zephyr AI inside</span>
+      <span class="chip">🏆 Community XP</span>
+    </div>
+    <h1 class="anim-in anim-in-1">Where conversations<br><span class="grad-text">drift into motion.</span></h1>
+    <p class="hero-sub anim-in anim-in-2">
+      Drift is a next-generation chat platform: living rooms with momentum,
+      an AI companion woven into every conversation, and a community that
+      levels up together.
+    </p>
+    <div class="hero-ctas anim-in anim-in-3">
+      <a class="btn btn-primary btn-lg" href="./signup.html">Get Started — it's free</a>
+      <a class="btn btn-glass btn-lg" href="./login.html?demo=1">Explore Rooms →</a>
+    </div>
+    <div class="hero-online anim-in anim-in-4">
+      <span class="dot online"></span> <b data-online-count>1,284</b>&nbsp;people drifting right now
+    </div>
+
+    <!-- Animated product preview -->
+    <div class="hero-stage anim-in anim-in-5" id="heroStage">
+      <div class="float-chip fc-1">🎯 Instant polls</div>
+      <div class="float-chip fc-2">⚡ Quick Pulse trending</div>
+      <div class="float-chip fc-3">🎮 Mini activities</div>
+      <div class="preview-window">
+        <div class="pw-bar">
+          <span class="pw-dot" style="background:#fb7185"></span>
+          <span class="pw-dot" style="background:#fbbf24"></span>
+          <span class="pw-dot" style="background:#34d399"></span>
+          <span class="pw-title">#orbit-lounge · 🛋️ · 1,287 members</span>
+        </div>
+        <div class="pw-body">
+          <aside class="pw-side">
+            <div class="pw-room on">🛋️ Orbit Lounge</div>
+            <div class="pw-room">🎮 Pixel Arena</div>
+            <div class="pw-room">👨‍💻 Code Forge</div>
+            <div class="pw-room">🎧 Sound Wave</div>
+          </aside>
+          <div class="pw-msgs" id="pwMsgs"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== CATEGORY MARQUEE ===================== -->
+  <section class="strip reveal">
+    <p class="strip-label">Communities already drifting</p>
+    <div class="marquee">
+      <!-- duplicated for seamless loop -->
+      <span class="mq-chip">🛋️ Orbit Lounge <small>LIVE</small></span><span class="mq-chip">🎮 Pixel Arena <small>2.1k</small></span><span class="mq-chip">👨‍💻 The Code Forge <small>HOT</small></span><span class="mq-chip">📚 Late Night Study</span><span class="mq-chip">🎧 Sound Wave</span><span class="mq-chip">😂 Meme Harbor <small>HOT</small></span><span class="mq-chip">🚀 Future Tech</span><span class="mq-chip">⚽ Sports Bar</span><span class="mq-chip">🎨 Design Deck</span>
+      <span class="mq-chip">🛋️ Orbit Lounge <small>LIVE</small></span><span class="mq-chip">🎮 Pixel Arena <small>2.1k</small></span><span class="mq-chip">👨‍💻 The Code Forge <small>HOT</small></span><span class="mq-chip">📚 Late Night Study</span><span class="mq-chip">🎧 Sound Wave</span><span class="mq-chip">😂 Meme Harbor <small>HOT</small></span><span class="mq-chip">🚀 Future Tech</span><span class="mq-chip">⚽ Sports Bar</span><span class="mq-chip">🎨 Design Deck</span>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="section container" id="features">
+    <div class="section-head reveal">
+      <span class="eyebrow">✦ Built different</span>
+      <h2>Everything a modern chat should be.<br>Then some.</h2>
+      <p>Not another Discord clone. Drift rethinks what a chat platform feels like when motion, mood and meaning matter.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">🌊</div><h3>Momentum engine</h3><p>Every room has a visible energy score that rises with real activity. Find where the party is at a glance.</p></div>
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">⚡</div><h3>Quick Pulse</h3><p>A living ticker of the topics heating up across all rooms, updated as conversations drift.</p></div>
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">🏆</div><h3>Community XP</h3><p>Positive participation earns XP, levels, streaks and daily quests. Kindness compounds.</p></div>
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">📊</div><h3>Instant polls & pins</h3><p>Settle debates with one-tap polls; pin the messages that matter to the top of any room.</p></div>
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">🎮</div><h3>Mini activities</h3><p>Launch Reaction Races and Trivia Rushes mid-conversation. Results post straight to chat.</p></div>
+      <div class="card card-glow hoverable feat-card reveal"><div class="feat-icon">🎨</div><h3>Yours, visually</h3><p>Dark & light themes, five accent gradients, font scaling, focus mode and reduced-motion support.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== UNIQUE SHOWCASES ===================== -->
+  <section class="section container" id="unique">
+    <div class="showcase reveal">
+      <div class="sc-copy">
+        <span class="eyebrow">Signature system</span>
+        <h3>Reactions with personality</h3>
+        <p>Beyond 👍 and ❤️ — Drift ships its own reaction vocabulary built for how people actually respond.</p>
+        <ul>
+          <li>🤯 Mind-blown · 💡 Interesting · 🤝 Agree</li>
+          <li>W tokens for wins, 🔥 Helpful stamps</li>
+          <li>Fully custom picker with recents</li>
+        </ul>
+      </div>
+      <div class="sc-visual">
+        <div class="pulse-demo">
+          <button class="reaction-pill mine">🤯 <b>24</b></button>
+          <button class="reaction-pill">💡 <b>18</b></button>
+          <button class="reaction-pill mine">🤝 <b>31</b></button>
+          <button class="reaction-pill">🔥 <b>9</b></button>
+          <button class="reaction-pill"><span class="w-token">W</span> <b>42</b></button>
+          <button class="reaction-pill">😂 <b>57</b></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase flip reveal">
+      <div class="sc-copy">
+        <span class="eyebrow">Built-in brain</span>
+        <h3>Zephyr lives in your rooms</h3>
+        <p>Not a separate tab — an AI companion with its own identity, summoned from any composer.</p>
+        <ul>
+          <li>“Summarize this room” after a busy day</li>
+          <li>Icebreakers & topic suggestions on demand</li>
+          <li>Rewrite, translate, explain — inline</li>
+          <li>Privacy-first: connect your own API proxy</li>
+        </ul>
+      </div>
+      <div class="sc-visual">
+        <div class="ai-demo">
+          <div class="ai-bubble">catch me up on #code-forge?</div>
+          <div class="ai-bubble zephyr"><span class="ai-tag">✨ Zephyr</span>Kai shipped v2.1 clean — latency down 40%. Mia's on-call but chilling. One open question about edge cold starts…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase reveal">
+      <div class="sc-copy">
+        <span class="eyebrow">Decision engine</span>
+        <h3>Polls that feel alive</h3>
+        <p>Create a poll from the composer in two taps. Watch bars animate as votes drift in, live.</p>
+        <ul>
+          <li>Up to six options, change your vote anytime</li>
+          <li>Winning option glows automatically</li>
+          <li>Votes earn XP — democracy, rewarded</li>
+        </ul>
+      </div>
+      <div class="sc-visual">
+        <div class="poll-demo">
+          <b>Game night vibe?</b>
+          <div class="poll-opt voted"><span class="po-fill win" style="--pct:.62"></span><span class="po-lbl">🎮 Co-op chaos ✔</span><span class="po-pct">62%</span></div>
+          <div class="poll-opt"><span class="po-fill" style="--pct:.23"></span><span class="po-lbl">🕵️ Deduction night</span><span class="po-pct">23%</span></div>
+          <div class="poll-opt"><span class="po-fill" style="--pct:.15"></span><span class="po-lbl">🏎️ Racing league</span><span class="po-pct">15%</span></div>
+          <span class="poll-meta">34 votes · open</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STATS BAND ===================== -->
+  <section class="stats-band reveal">
+    <div class="container stats-grid">
+      <div><div class="stat-num" data-count="12400">0</div><div class="stat-lbl">Drifters onboard</div></div>
+      <div><div class="stat-num" data-count="480">0</div><div class="stat-lbl">Live rooms</div></div>
+      <div><div class="stat-num" data-count="1200000">0</div><div class="stat-lbl">Messages this week</div></div>
+      <div><div class="stat-num" data-count="98">0</div><div class="stat-lbl">% would recommend</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== ROOMS PREVIEW / CTA ===================== -->
+  <section class="section container" id="rooms">
+    <div class="cta-panel reveal" id="zephyr">
+      <span class="eyebrow">Ready to drift?</span>
+      <h2>Your people are already talking.</h2>
+      <p>Jump into the demo — no server needed. Or bring your own backend later; Drift is built Supabase/Firebase-ready.</p>
+      <div class="hero-ctas" style="margin-top:1.6rem;">
+        <a class="btn btn-primary btn-lg" href="./signup.html">Create free account</a>
+        <a class="btn btn-glass btn-lg" href="./login.html?demo=1">Try instant demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="land-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="logo"><svg width="26" height="26" viewBox="0 0 48 48"><defs><linearGradient id="lg2" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lg2)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg><span class="logo-name">Dri<b>ft</b></span></span>
+          <p>An open, frontend-first chat platform concept. Demo runs fully in your browser.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Product</h5>
+          <a href="#features">Features</a><a href="#unique">Unique systems</a><a href="#zephyr">Zephyr AI</a><a href="./app.html">Open app</a>
+        </div>
+        <div class="footer-col">
+          <h5>Developers</h5>
+          <a href="https://github.com" target="_blank" rel="noopener">GitHub repo ↗</a><a href="./README.md">Documentation</a><a href="./README.md#connect-supabase-or-firebase">Backend guide</a>
+        </div>
+        <div class="footer-col">
+          <h5>Account</h5>
+          <a href="./login.html">Log in</a><a href="./signup.html">Sign up</a><a href="./app.html">Demo mode</a>
+        </div>
+      </div>
+      <div class="footer-base">
+        <span>© 2026 Drift · crafted for the open web</span>
+        <span>Made with vanilla HTML/CSS/JS — zero frameworks</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/landing.js"></script>
+</body>
+</html>
