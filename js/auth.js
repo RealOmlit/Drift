@@ -169,6 +169,7 @@ window.Auth = (() => {
 
   /** Restore session on page load (checks both storages). */
   function restore() {
+    Store.init();   // idempotent — guarantees accounts are loaded no matter the call order
     let raw = null;
     try {
       raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
@@ -203,8 +204,11 @@ window.Auth = (() => {
   function signOut() {
     if (Store.state.profile) {
       Store.state.profile.lastSeen = Date.now();
-      Store.save();
     }
+    // Clear in-memory session BEFORE any persistence — otherwise the
+    // beforeunload flush below resurrects it into localStorage.
+    Store.state.session = null;
+    Store.save();
     try { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
     Backend.stop();
     location.href = './login.html?loggedOut=1';
