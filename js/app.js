@@ -375,8 +375,8 @@ window.AppShell = (() => {
 
   /* ------------------------------ Boot ------------------------------ */
   function boot() {
+    Store.init();               // must run first so Auth.restore() can see accounts
     if (!Auth.requireAuth()) return;
-    Store.init();
     SettingsPage.applyTheme();
     Backend.start();
     injectChrome();
