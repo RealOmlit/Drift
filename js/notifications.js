@@ -139,7 +139,7 @@ window.Notifs = (() => {
         </span>
         <span class="notif-time">${U.fmtRel(n.ts)}</span>
         ${n.read ? '' : '<span class="notif-dot"></span>'}
-        <button class="notif-x icon-btn sm" data-dismiss="${n.id}" aria-label="Dismiss notification">${U.icon('x', 13)}</button>
+        <button class="notif-x icon-btn sm" data-dismiss="${n.id}" aria-label="Dismiss notification">${U.icon('x', 16)}</button>
       </div>`;
   }
 

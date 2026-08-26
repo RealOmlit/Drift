@@ -174,23 +174,24 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 
 /* ================= Notifications ================= */
 .notif-list { display:flex; flex-direction:column; gap:.55rem; }
-.notif-card { display:flex; gap:.85rem; align-items:flex-start; cursor:pointer; position:relative; }
+.notif-card { display:flex; gap:.85rem; align-items:flex-start; cursor:pointer; position:relative; padding-right:44px; }
 .notif-card.unread { box-shadow: inset 0 0 0 1px var(--ring); background: linear-gradient(90deg, var(--ring), transparent 40%), linear-gradient(180deg,var(--glass),rgba(255,255,255,.02)); }
 .notif-ic { width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid var(--brd-1);background:var(--glass-2); }
 .notif-main b{font-size:.9rem;display:block;} .notif-main p{font-size:.83rem;color:var(--txt2);} 
 .notif-time { font-size:.73rem;color:var(--txt3); white-space:nowrap; }
 .notif-dot { position:absolute; top:14px; right:34px; width:8px;height:8px;border-radius:50%;background:var(--ac1); box-shadow:0 0 8px var(--ac1); }
 .notif-x {
-  position: absolute; top: 6px; right: 6px; z-index: 2;
-  width: 26px; height: 26px; flex: none;
+  position: absolute; top: 4px; right: 4px; z-index: 2;
+  width: 32px; height: 32px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 8px; border: none; cursor: pointer;
-  background: var(--glass-2); color: var(--txt2);
-  opacity: .85; transition: opacity .15s ease, color .15s ease, background .15s;
+  border-radius: 9px; cursor: pointer;
+  background: color-mix(in srgb, var(--bad) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bad) 38%, transparent);
+  color: var(--bad);
+  opacity: .95; transition: all .15s ease;
 }
-.notif-card:hover .notif-x, .notif-x:hover { opacity: 1; }
-.notif-x:hover { color: #fff; background: var(--bad); }
-.notif-card { padding-right: 38px; }
+.notif-card:hover .notif-x { opacity: 1; }
+.notif-x:hover { background: var(--bad); color: #fff; box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--bad) 55%, transparent); }
 .day-sep { font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin:1.2rem .2rem .5rem; }
 
 /* ================= Zephyr AI panel ================= */
