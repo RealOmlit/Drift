@@ -2,12 +2,13 @@
    Drift · ai.js — "Zephyr", Drift's built-in AI companion.
    ───────────────────────────────────────────────────────────────────────────
    Two layers:
-   1) RemoteAI  → clearly marked integration point for YOUR backend proxy.
-                  ⚠️ NEVER put an API key in front-end code. Point
-                  DriftConfig.AI_PROXY_URL at a serverless function that holds
-                  the key and forwards to OpenAI / Anthropic / etc.
-   2) LocalEngine → offline fallback used while AI_PROXY_URL is null so the
-                  demo is fully functional without any credentials.
+   1) RemoteAI  → OpenAI-compatible chat completions (AIML API by default).
+                  Configure via DriftConfig.AI_BASE_URL / AI_MODEL /
+                  AI_API_KEY, or point AI_PROXY_URL at your own secure proxy
+                  ({ messages, persona } → { text }).
+   2) LocalEngine → keyword-rules fallback used only when no key is set.
+   When a remote call FAILS (out of funds, bad model…), Zephyr says so
+   honestly instead of pretending.
    ========================================================================== */
 
 window.AI = (() => {
@@ -20,21 +21,73 @@ window.AI = (() => {
     avatar: '✨'
   };
 
+  const remoteConfigured = () => !!(CFG.AI_ENABLED && (CFG.AI_API_KEY || CFG.AI_PROXY_URL));
+
   /* =====================================================================
-     REMOTE INTEGRATION LAYER  [BACKEND]
-     Replace `null` in config with your proxy endpoint. The request shape:
-       POST { messages:[{role,content}], persona, context? } → { text }
-  ====================================================================== */
-  function remoteComplete(messages, context) {
+      REMOTE INTEGRATION LAYER
+      a) AI_PROXY_URL set  → POST { messages, persona, context? } → { text }
+      b) AI_API_KEY set    → direct OpenAI-compatible /chat/completions
+   ====================================================================== */
+  const PERSONAS = {
+    friendly: 'You are Zephyr, the friendly resident AI companion inside a chat app called Drift. Warm, upbeat and genuinely helpful. Use light markdown (**bold**, `code`, bullet lists) where it helps.',
+    concise:  'You are Zephyr, an AI companion in a chat app. Answer in at most 2-3 short sentences unless asked for detail. Skip filler.',
+    playful:  'You are Zephyr, a witty AI companion in a chat app. Playful, emoji-friendly, but still useful first.'
+  };
+
+  function buildMessages(input, ctx = {}) {
+    const msgs = [];
+    let sys = PERSONAS[Store.state.settings.aiPersona] || PERSONAS.friendly;
+    if (ctx.roomContext?.room) {
+      sys += `\nYou are chatting inside the room "#${ctx.roomContext.room}".`;
+      if (Array.isArray(ctx.roomContext.recent) && ctx.roomContext.recent.length) {
+        sys += '\nRecent messages for context:\n' + ctx.roomContext.recent
+          .map(m => `${m.user}: ${String(m.text).slice(0, 120)}`).join('\n');
+      }
+    }
+    msgs.push({ role: 'system', content: sys });
+    // Continuity: replay the last few turns of this thread
+    thread().slice(-8).forEach(t =>
+      msgs.push({ role: t.role === 'user' ? 'user' : 'assistant', content: t.text }));
+    msgs.push({ role: 'user', content: input });
+    return msgs;
+  }
+
+  async function chatComplete(messages) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const resp = await fetch(CFG.AI_BASE_URL + '/chat/completions', {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + CFG.AI_API_KEY
+        },
+        body: JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: 600, temperature: 0.7 })
+      });
+      const data = await resp.json().catch(() => null);
+      if (!resp.ok) {
+        // Surface AIML/OpenAI-style errors honestly (funds, rate limit, model…)
+        const msg = data?.error?.message || data?.message ||
+          `API error ${resp.status}`;
+        throw new Error(msg);
+      }
+      return data?.choices?.[0]?.message?.content?.trim() || null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function remoteComplete(messages, ctx) {
     return new Promise(resolve => {
-      if (!CFG.AI_PROXY_URL) { resolve(null); return; } // fall back to local engine
+      if (!CFG.AI_PROXY_URL) { resolve(null); return; }
       fetch(CFG.AI_PROXY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages,
           persona: Store.state.settings.aiPersona,
-          context: Store.state.settings.aiContext ? context : null
+          context: Store.state.settings.aiContext ? ctx : null
         })
       })
         .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
@@ -110,7 +163,7 @@ window.AI = (() => {
       const key = w.toLowerCase().replace(/[^a-z]/g, '');
       return dict[key] ? w.replace(new RegExp(key, 'i'), dict[key]) : w;
     }).join('');
-    return `**Demo translation (${lang === 'fr' ? 'French' : 'Spanish'}):**\n"${words}"\n\n_This offline demo translates common words only. Connect an AI API via \`AI_PROXY_URL\` for full-quality translation._`;
+    return `**Offline translation (${lang === 'fr' ? 'French' : 'Spanish'}):**\n"${words}"\n\n_This built-in dictionary handles common words only. Add an API key in \`js/config.js\` for full-quality translation._`;
   }
 
   function rewrite(text, mode) {
@@ -213,7 +266,7 @@ window.AI = (() => {
     if (/code|bug|javascript|python|css|function|error|api/.test(ql)) return codeHelp(q);
     if (/moderat|rules|guideline|moderation/.test(ql)) return moderationHelp();
     if (/who are you|what are you|about you/.test(ql)) return `I'm **Zephyr** — ${IDENTITY.role}. I live inside Drift: summaries, translations, icebreakers, math emergencies (` + '`12*(34+8)`' + '), code saves and vibe checks. Ask away!';
-    if (/help|what can you do/.test(ql)) return '**Things I\'m good at:**\n• `summarize this room` — instant recap\n• `suggest topics` — kill the silence\n• `translate <text>` — ES/FR demo\n• `rewrite: <message>` — polish any draft\n• `generate a room description`\n• code help, moderation advice, quick math\n\nI get full conversational powers once an AI API is connected via the secure proxy.';
+    if (/help|what can you do/.test(ql)) return '**Things I\'m good at:**\n• `summarize this room` — instant recap\n• `suggest topics` — kill the silence\n• `translate <text>` — ES/FR\n• `rewrite: <message>` — polish any draft\n• `generate a room description`\n• code help, moderation advice, quick math\n\nAdd an API key in `js/config.js` and I get full conversational powers on top of these.';
     if (/^(hi|hey|hello|yo|sup)\b/.test(ql)) return U.rand([`Hey ${Store.me()?.displayName || 'there'}! 👋 What are we building, solving or debating today?`, `Hello hello ✨ Need a recap, an idea, or a translation?`]);
 
     // Generic thoughtful fallback referencing context when available
@@ -234,11 +287,25 @@ window.AI = (() => {
     return text;
   }
 
-  /** Main entry: returns a Promise<string>. Tries remote, falls back local. */
+  /** Main entry: returns a Promise<string>. Remote first; local only when unconfigured. */
   async function respond(input, ctx = {}) {
-    const messages = [{ role: 'user', content: input }];
-    const remote = await remoteComplete(messages, ctx.roomContext);
-    if (remote) return remote;
+    if (remoteConfigured()) {
+      try {
+        let text = null;
+        if (CFG.AI_PROXY_URL) {
+          text = await remoteComplete([{ role: 'user', content: input }], ctx.roomContext);
+        } else {
+          text = await chatComplete(buildMessages(input, ctx));
+        }
+        if (text) return persona(text);
+      } catch (e) {
+        // Honest failure — no fake fallbacks when an API is configured.
+        const hint = /funds|insufficient|billing/i.test(e.message)
+          ? ' The AIML account needs a top-up: aimlapi.com/app/billing'
+          : '';
+        return `⚠️ **Zephyr can't reach its AI backend right now.**\n${e.message}.${hint}`;
+      }
+    }
     await new Promise(r => setTimeout(r, U.randInt(650, 1400))); // human-ish latency
     return persona(localRespond(input, ctx));
   }
@@ -291,7 +358,9 @@ window.AI = (() => {
         <button class="ai-send" data-send aria-label="Send">${U.icon('send', 18)}</button>
       </div>
       <div class="small faint" style="margin-top:.45rem;display:flex;gap:.35rem;align-items:center;">
-        ${U.icon('info', 13)} Offline demo model · connect an API via <span class="mono">AI_PROXY_URL</span> for full power
+        ${U.icon('info', 13)} ${remoteConfigured()
+          ? `Live model: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · powered by AIML API`
+          : 'Offline rule engine · add an API key in <span class="mono">js/config.js</span> for full power'}
       </div>`;
   }
 
@@ -427,5 +496,5 @@ window.AI = (() => {
     scrollBottom(body);
   }
 
-  return { IDENTITY, respond, openDrawer, renderPanel, roomDescription, summarizeRoom };
+  return { IDENTITY, respond, openDrawer, renderPanel, roomDescription, summarizeRoom, remoteConfigured };
 })();

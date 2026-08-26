@@ -42,8 +42,12 @@ live and the online counter reflect reality.
 
 ## Notes & limits
 
-- **Zephyr AI** is disabled until you connect a real model endpoint
-  (`AI_ENABLED` in `js/config.js`). No fake responses.
+- **Zephyr AI** is wired to [AIML API](https://aimlapi.com) (OpenAI-compatible)
+  via `AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` in `js/config.js`. ⚠️ A key in
+  front-end code is public — expect strangers to see it. For production, move
+  it into a Supabase Edge Function and set `AI_PROXY_URL` instead. If Zephyr
+  answers with an "out of funds" notice, top up at
+  <https://aimlapi.com/app/billing>.
 - **XP / streaks / daily quests** are per-user gamification stored in your own
   profile row — real to you, computed client-side.
 - **Blocking/muting** someone is enforced locally in your browser; reports are

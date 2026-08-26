@@ -11,7 +11,7 @@ window.Landing = (() => {
     { side: 'right', name: 'You', color: '', text: 'insane. did the edge functions hold up?' },
     { side: 'left', name: 'Mia', color: 'hsl(190 75% 45%)', text: 'like a dream. p95 down 40% 👀' },
     { side: 'left', name: 'Zephyr ✨', color: '', text: 'Summary: v2.1 shipped clean — latency improved 40%.', ai: true },
-    { side: 'right', name: 'You', color: '', text: 'poll: demo friday or monday?' },
+    { side: 'right', name: 'You', color: '', text: 'poll: game night friday or saturday?' },
     { side: 'left', name: 'Kai', color: 'hsl(262 70% 60%)', text: 'friday. obviously. we ship fast here 😤' }
   ];
 

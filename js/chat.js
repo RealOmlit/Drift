@@ -798,7 +798,6 @@ window.Chat = (() => {
   function onRoomUpdate(updated) { if (updated.id === roomId) updateHeadMeta(); }
   function updateHeadMeta() {
     updateOnlineSub();
-    const el = U.$('[data-online-sub]'); void el;
     const memEl = U.$('[data-jump-members]');
     if (memEl) memEl.textContent = `${U.fmtCount(room().memberCount)} members`;
   }

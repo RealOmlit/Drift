@@ -61,12 +61,8 @@ window.Finder = (() => {
       case 'room': Router.go('room', [item.x.id]); break;
       case 'person': People.openProfileCard(item.x.id); break;
       case 'message': Router.go('room', [item.room.id]); setTimeout(() => Chat.jumpToPublic?.(item.x.id) ?? null, 350); break;
-      case 'topic': Router.go('room', [item.x.room]); break;
     }
   }
-
-  // Chat exposes jumpTo internally; small public bridge:
-  window.Chat = window.Chat; // (Chat.jumpTo stays internal; navigation to the room is enough)
 
   /* ============================== palette ============================== */
   function openPalette(prefill = '') {

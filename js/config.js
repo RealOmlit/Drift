@@ -25,12 +25,17 @@ window.DriftConfig = {
   REAL_MODE: false, // recomputed below
 
   /**
-   * Zephyr AI assistant. Disabled by default: there is no fake offline
-   * engine anymore. Point AI_PROXY_URL at a serverless function that holds
-   * YOUR API key server-side, then set AI_ENABLED to true.
+   * Zephyr AI assistant — powered by AIML API (OpenAI-compatible).
+   * 🔒 Paste YOUR key here locally before deploying; never commit it to the
+   * public repo (this file ships to every visitor). Get one at
+   * aimlapi.com. For production, move the key into a server-side proxy
+   * and point AI_PROXY_URL at it instead.
    */
-  AI_ENABLED: false,
-  AI_PROXY_URL: null,
+  AI_ENABLED: true,
+  AI_PROXY_URL: null,                                   // optional secure proxy
+  AI_BASE_URL: 'https://api.aimlapi.com/v1',
+  AI_MODEL: 'gpt-4o-mini',
+  AI_API_KEY: '',
 
   /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
   STORAGE_PREFIX: 'drift.v2.',

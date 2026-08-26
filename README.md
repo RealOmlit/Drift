@@ -4,59 +4,53 @@
   <img src="./assets/favicon.svg" width="72" alt="Drift logo">
 </p>
 
-**Drift** is a premium, modern chat platform built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. Rooms, an AI companion named **Zephyr**, community XP, polls, mini-games, smart notifications and a fully responsive UI.
+**Drift** is a real-time chat platform built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. Rooms, live presence, an AI companion named **Zephyr**, community XP, polls, mini-games, smart notifications and a fully responsive UI.
 
-> ✅ **This is a real chat app.** Accounts, messages and presence run on **Supabase** (Postgres + Auth + Realtime). No demo bots or fake counters. To bring your own deployment online, follow **[SETUP.md](./SETUP.md)** — create a free Supabase project, run `supabase-setup.sql`, paste two keys into `js/config.js`. Until configured, pages show a setup guide instead of a broken app.
+> ✅ **Real backend included.** Accounts, messages and presence run on [Supabase](https://supabase.com) (Postgres + Auth + Realtime). No demo bots, no fake counters. Setup takes five minutes — see **[SETUP.md](./SETUP.md)**.
 
 ---
 
-## ✨ Feature highlights
+## ✨ Features
 
 | Area | What you get |
 |---|---|
-| 🔐 **Auth** | Sign-up, login (username or email), password visibility toggle + strength meter, remember me, logout, profile editing, username/email/password changes, last-seen & availability |
-| 💬 **Rooms** | Create / join / leave / delete rooms, public + private (invite codes), 10 categories, tags, rules, slow mode, moderators, room settings, live momentum meter |
-| 🧠 **Zephyr AI** | Built-in assistant with its own identity: room summaries, icebreakers, message explanations, rewrite, translate (demo), code help, moderation coaching, math. `✨ Ask AI` lives right in the composer |
-| 👥 **People** | Live-feeling online counts (~1,284 baseline), online/recent/offline filters, friend requests, animated profile cards with XP rings & badges, mute / block / report |
-| 💬 **Messages** | Replies, mentions w/ autocomplete, emoji picker, Drift's own reaction set (🤯 💡 🤝 W…), editing, deletion, pins + pin bar, copy, read receipts, typing indicators, link previews, in-room search, markdown-ish formatting incl. code blocks |
-| 🗳️ **Polls** | One-tap poll builder inside any room; votes arrive live and bars animate |
-| 🎮 **Mini activities** | Reaction Race (reflex duel) and Trivia Rush — results post into the chat |
-| 🏆 **Gamification** | Community XP, levels, daily streaks, daily quests, achievements grid |
-| ⚡ **Quick Pulse** | Trending topics ticker across all rooms |
-| 🔥 **Trending** | Momentum-ranked room discovery (trending / newest / biggest) |
-| 🔎 **Search** | Global command palette (**Ctrl/⌘+K**) plus a full search page across rooms, people, messages & topics |
-| 🔔 **Notifications** | Notification center, per-type preferences, elegant toasts, unread badges |
-| 🛡️ **Moderation** | Report messages/users, mutes, blocks, escalation flow, moderation dashboard |
-| ⚙️ **Settings** | Dark/light themes, 5 accent gradients, font scale, reduced motion, high contrast, compact mode, privacy controls, AI persona, data export |
+| 🔐 **Auth** | Real Supabase Auth: sign-up with username/email/password, strength meter, login by username *or* email, password/email/username changes, server-side sessions |
+| 💬 **Rooms** | Create / join / leave / delete, public + private (invite codes via RPC), 10 categories, tags, rules, slow mode, moderators, live room settings |
+| 🧠 **Zephyr AI** | Real LLM responses via [AIML API](https://aimlapi.com) (OpenAI-compatible): summaries, icebreakers, explanations, rewrite, translate, code help, math — with persona settings and thread memory |
+| 👥 **People** | Real profile directory from Postgres, follow system, live presence dots, profile cards with XP rings & earned badges, mute / block / report |
+| 💬 **Messages** | Persisted in Postgres + realtime delivery, replies, mentions w/ autocomplete, emoji picker, custom reaction set, editing, deletion, pins + pin bar, read tracking, typing indicators, link previews, in-room search |
+| 🗳️ **Polls** | One-tap poll builder; votes persist through an RPC (`cast_vote`) and update on every client live |
+| 🎮 **Mini activities** | Reaction Race and Trivia Rush — results post into chat as real messages |
+| 🏆 **Gamification** | Community XP stored on your profile, levels, daily streaks, daily quests, achievements grid |
+| 📡 **Presence** | Genuine online counts everywhere — landing page, home dashboard, room header — powered by a Realtime Presence channel |
+| 🔎 **Search** | Command palette (**Ctrl/⌘+K**) plus a full search page across rooms, people & your messages |
+| 🔔 **Notifications** | DB-backed (SQL triggers fire on follows & room joins), streamed live; per-type preferences, toasts, unread badges |
+| 🛡️ **Moderation** | Reports persisted to a `reports` table for the operator, local mutes/blocks, escalation flow |
+| ⚙️ **Settings** | Dark/light themes, 5 accent gradients, font scale, reduced motion, high contrast, compact mode, privacy controls, AI persona, JSON data export |
 
 ---
 
-## 🚀 Run it locally
+## 🚀 Quick start
 
-No dependencies, no build step:
+1. **Create the database** — free project at [supabase.com](https://supabase.com), then run [`supabase-setup.sql`](./supabase-setup.sql) in its SQL Editor.
+2. **Wire your keys** — copy the project URL + anon key into `js/config.js` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+3. Serve the folder:
 
 ```bash
-# option A — just open it
-open index.html            # macOS
-xdg-open index.html        # Linux
-
-# option B — tiny server (nicer URLs)
-python3 -m http.server 8080
-# → http://localhost:8080
+python3 -m http.server 8080     # → http://localhost:8080
 ```
 
-Then click **“Try instant demo”** on the login page for a pre-filled session, or create your own account (stored only in your browser).
+Until credentials are set, every page shows a friendly setup screen instead of a broken app. Full details in **[SETUP.md](./SETUP.md)**.
 
 ---
 
 ## 🌐 Deploy to GitHub Pages
 
 1. Push this folder to a GitHub repository.
-2. **Settings → Pages → Source:** `Deploy from a branch`.
-3. Choose branch `main` and folder `/ (root)` → Save.
-4. Your site is live at `https://<user>.github.io/<repo>/`.
+2. **Settings → Pages → Source:** `Deploy from a branch` → `main` / `/ (root)`.
+3. Live at `https://<user>.github.io/<repo>/`.
 
-All asset paths are relative, so it also works fine from a project sub-path.
+All asset paths are relative, so project sub-paths work fine.
 
 ---
 
@@ -65,9 +59,11 @@ All asset paths are relative, so it also works fine from a project sub-path.
 ```
 drift/
 ├── index.html            Landing page
-├── login.html            Login (+ instant demo)
+├── login.html            Login
 ├── signup.html           Registration
 ├── app.html              The application shell
+├── supabase-setup.sql    ★ Run once in Supabase SQL Editor
+├── SETUP.md              ★ Step-by-step backend setup
 ├── assets/
 │   └── favicon.svg       Logo / favicon
 ├── css/
@@ -80,21 +76,21 @@ drift/
 │   ├── app.css           Shell + every app view (incl. chat)
 │   └── responsive.css    Tablet/phone refinements
 └── js/
-    ├── config.js         ★ Deployment knobs (backend provider, AI proxy URL)
+    ├── config.js         ★ Deployment knobs (Supabase keys, AI key/model)
+    ├── supabase-client.js Shared client + setup guard overlay
     ├── utils.js          DOM helpers, formatters, avatars, icon library
-    ├── store.js          State + pub/sub bus + localStorage persistence
-    ├── demo-data.js      ⚠️ Mock users/rooms/messages (isolated demo layer)
-    ├── backend.js        ⚠️ Realtime SIMULATION + integration markers [BACKEND]
+    ├── store.js          DB-backed state + pub/sub event bus
+    ├── backend.js        Realtime subscriptions: messages, presence, typing
     ├── ui.js             Toasts, modals, menus, emoji picker, confetti
-    ├── auth.js           Demo auth (clearly marked; swap for Supabase/Firebase)
-    ├── ai.js             Zephyr engine + remote proxy layer
+    ├── auth.js           Supabase Auth wrapper
+    ├── ai.js             Zephyr: AIML/OpenAI-compatible engine + UI
     ├── notifications.js  Notification center + badges
     ├── rooms.js          Discovery, creation, membership, settings
     ├── chat.js           The room view engine (largest module)
     ├── activities.js     Reaction Race & Trivia Rush
-    ├── people.js         People directory, friends, profile cards
+    ├── people.js         People directory, follows, profile cards
     ├── finder.js         Command palette + search page
-    ├── moderation.js     Reports, mutes, blocks, mod dashboard
+    ├── moderation.js     Reports, mutes, blocks
     ├── settings.js       All settings sections
     ├── landing.js        Hero animation & reveals
     └── app.js            Router, shell wiring, onboarding tour
@@ -102,109 +98,27 @@ drift/
 
 ### Architecture notes
 
-- **One event bus.** Everything flows through `Store.on/emit` (`msg:new`, `presence`, `typing`, `xp`, …), so swapping local state for websockets doesn't touch UI code.
-- **Demo layers are quarantined.** `demo-data.js` (mock content) and the simulation loops in `backend.js` are isolated and clearly marked. Delete them once real endpoints exist.
-- **No secrets in the client. Ever.**
+- **One event bus.** Everything flows through `Store.on/emit` (`msg:new`, `presence`, `typing`, `xp`, …), so views never talk to the network directly.
+- **Security is enforced by row-level security** in `supabase-setup.sql`, not by hiding keys — the anon key is public by design.
+- **Honest failures.** If the AI backend errors (out of funds, bad model), Zephyr says so instead of falling back to canned replies.
 
 ---
 
-## 🔌 Connect Supabase or Firebase
+## 🤖 Zephyr AI configuration
 
-Every function that must be replaced carries a `// [BACKEND]` marker.
-
-| Capability | Demo implementation | Supabase | Firebase |
-|---|---|---|---|
-| Auth | `js/auth.js` (localStorage + SHA-256 demo hash) | `supabase.auth.signUp / signInWithPassword` | Firebase Auth SDK |
-| Messages | `Store.composeMessage` → array push | insert into `messages`; subscribe via `postgres_changes` | Firestore `onSnapshot` |
-| Presence | number wobble in `backend.js` | Realtime Presence channel | Realtime Database `onDisconnect()` |
-| Typing | simulated emits | broadcast payload on a channel | RTDB ephemeral writes |
-| Notifications | local `Notifs.push` | table inserts + Realtime subscription | FCM + Firestore |
-
-Recommended Supabase schema sketch:
-
-```sql
-create table profiles (
-  id uuid primary key references auth.users,
-  username text unique, display_name text, bio text,
-  status_msg text, avatar_emoji text, hue int, xp int default 0
-);
-create table rooms (
-  id uuid primary key default gen_random_uuid(),
-  name text, description text, icon text, category text,
-  visibility text default 'public', invite_code text,
-  owner_id uuid references profiles, created_at timestamptz default now()
-);
-create table room_members (
-  room_id uuid references rooms, user_id uuid references profiles,
-  role text default 'member', primary key (room_id, user_id)
-);
-create table messages (
-  id uuid primary key default gen_random_uuid(),
-  room_id uuid references rooms, user_id uuid references profiles,
-  text text, reply_to uuid, type text default 'text',
-  reactions jsonb default '{}', pinned bool default false,
-  created_at timestamptz default now()
-);
-create table notifications ( ... );
-```
-
-Wire-up steps (Supabase example):
-
-1. `npm create vite@latest` is **not** required — simply add `<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>` to `app.html`.
-2. In `config.js`: set `BACKEND_PROVIDER: 'supabase'`.
-3. Implement `Auth.signIn/signUp/signOut` with supabase calls.
-4. In `chat.js`, replace `Store.roomMessages(roomId)` reads with a cached channel subscription that feeds the same `'msg:new'` events — the UI needs zero changes.
-
----
-
-## 🤖 Connecting an AI API securely
-
-**Never put an OpenAI/Anthropic/etc. key in frontend JavaScript.** Anyone can read it.
-
-Instead, deploy a one-file proxy (Cloudflare Worker, Vercel Edge, Netlify Function…) that holds the key server-side:
+Works out of the box with [AIML API](https://aimlapi.com):
 
 ```js
-// Cloudflare Worker sketch — api.zephyr
-export default {
-  async fetch(req, env) {
-    const { messages, persona, context } = await req.json();
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`, // secret, server-side only
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: `You are Zephyr, the AI companion of the Drift chat platform. Persona: ${persona}. Room context JSON may be provided.` },
-          ...(context ? [{ role: 'system', content: 'Recent room context: ' + JSON.stringify(context) }] : []),
-          ...messages
-        ]
-      })
-    });
-    const data = await r.json();
-    return new Response(JSON.stringify({ text: data.choices?.[0]?.message?.content ?? '' }),
-      { headers: { 'content-type': 'application/json' } });
-  }
-};
+// js/config.js
+AI_ENABLED: true,
+AI_BASE_URL: 'https://api.aimlapi.com/v1',
+AI_MODEL: 'gpt-4o-mini',        // any model your plan supports
+AI_API_KEY: '…',
 ```
 
-Then in `js/config.js`:
-
-```js
-AI_PROXY_URL: 'https://your-worker.your-subdomain.workers.dev/'
-```
-
-The request contract is simple: `POST { messages:[{role,content}], persona, context? }` → `{ text }`. Until configured, Zephyr runs its offline keyword engine so the demo stays fully functional without credentials.
+⚠️ A key shipped to the browser is **public** — anyone can read it in DevTools and spend your credits. For production, move it into a Supabase Edge Function that forwards to your provider, then point `AI_PROXY_URL` at that function instead. The proxy contract is simple: `POST { messages:[{role,content}], persona } → { text }`.
 
 ---
-
-## 🧪 Demo vs production honesty
-
-- The **“1,284 people online”** counter, ambient bot chatter, typing indicators and notification events are **simulated** (`js/backend.js`) so static hosting feels alive.
-- Accounts are stored in `localStorage` under the `drift.v1.*` namespace with a demo-grade password hash. This is convenient, **not secure** — see the banner shown on the signup page.
-- Settings → Account → **Reset demo world** wipes and reseeds everything.
 
 ## 🗺️ Future improvements
 
@@ -218,4 +132,4 @@ The request contract is simple: `POST { messages:[{role,content}], persona, cont
 
 ---
 
-Built as a showcase of what vanilla web tech can do in 2026. Remix it, connect a backend, make it yours. ✦
+Built with vanilla web tech. Remix it, extend it, make it yours. ✦

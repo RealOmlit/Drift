@@ -272,7 +272,6 @@ window.Store = (() => {
     rules: r.rules || [],
     members: ['me', ...(members || []).map(m => m.user_id)],
     memberCount: (members ? members.length : 0) || 1,
-    momentum: 0,                              // legacy field — no longer fake-scored
     createdAt: Date.parse(r.created_at) || Date.now(),
     messages: []
   });

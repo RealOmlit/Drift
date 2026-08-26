@@ -347,14 +347,7 @@ kbd.kbd {
 .pc-level .lv-bar { height: 7px; border-radius: 99px; background: var(--glass-2); overflow: hidden; margin-top: .35rem; }
 .pc-level .lv-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .8s var(--ease); }
 
-/* ---------------- Progress / momentum ---------------- */
-.momentum { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 16px; }
-.momentum i { width: 3.5px; border-radius: 99px; background: var(--grad); opacity: .85; animation: eq 1.2s ease-in-out infinite; }
-.momentum i:nth-child(1) { height: 45%; animation-delay: 0s; }
-.momentum i:nth-child(2) { height: 80%; animation-delay: .15s; }
-.momentum i:nth-child(3) { height: 60%; animation-delay: .3s; }
-.momentum i:nth-child(4) { height: 95%; animation-delay: .45s; }
-
+/* ---------------- Progress ---------------- */
 .bar-track { height: 7px; border-radius: 99px; background: var(--glass-2); overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .7s var(--ease); }
 

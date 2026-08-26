@@ -199,6 +199,7 @@ window.SettingsPage = (() => {
     }
 
     if (section === 'ai') {
+      const live = AI.remoteConfigured?.();
       panel.innerHTML = `
         <h2>Zephyr AI</h2>
         <p class="desc">Drift's built-in companion.</p>
@@ -206,9 +207,9 @@ window.SettingsPage = (() => {
           <div class="row" style="gap:.7rem;">
             <div class="ai-av">✨</div>
             <div class="grow"><b>Zephyr status</b>
-              <p class="small muted">${window.DriftConfig.AI_PROXY_URL
-                ? 'Connected via secure proxy — full conversational powers.'
-                : '<b style="color:var(--warn)">Offline demo model.</b> Keyword-based responses run fully in your browser. Connect an API proxy for real intelligence.'}</p>
+              <p class="small muted">${live
+                ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : 'AIML API'}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
+                : '<b style="color:var(--warn)">Offline rule engine.</b> Add <span class="mono">AI_API_KEY</span> in <span class="mono">js/config.js</span> for real intelligence.'}</p>
             </div>
           </div>
         </div>
@@ -220,8 +221,8 @@ window.SettingsPage = (() => {
         </div>
         ${row('Share room context', 'Zephyr can read recent messages to summarize & explain.', toggle('aiCtx', s.aiContext))}
         <div class="card set-row" style="border-style:dashed;">
-          <div class="s-main"><b>Connect a real AI API 🔐</b>
-            <p>Set <span class="mono">AI_PROXY_URL</span> in <span class="mono">js/config.js</span> to YOUR backend proxy. Never ship API keys to the browser — see README → “Connecting an AI API securely”.</p></div>
+          <div class="s-main"><b>Going to production? 🔐</b>
+            <p>Move the key into a Supabase Edge Function and point <span class="mono">AI_PROXY_URL</span> at it — never ship API keys in front-end code.</p></div>
         </div>`;
       panel.querySelector('#aiPersona').addEventListener('click', e => {
         const b = e.target.closest('[data-p]'); if (!b) return;

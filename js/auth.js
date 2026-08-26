@@ -3,10 +3,9 @@
    Sessions, emails and passwords are handled server-side by Supabase;
    profile rows live in public.profiles (created by an SQL trigger on signup).
 
-   Public API (unchanged shape vs the old demo build):
-     current(), signUp(), signIn(), signOut(), restore(),
-     requireAuth(), redirectIfAuthed(),
-     changePassword(), changeUsername(), validateUsername(), passwordStrength()
+   Public API: current(), signUp(), signIn(), signOut(), restore(),
+   requireAuth(), redirectIfAuthed(), changePassword(), changeUsername(),
+   changeEmail(), validateUsername(), passwordStrength()
    ========================================================================== */
 
 window.Auth = (() => {
