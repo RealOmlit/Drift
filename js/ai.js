@@ -311,21 +311,29 @@ window.AI = (() => {
   /** Main entry: returns a Promise<string>. Remote first; local only when unconfigured. */
   async function respond(input, ctx = {}) {
     if (remoteConfigured()) {
-      try {
-        let text = null;
-        if (CFG.AI_PROXY_URL) {
-          text = await remoteComplete([{ role: 'user', content: input }], ctx.roomContext);
-        } else {
-          text = await chatComplete(buildMessages(input, ctx));
+      let lastErr = null;
+      // Free community endpoints occasionally throttle — one quiet retry.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          let text = null;
+          if (CFG.AI_PROXY_URL) {
+            text = await remoteComplete([{ role: 'user', content: input }], ctx.roomContext);
+          } else {
+            text = await chatComplete(buildMessages(input, ctx));
+          }
+          if (text) return persona(text);
+          break;
+        } catch (e) {
+          lastErr = e;
+          if (attempt === 0) await new Promise(r => setTimeout(r, 1300));
         }
-        if (text) return persona(text);
-      } catch (e) {
-        // Honest failure — no fake fallbacks when an API is configured.
-        const hint = /funds|insufficient|billing/i.test(e.message)
-          ? ' The AIML account needs a top-up: aimlapi.com/app/billing'
-          : '';
-        return `⚠️ **Zephyr can't reach its AI backend right now.**\n${e.message}.${hint}`;
       }
+      // Honest failure — no fake fallbacks when an API is configured.
+      const msg = lastErr?.message || 'Unknown error';
+      const hint = /funds|insufficient|billing|Payment Required|402/i.test(msg)
+        ? ' The AI endpoint is rate-limiting or out of credits — try again in a minute.'
+        : '';
+      return `⚠️ **Zephyr can't reach its AI backend right now.**\n${msg}.${hint}`;
     }
     await new Promise(r => setTimeout(r, U.randInt(650, 1400))); // human-ish latency
     return persona(localRespond(input, ctx));
