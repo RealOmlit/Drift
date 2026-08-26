@@ -49,6 +49,15 @@
 .remember-row { display: flex; justify-content: space-between; align-items: center; margin: .2rem 0 1rem; font-size: .87rem; }
 .remember-row a { color: var(--txt2); } .remember-row a:hover { color: var(--txt1); }
 
+.linklike {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: .87rem; color: var(--txt2);
+}
+.linklike:hover { color: var(--txt1); text-decoration: underline; }
+
+.reset-row { display: flex; gap: .55rem; align-items: center; margin-bottom: 1rem; animation: banner-in .22s ease; }
+.reset-row .input { flex: 1; min-width: 0; }
+
 .pw-toggle { position: absolute; right: .55rem; color: var(--txt3); padding: .35rem; border-radius: 8px; }
 .pw-toggle:hover { color: var(--txt1); }
 

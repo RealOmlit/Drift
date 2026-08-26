@@ -12,11 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2.0.3">
-  <link rel="stylesheet" href="./css/base.css?v=2.0.3">
-  <link rel="stylesheet" href="./css/components.css?v=2.0.3">
-  <link rel="stylesheet" href="./css/animations.css?v=2.0.3">
-  <link rel="stylesheet" href="./css/auth.css?v=2.0.3">
+  <link rel="stylesheet" href="./css/tokens.css?v=2.0.4">
+  <link rel="stylesheet" href="./css/base.css?v=2.0.4">
+  <link rel="stylesheet" href="./css/components.css?v=2.0.4">
+  <link rel="stylesheet" href="./css/animations.css?v=2.0.4">
+  <link rel="stylesheet" href="./css/auth.css?v=2.0.4">
 </head>
 <body class="auth-body">
   <div class="aurora"></div>
@@ -68,8 +68,13 @@
         </div>
 
         <div class="remember-row">
-          <a href="#" onclick="return false;">Forgot password?</a>
+          <button type="button" class="linklike" id="forgotBtn">Forgot password?</button>
           <span class="small faint">Sessions stay signed in on this device</span>
+        </div>
+
+        <div class="reset-row" id="resetRow" hidden>
+          <input class="input" id="resetEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          <button type="button" class="btn btn-glass btn-sm" id="resetSend">Send link</button>
         </div>
 
         <button class="btn btn-primary btn-block btn-lg" id="loginBtn" type="submit">Dive back in →</button>
@@ -80,12 +85,12 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/config.js?v=2.0.3"></script>
-  <script src="./js/supabase-client.js?v=2.0.3"></script>
-  <script src="./js/utils.js?v=2.0.3"></script>
-  <script src="./js/store.js?v=2.0.3"></script>
-  <script src="./js/ui.js?v=2.0.3"></script>
-  <script src="./js/auth.js?v=2.0.3"></script>
+  <script src="./js/config.js?v=2.0.4"></script>
+  <script src="./js/supabase-client.js?v=2.0.4"></script>
+  <script src="./js/utils.js?v=2.0.4"></script>
+  <script src="./js/store.js?v=2.0.4"></script>
+  <script src="./js/ui.js?v=2.0.4"></script>
+  <script src="./js/auth.js?v=2.0.4"></script>
   <script>
     // Auth pages bootstrap: restore session or show login form.
     (() => {
@@ -153,6 +158,25 @@
         inp.type = inp.type === 'password' ? 'text' : 'password';
         b.style.color = inp.type === 'text' ? 'var(--ac2)' : '';
       }));
+
+      // Forgot password — inline reset row
+      const resetRow = document.getElementById('resetRow');
+      document.getElementById('forgotBtn').addEventListener('click', () => {
+        resetRow.hidden = !resetRow.hidden;
+        if (!resetRow.hidden) document.getElementById('resetEmail').focus();
+      });
+      document.getElementById('resetSend').addEventListener('click', async e => {
+        const btn = e.currentTarget;
+        btn.disabled = true; btn.textContent = 'Sending…';
+        try {
+          await Auth.requestPasswordReset(document.getElementById('resetEmail').value);
+          btn.textContent = 'Sent ✓';
+          UI.toast({ title: 'Reset link sent', body: 'Open the email and follow the link — then set a new password in Settings → Account.', type: 'ok', duration: 9000 });
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'Send link';
+          UI.toast({ title: 'Couldn\u2019t send', body: err.message, type: 'bad', icon: 'alert' });
+        }
+      });
 
       // Real online counter (anon presence subscription)
       if (window.SB?.configured()) {

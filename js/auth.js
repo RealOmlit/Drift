@@ -141,6 +141,19 @@ window.Auth = (() => {
     return true;
   }
 
+  /** Send a password-reset email. The link signs the user in; they can set
+      a new password afterwards from Settings → Account. */
+  async function requestPasswordReset(email) {
+    if (!SB.configured()) throw new Error('This site isn\u2019t connected to its chat database yet.');
+    email = (email || '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email)) throw new Error('Enter a valid email address.');
+    const { error } = await SB.client.auth.resetPasswordForEmail(email, {
+      redirectTo: emailRedirectTo()
+    });
+    if (error) throw new Error(error.message || 'Couldn\u2019t send the email.');
+    return true;
+  }
+
   /* ------------------------------- log out ------------------------------- */
   async function signOut() {
     try { await SB.client.auth.signOut(); } catch (e) {}
@@ -202,6 +215,6 @@ window.Auth = (() => {
   return {
     current, signUp, signIn, signOut, restore,
     requireAuth, redirectIfAuthed, changePassword, changeUsername, changeEmail,
-    validateUsername, passwordStrength, resendConfirmation
+    validateUsername, passwordStrength, resendConfirmation, requestPasswordReset
   };
 })();
