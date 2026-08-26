@@ -42,8 +42,9 @@
 .anim-in-3 { animation-delay: .19s; } .anim-in-4 { animation-delay: .26s; }
 .anim-in-5 { animation-delay: .33s; } .anim-in-6 { animation-delay: .4s; }
 
-.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
-.reveal.shown { opacity: 1; transform: none; }
+.reveal { opacity: 0; transform: translateY(26px); filter: blur(10px); transition: opacity .75s var(--ease), transform .75s var(--ease), filter .75s var(--ease); }
+.reveal.shown { opacity: 1; transform: none; filter: blur(0); }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 .msg-enter { animation: fade-up .3s var(--ease); }
 .flash-target { animation: flash-bg 1.6s var(--ease); }

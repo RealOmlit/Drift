@@ -224,3 +224,29 @@
   .scroll-cue { display: none; }
   .trust-row { gap: .35rem; }
 }
+
+/* ---------- v2.1.2 · premium compression + motion ---------- */
+.land-body { animation: page-in .55s ease both; }
+.section { padding: 3.4rem 0; }
+.section-head { margin: 0 auto 2.1rem; }
+.showcase { gap: 2.6rem; padding: 1.5rem 0; }
+.cta-panel { padding: 3rem 1.6rem !important; }
+
+/* Masked line-by-line title reveal */
+.hero h1 { letter-spacing: -.035em; max-width: 15ch; margin-inline: auto; font-size: clamp(2.6rem, 6.2vw, 4.7rem); }
+.hero h1 .line { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; margin-bottom: -.08em; }
+.hero h1 .line-in { display: inline-block; transform: translateY(112%); animation: line-up .95s cubic-bezier(.22, 1, .36, 1) forwards; }
+.hero h1 .line:nth-of-type(1) .line-in { animation-delay: .1s; }
+.hero h1 .line:nth-of-type(2) .line-in { animation-delay: .24s; }
+@keyframes line-up { to { transform: translateY(0); } }
+
+/* Dual counter-scrolling room rows */
+.marquee { animation-duration: 26s; }
+.marquee.rev { animation-direction: reverse; }
+.strip .marquee + .marquee { margin-top: .65rem; }
+.strip-label { margin-bottom: .9rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .land-body, .hero h1 .line-in { animation: none; }
+  .hero h1 .line-in { transform: none; }
+}

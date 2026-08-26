@@ -19,6 +19,15 @@ window.Landing = (() => {
     // Version chip(s)
     U.$$('[data-app-version]').forEach(el => { el.textContent = 'v' + window.DriftConfig.VERSION; });
 
+    // Second, counter-scrolling row of rooms — clone keeps them in sync
+    const mq = U.$('.strip .marquee');
+    if (mq && !U.$('.marquee.rev')) {
+      const rev = mq.cloneNode(true);
+      rev.classList.add('rev');
+      rev.setAttribute('aria-hidden', 'true');
+      mq.parentElement.appendChild(rev);
+    }
+
     // Nav scroll state
     const nav = U.$('#landNav');
     const onScroll = () => nav.classList.toggle('scrolled', scrollY > 24);
