@@ -278,6 +278,10 @@
 .m-author { font-weight:700; font-size:.9rem; cursor:pointer; }
 .m-author:hover { text-decoration:underline; }
 .m-time { font-size:.71rem; color:var(--txt3); }
+.m-timetag {
+  position:absolute; top:.3rem; right:.45rem;
+  font-size:.67rem; color:var(--txt3); opacity:.75; pointer-events:none;
+}
 .m-text { font-size:.93rem; word-break:break-word; white-space:pre-wrap; }
 .m-text a { color:var(--ac2); text-decoration:underline; text-decoration-color: color-mix(in srgb, var(--ac2) 40%, transparent); text-underline-offset:2px; }
 .m-text .mention { color:var(--ac2); background:rgba(34,211,238,.1); padding:.05em .3em; border-radius:6px; font-weight:600; cursor:pointer; }
@@ -302,6 +306,12 @@
 .m-actions button:hover { background:var(--glass-2); color:var(--txt1); }
 .m-actions button.react-on { color:var(--ac2); }
 .m-actions .ma-pin.active { color:var(--warn); }
+.msg.pending .m-text { opacity:.5; }
+.msg.pending .m-side::after {
+  content:''; display:inline-block; width:7px; height:7px; margin-top:4px;
+  border-radius:50%; background:var(--txt3); opacity:.6; animation:pulse 1s ease infinite;
+}
+@keyframes pulse { 50% { opacity:.15; } }
 
 /* Reactions row */
 .reactions { display:flex; gap:.3rem; flex-wrap:wrap; margin-top:.35rem; }

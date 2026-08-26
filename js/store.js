@@ -391,14 +391,45 @@ window.Store = (() => {
     if (extra.poll) payload.poll = extra.poll;
     if (extra.meta) payload.meta = extra.meta;
 
-    const rows = await SB.unwrap(
-      SB.client.from('messages').insert(payload).select('*')
-    );
-    const msg = msgRowToMsg(rows[0]);
-    room.messages.push(msg);
-    trimRoom(room);
-    emit('msg:new', msg);
-    return msg;
+    // Optimistic echo — my own text messages appear instantly and get swapped
+    // for the real database row as soon as it lands.
+    let temp = null;
+    if (payload.type === 'text') {
+      temp = {
+        id: U.uid('tmp'), roomId, userId: 'me',
+        text: payload.content, ts: Date.now(),
+        edited: false, deleted: false, pinned: false,
+        type: 'text', replyTo: extra.replyTo || null,
+        poll: null, meta: null, reactions: {}, seen: false, pending: true
+      };
+      room.messages.push(temp);
+      emit('msg:new', temp);
+    }
+
+    try {
+      const rows = await SB.unwrap(
+        SB.client.from('messages').insert(payload).select('*')
+      );
+      const msg = msgRowToMsg(rows[0]);
+      const ti = temp ? room.messages.findIndex(x => x.id === temp.id) : -1;
+      if (room.messages.some(x => x.id === msg.id)) {
+        // Realtime already delivered the real row — just drop the placeholder.
+        if (ti >= 0) { room.messages.splice(ti, 1); emit('msg:remove', temp); }
+        return msg;
+      }
+      if (ti >= 0) room.messages.splice(ti, 1, msg);
+      else room.messages.push(msg);
+      trimRoom(room);
+      emit('msg:replace', { oldId: temp ? temp.id : null, msg });
+      return msg;
+    } catch (e) {
+      if (temp) {
+        const ti = room.messages.findIndex(x => x.id === temp.id);
+        if (ti >= 0) room.messages.splice(ti, 1);
+        emit('msg:remove', temp);
+      }
+      throw e;
+    }
   }
 
   async function updateMessage(roomId, msgId, patch) {

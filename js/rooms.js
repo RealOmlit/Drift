@@ -299,8 +299,9 @@ window.Rooms = (() => {
       m.card.querySelectorAll('#crVis button').forEach(x => x.classList.toggle('on', x === b));
       preview();
     }));
-    m.card.querySelector('#crIcon').addEventListener('click', e => {
-      UI.emojiPicker(e.currentTarget, em => { form.icon = em; e.currentTarget.textContent = em; preview(); });
+    const crIconBtn = m.card.querySelector('#crIcon');
+    crIconBtn.addEventListener('click', () => {
+      UI.emojiPicker(crIconBtn, em => { form.icon = em; crIconBtn.textContent = em; preview(); });
     });
     m.card.querySelector('#crAI')?.addEventListener('click', () => {
       const btn = m.card.querySelector('#crAI');
@@ -402,8 +403,9 @@ window.Rooms = (() => {
                     : `<button class="btn btn-glass" data-close2>Close</button>`
     });
 
-    m.card.querySelector('#rsIcon').addEventListener('click', e => {
-      UI.emojiPicker(e.currentTarget, em => e.currentTarget.textContent = em);
+    const rsIconBtn = m.card.querySelector('#rsIcon');
+    rsIconBtn.addEventListener('click', () => {
+      UI.emojiPicker(rsIconBtn, em => { rsIconBtn.textContent = em; });
     });
     m.card.querySelector('#rsCode')?.addEventListener('click', async e => {
       await UI.copyText(room.privateCode);

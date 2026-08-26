@@ -20,7 +20,18 @@ window.Backend = (() => {
     if (!row) return;
     const room = Store.getRoom(row.room_id);
     if (!room) return;                       // room not cached → not joined/public slice
-    if (room.messages.some(m => m.id === row.id)) return;  // our own insert already landed
+
+    // My own message: the optimistic placeholder may still be on screen.
+    if (row.user_id === Store.me()?.id) {
+      if (room.messages.some(m => m.id === row.id)) return;  // HTTP path already landed
+      const ti = room.messages.findIndex(m => m.pending && m.userId === 'me' && m.text === (row.content || ''));
+      if (ti < 0) return;
+      const oldId = room.messages[ti].id;
+      room.messages.splice(ti, 1, rowToMsgShim(row));
+      Store.emit('msg:replace', { oldId, msg: room.messages[ti] });
+      return;
+    }
+
     // Reactions don't exist at INSERT time — none to fetch.
     room.messages.push(rowToMsgShim(row));
     trimAndEmit(row.room_id, row.id);
@@ -194,5 +205,13 @@ window.Backend = (() => {
 
   const onlineUserIds = () => [...online.keys()];
 
-  return { start, stop, sendTyping, onlineUserIds };
+  /** Presence check that treats the local 'me' sentinel and my real uuid as
+      one and the same person — prevents double-counting in member lists. */
+  function isOnline(id) {
+    if (!id) return false;
+    if (id === 'me') id = Store.me()?.id;
+    return !!id && online.has(id);
+  }
+
+  return { start, stop, sendTyping, onlineUserIds, isOnline };
 })();

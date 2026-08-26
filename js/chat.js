@@ -73,6 +73,8 @@ window.Chat = (() => {
     unsubs.push(
       Store.on('msg:new', onMsgNew),
       Store.on('msg:update', onMsgUpdate),
+      Store.on('msg:replace', onMsgReplace),
+      Store.on('msg:remove', onMsgRemove),
       Store.on('typing', onTyping),
       Store.on('typing-stop', onTypingStop),
       Store.on('room:update', onRoomUpdate),
@@ -414,7 +416,7 @@ window.Chat = (() => {
     const preview = Store.state.settings.linkPreviews ? linkPreviewHTML(m.text) : '';
 
     return `
-      <div class="msg ${ctx.grouped ? 'grouped' : 'gap'} ${mentionedMe && !mine ? 'mentions-me' : ''} ${muted ? 'dimmed-muted' : ''}" data-mid="${m.id}">
+      <div class="msg ${ctx.grouped ? 'grouped' : 'gap'} ${mentionedMe && !mine ? 'mentions-me' : ''} ${muted ? 'dimmed-muted' : ''} ${m.pending ? 'pending' : ''}" data-mid="${m.id}">
         <div class="m-side">${ctx.grouped ? '' : (blocked ? U.avatar({ username: 'blocked', hue: 0 }, { size: 34 }) : (u ? U.avatar(u, { size: 34 }) : ''))}</div>
         <div class="m-body">
           ${quote}
@@ -423,6 +425,7 @@ window.Chat = (() => {
           ${preview}
           ${reactionsHTML(m)}
         </div>
+        ${ctx.grouped ? `<span class="m-timetag" title="${U.esc(new Date(m.ts).toLocaleString())}">${U.fmtTime(m.ts)}</span>` : ''}
         ${actionsHTML(m, mine, u)}
       </div>`;
   }
@@ -550,6 +553,23 @@ window.Chat = (() => {
     if (msg.roomId !== roomId) return;
     refreshOne(msg.id);
     renderPinnedBar();
+  }
+
+  /** Swap an optimistic placeholder for the confirmed database row. */
+  function onMsgReplace({ oldId, msg }) {
+    if (msg.roomId !== roomId || !U.$('#msgList')) return;
+    const node = oldId ? U.$(`#msgList [data-mid="${oldId}"]`) : null;
+    if (!node) {
+      if (!U.$(`#msgList [data-mid="${msg.id}"]`)) onMsgNew(msg);
+      return;
+    }
+    node.outerHTML = messageHTML(msg, { grouped: node.classList.contains('grouped') });
+    if (atBottom) scrollToBottom(true);
+  }
+
+  function onMsgRemove(msg) {
+    if (msg.roomId !== roomId) return;
+    U.$(`#msgList [data-mid="${msg.id}"]`)?.remove();
   }
 
   function refreshOne(msgId) {
@@ -788,11 +808,18 @@ window.Chat = (() => {
 
   function updateOnlineSub() {
     const el = U.$('[data-online-sub]'); if (!el) return;
-    const r = room();
-    const onlineIds = Backend.onlineUserIds();
-    const online = new Set([...onlineIds, me()?.id]).size > 0
-      ? r.members.filter(id => id === 'me' || onlineIds.includes(id)).length : 1;
-    el.textContent = `${Math.max(online, 1)} online here`;
+    el.textContent = `${onlineMemberCount(room())} online here`;
+  }
+
+  /** Unique people online in this room — 'me' and my real uuid collapse into
+      one entry so nobody is ever counted twice. */
+  function onlineMemberCount(r) {
+    const s = new Set();
+    (r?.members || []).forEach(id => {
+      const uid = id === 'me' ? me()?.id : id;
+      if (uid && Backend.isOnline(id)) s.add(uid);
+    });
+    return Math.max(s.size, 1);
   }
 
   function onRoomUpdate(updated) { if (updated.id === roomId) updateHeadMeta(); }
@@ -822,13 +849,19 @@ window.Chat = (() => {
         <div class="rr-section-title">Room activity</div>
         <div class="card" style="padding:.8rem .9rem;">
           <div class="spread"><span class="small muted">Members online here</span>
-            <b>${r.members.filter(id => id === 'me' || Backend.onlineUserIds().includes(id)).length}</b></div>
+            <b>${onlineMemberCount(r)}</b></div>
           <div class="small faint" style="margin-top:.45rem;">Presence is live — who you see is who's actually here.</div>
         </div>`;
     }
     if (tab === 'members') {
       const roleOrder = uid => uid === r.ownerId ? 0 : (r.mods || []).includes(uid) ? 1 : 2;
-      const members = r.members.map(Store.getUser).filter(Boolean).sort((a, b) => roleOrder(a.id) - roleOrder(b.id));
+      // 'me' and my real uuid resolve to the same person — dedupe.
+      const seen = new Set();
+      const members = r.members
+        .map(id => id === 'me' ? me() : Store.getUser(id))
+        .filter(Boolean)
+        .filter(u => !seen.has(u.id) && seen.add(u.id))
+        .sort((a, b) => roleOrder(a.id) - roleOrder(b.id));
       body.innerHTML = `
         <input class="input" placeholder="Find a member…" style="margin-bottom:.7rem;" id="memberFilter">
         <div id="memberRows">${members.map(u => memberRowHTML(u,
@@ -871,7 +904,7 @@ window.Chat = (() => {
           ${[['Messages', Store.roomMessages(roomId).length],
              ['Members', U.fmtCount(r.memberCount)],
              ['Pins', Store.roomMessages(roomId).filter(m => m.pinned).length],
-             ['Online', r.members.filter(id => id === 'me' || Backend.onlineUserIds().includes(id)).length]].map(([k, v]) => `<div class="pc-stat"><b>${v}</b><span>${k}</span></div>`).join('')}
+             ['Online', onlineMemberCount(r)]].map(([k, v]) => `<div class="pc-stat"><b>${v}</b><span>${k}</span></div>`).join('')}
         </div>`;
       body.querySelectorAll('[data-zq]').forEach(b => b.addEventListener('click', () => AI.openDrawer(roomId, b.dataset.zq)));
       body.querySelector('#tRace').addEventListener('click', () => Activities.launch('race', roomId));
