@@ -37,9 +37,19 @@ window.Chat = (() => {
     s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
     return s.replace(/\n/g, '<br>');
   }
+  /* ------------------------- safe mode (censoring) ------------------------ */
+  const SWEAR_RE = new RegExp(
+    '\\b(f+u+c+k+|f+u+k+|sh[i1*]+t+|b[i1*]+tch(es)?|a+s*s+h[o0]*l*e+s?|ba[s5]*t[a4]rd?s?|' +
+    'c[u*]n+t+s?|d[i1*]c*k+(head|s)?|wh[o0]r+e?s?|sl[u*]t+s?|p[u*]ss+y|c[o0]c*k+s?(sucker)?)\\b', 'gi');
+  function censor(t) {
+    return Store.state.settings.safeMode
+      ? String(t).replace(SWEAR_RE, m => '█'.repeat(Math.min(m.length, 7)))
+      : t;
+  }
+
   function fmtText(raw) {
     // ``` fenced code blocks survive as <pre>
-    return String(raw).split(/```(?:[a-z]*\n)?/i)
+    return censor(String(raw)).split(/```(?:[a-z]*\n)?/i)
       .map((seg, i) => i % 2 ? `<pre style="background:var(--bg0);border:1px solid var(--brd-1);padding:.7rem .85rem;border-radius:11px;overflow-x:auto;font-family:var(--mono);font-size:.8rem;margin:.4rem 0;">${U.esc(seg.trim())}</pre>` : fmtInline(seg))
       .join('');
   }
@@ -135,6 +145,8 @@ window.Chat = (() => {
         <div class="composer-zone">
           <div id="replyChipWrap"></div>
           <div class="composer" id="composerBox">
+            <button class="c-btn" id="btnImage" data-tip="Send image">${U.icon('image', 19)}</button>
+            <input type="file" id="imgFile" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
             <button class="c-btn" id="btnEmoji" data-tip="Emoji">${U.icon('smile', 20)}</button>
             <textarea id="msgInput" rows="1" placeholder="Message ${U.esc(r.name)}…" autocomplete="off"></textarea>
             <button class="c-btn" id="btnPoll" data-tip="Instant poll">${U.icon('chart', 19)}</button>
@@ -209,6 +221,12 @@ window.Chat = (() => {
       if (e.key === 'Escape' && replyTo) setReply(null);
     });
     $('#btnSend').addEventListener('click', sendCurrent);
+    $('#btnImage').addEventListener('click', () => $('#imgFile').click());
+    $('#imgFile').addEventListener('change', e => {
+      const f = e.target.files?.[0];
+      e.target.value = '';
+      if (f) sendChatImage(f);
+    });
     $('#btnEmoji').addEventListener('click', e => {
       UI.emojiPicker(e.currentTarget, em => insertAtCaret(ta, em));
     });
@@ -399,6 +417,22 @@ window.Chat = (() => {
 
     if (m.type === 'poll') return pollHTML(m, ctx, u, mine);
 
+    // Shared image
+    if (m.type === 'image') {
+      return `
+      <div class="msg gap ${m.pending ? 'pending' : ''}" data-mid="${m.id}">
+        <div class="m-side">${u ? U.avatar(u, { size: 34 }) : ''}</div>
+        <div class="m-body">
+          ${headHTML(m, u, mine)}
+          ${m.meta?.url
+            ? `<img class="msg-img" src="${U.esc(m.meta.url)}" alt="Shared photo" loading="lazy" data-imgview>`
+            : '<div class="m-text faint">📷 photo</div>'}
+          ${reactionsHTML(m)}
+        </div>
+        ${actionsHTML(m, mine, u)}
+      </div>`;
+    }
+
     // Regular text message
     const muted = Mod.isMuted(m.userId);
     const blocked = Mod.isBlocked(m.userId);
@@ -555,6 +589,44 @@ window.Chat = (() => {
     renderPinnedBar();
   }
 
+  /** Verify → compress → upload → post an image message. */
+  async function sendChatImage(file) {
+    if (!SB.configured()) return;
+    if (file.size > 8 * 1024 * 1024) {
+      UI.toast({ title: 'Image too large', body: 'Keep it under 8 MB.', type: 'warn' });
+      return;
+    }
+    UI.toast({ title: 'Checking image…', body: 'Running it through safety verification.', type: 'info', duration: 2500 });
+    const verdict = await ImageGuard.check(file);
+    if (!verdict.ok) {
+      UI.toast({ title: 'Image blocked 🛡️', body: 'That image didn\u2019t pass the safety check and was never uploaded.', type: 'bad', icon: 'shield', duration: 6000 });
+      return;
+    }
+    try {
+      const blob = await ImageGuard.compress(file, 1280, 0.82);
+      const path = `${Store.me().id}/${Date.now()}.jpg`;
+      const up = await SB.client.storage.from('chat-images').upload(path, blob, { contentType: 'image/jpeg' });
+      if (up.error) throw new Error(up.error.message);
+      const url = SB.client.storage.from('chat-images').getPublicUrl(path).data.publicUrl;
+      await Store.composeMessage(roomId, 'me', '', { type: 'image', meta: { url } });
+    } catch (err) {
+      UI.toast({ title: 'Couldn\u2019t send image', body: /bucket|not found|policy/i.test(err.message)
+        ? 'Image storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).'
+        : err.message, type: 'bad', icon: 'alert', duration: 7000 });
+    }
+  }
+
+  function openImageViewer(src) {
+    const m = UI.openModal({
+      wide: true, slim: false,
+      title: `${U.icon('image', 16)} Photo`,
+      body: `<img class="lightbox-img" src="${U.esc(src)}" alt="Photo">`,
+      footer: `<a class="btn btn-glass btn-sm" href="${U.esc(src)}" target="_blank" rel="noopener noreferrer">Open original</a>
+               <button class="btn btn-primary btn-sm" data-close2>Close</button>`
+    });
+    m.card.querySelector('[data-close2]').addEventListener('click', m.close);
+  }
+
   /** Swap an optimistic placeholder for the confirmed database row. */
   function onMsgReplace({ oldId, msg }) {
     if (msg.roomId !== roomId || !U.$('#msgList')) return;
@@ -588,6 +660,9 @@ window.Chat = (() => {
   function onListClick(e) {
     const jump = e.target.closest('[data-jump]');
     if (jump) { jumpTo(jump.dataset.jump); return; }
+
+    const img = e.target.closest('[data-imgview]');
+    if (img) { openImageViewer(img.src); return; }
 
     const card = e.target.closest('[data-user-card], [data-mention]');
     if (card) {

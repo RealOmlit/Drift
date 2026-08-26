@@ -510,3 +510,64 @@ body.focus-mode .shell .rail:hover { opacity:1; }
 /* Gradient-ringed avatar on the home greeting */
 .me-orb { display: inline-grid; place-items: center; padding: 3px; border-radius: 50%; background: var(--grad); box-shadow: 0 6px 18px -6px var(--ring); flex: none; }
 .me-orb .avatar, .me-orb span[class*='av'] { border: 2px solid var(--bg1); }
+
+/* ================= v2.2.0 · images, suggestions, right-panel polish ================= */
+/* Shared photos in chat */
+.msg-img {
+  display: block; max-width: min(340px, 100%); margin-top: .15rem;
+  border-radius: 14px; border: 1px solid var(--brd-1);
+  cursor: zoom-in; transition: transform .18s var(--ease), box-shadow .18s;
+}
+.msg-img:hover { transform: scale(1.012); box-shadow: var(--sh2); }
+.lightbox-img {
+  display: block; margin: auto; max-width: min(88vw, 940px); max-height: 80vh;
+  border-radius: 16px; box-shadow: var(--sh3);
+}
+.av-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+
+/* Suggested friends */
+.suggest-strip { display: flex; gap: .65rem; overflow-x: auto; padding: .15rem .15rem .55rem; scrollbar-width: none; }
+.suggest-strip::-webkit-scrollbar { display: none; }
+.suggest-card {
+  min-width: 158px; padding: .9rem .8rem .75rem; display: flex; flex-direction: column;
+  align-items: center; gap: .3rem; text-align: center; border-radius: 16px;
+}
+.suggest-card b { font-size: .88rem; margin-top: .25rem; }
+.suggest-card .btn { margin-top: .4rem; width: 100%; justify-content: center; }
+
+/* Room right panel — plush segmented tabs & softer body */
+.room-right {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg1) 88%, transparent), transparent 240px);
+}
+.rr-tabs {
+  display: flex; gap: .25rem; margin: .65rem .7rem .35rem;
+  padding: .32rem; background: var(--glass); border: 1px solid var(--brd-1);
+  border-radius: 13px;
+}
+.rr-tab {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .34rem;
+  padding: .42rem .3rem; border: none; background: none; cursor: pointer;
+  font-size: .76rem; font-weight: 700; color: var(--txt2);
+  border-radius: 10px; transition: all .18s var(--ease);
+}
+.rr-tab:hover { color: var(--txt1); background: var(--glass-2); }
+.rr-tab.on {
+  background: var(--grad); color: #fff;
+  box-shadow: 0 6px 16px -6px var(--ring);
+}
+.rr-section-title {
+  font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--txt3); font-weight: 800; margin: 1.25rem .2rem .5rem;
+}
+.member-row {
+  width: 100%; display: flex; align-items: center; gap: .65rem;
+  padding: .45rem .55rem; border-radius: 12px; border: none;
+  background: none; cursor: pointer; text-align: left;
+  transition: background .16s, translate .16s;
+}
+.member-row:hover { background: var(--glass); translate: 2px 0; }
+.rules-box {
+  margin: 0; padding: .85rem 1rem .85rem 2rem; color: var(--txt2);
+  font-size: .86rem; line-height: 1.65;
+  background: var(--glass); border: 1px solid var(--brd-1); border-radius: 13px;
+}

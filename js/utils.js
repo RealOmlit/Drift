@@ -101,9 +101,11 @@ window.U = (() => {
    */
   function avatar(u, opts = {}) {
     const size = opts.size || 38;
-    const inner = u.avatarEmoji
-      ? `<span class="av-emoji">${esc(u.avatarEmoji)}</span>`
-      : esc(initials(u.displayName || u.username));
+    const inner = u.avatarUrl
+      ? `<img class="av-img" src="${esc(u.avatarUrl)}" alt="" loading="lazy">`
+      : u.avatarEmoji
+        ? `<span class="av-emoji">${esc(u.avatarEmoji)}</span>`
+        : esc(initials(u.displayName || u.username));
     const pres = (opts.presence && u.status)
       ? `<span class="presence ${esc(u.status)}"></span>` : '';
     const style = `width:${size}px;height:${size}px;font-size:${Math.max(9, Math.round(size * .36))}px;--av-bg:${avatarBg(u)}`
@@ -159,6 +161,7 @@ window.U = (() => {
     heart: '<path d="M12 20.2S4.2 15.4 4.2 9.9A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.8 2.6C19.8 15.4 12 20.2 12 20.2Z"/>',
     message: '<path d="M12 3.6a8.4 8.4 0 0 1 0 16.8c-1.4 0-2.7-.3-3.8-.9l-4.6 1 1-4.4A8.4 8.4 0 0 1 12 3.6Z"/>',
     star: '<path d="m12 3.6 2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.9Z"/>',
+    image: '<rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.6"/><circle cx="9" cy="10" r="1.7"/><path d="m3.8 17.2 4.6-4.4c.6-.6 1.6-.6 2.2 0l2.2 2.1 2.4-2.3c.6-.6 1.6-.6 2.2 0l2.8 2.7"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M5.2 18.8l1.7-1.7M17.1 6.9l1.7-1.7"/>',
     moon: '<path d="M20 14.6A8.6 8.6 0 0 1 9.4 4a8.6 8.6 0 1 0 10.6 10.6Z"/>',
     monitor: '<rect x="3" y="4.4" width="18" height="12.2" rx="2.2"/><path d="M9 20.6h6M12 16.6v4"/>',

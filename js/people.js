@@ -32,6 +32,8 @@ window.People = (() => {
           </div>
         </div>
 
+        <div id="ppSuggest"></div>
+
         <div id="ppGrid"><div class="view-inner">${UI.skeletonCards(6)}</div></div>
       </div>`;
 
@@ -43,11 +45,56 @@ window.People = (() => {
       drawGrid();
     });
 
-    loadDirectory().then(drawGrid).catch(err =>
+    loadDirectory().then(() => { drawSuggestions(); drawGrid(); }).catch(err =>
       U.$('#ppGrid').innerHTML = emptyHTML('Couldn\u2019t load people', err.message));
 
-    Store.on('presence', () => { if (U.$('#ppGrid')) drawGrid(); });
+    Store.on('presence', () => { if (U.$('#ppGrid')) { drawSuggestions(); drawGrid(); } });
     Store.on('profile:loaded', () => { if (U.$('#ppGrid')) drawGrid(); });
+  }
+
+  /** "Suggested for you" — people who share your rooms, that you don't follow yet. */
+  function drawSuggestions() {
+    const box = U.$('#ppSuggest'); if (!box) return;
+    const me = Store.me();
+    const onlineIds = new Set(Backend.onlineUserIds());
+    const candidates = state.users
+      .filter(x => x.id !== me.id && !isFollowing(x.id) && !Mod.isBlocked(x.id))
+      .map(x => {
+        let score = 0;
+        Store.state.rooms.forEach(r => {
+          if (r.members.includes(x.id)) score += r.members.includes(me.id) ? 3 : 1;
+        });
+        if (onlineIds.has(x.id)) score += 1;
+        return { u: x, score };
+      })
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+
+    if (!candidates.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `
+      <div class="section-label">${U.icon('sparkles', 16)} Suggested for you</div>
+      <div class="suggest-strip">
+        ${candidates.map(({ u }) => `
+          <div class="suggest-card card">
+            <button data-user-card="${u.id}" style="background:none;border:none;padding:0;">${U.avatar(u, { size: 52, presence: true, ring: true })}</button>
+            <b>${U.esc(u.displayName)}</b>
+            <span class="small faint">@${U.esc(u.username)}</span>
+            <button class="btn btn-primary btn-sm" data-sug-follow="${u.id}">${U.icon('user-plus', 13)} Follow</button>
+          </div>`).join('')}
+      </div>`;
+
+    box.querySelectorAll('[data-sug-follow]').forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true; b.textContent = 'Following…';
+      try {
+        await Store.setFollow(b.dataset.sugFollow, true);
+        UI.toast({ title: 'Following ✦', body: `${Store.getUser(b.dataset.sugFollow)?.displayName} was notified`, type: 'ok', icon: 'user-plus' });
+        drawSuggestions();
+      } catch (err) {
+        b.disabled = false;
+        UI.toast({ title: 'Couldn\u2019t follow', body: err.message, type: 'bad' });
+      }
+    }));
   }
 
   async function loadDirectory() {
@@ -256,7 +303,14 @@ window.People = (() => {
         <div class="card" style="padding:0;overflow:hidden;">
           <div class="profile-cover" style="--pc-grad:${U.avatarBg(u)}"></div>
           <div class="profile-head">
-            ${U.avatar(u, { size: 92, presence: true, ring: true })}
+            <span style="position:relative;">
+              ${U.avatar(u, { size: 92, presence: true, ring: true })}
+              <button class="icon-btn sm" id="pfPhoto" title="Change profile photo"
+                style="position:absolute;bottom:-4px;right:-4px;background:var(--grad);color:#fff;border:2px solid var(--bg1);">
+                ${U.icon('image', 14)}
+              </button>
+              <input type="file" id="pfPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
+            </span>
             <div class="grow">
               <h2>${U.esc(u.displayName)}</h2>
               <div class="profile-handle">@${U.esc(u.username)} · joined ${new Date(u.joinedAt).toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
@@ -320,6 +374,40 @@ window.People = (() => {
       </div>`;
 
     root.querySelector('#pfEdit').addEventListener('click', () => Router.go('settings', null, 'profile'));
+
+    // Custom profile photo — safety-checked, then stored in Supabase Storage.
+    const photoBtn = root.querySelector('#pfPhoto');
+    if (photoBtn) {
+      photoBtn.addEventListener('click', () => root.querySelector('#pfPhotoFile').click());
+      root.querySelector('#pfPhotoFile').addEventListener('change', async e => {
+        const f = e.target.files?.[0];
+        e.target.value = '';
+        if (!f) return;
+        photoBtn.disabled = true;
+        try {
+          UI.toast({ title: 'Checking photo…', body: 'Running it through safety verification.', type: 'info', duration: 2200 });
+          const verdict = await ImageGuard.check(f);
+          if (!verdict.ok) throw new Error('That photo didn\u2019t pass the safety check.');
+          const blob = await ImageGuard.compress(f, 256, 0.85);
+          const path = `${Store.me().id}/pfp.jpg`;
+          const up = await SB.client.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+          if (up.error) throw up.error;
+          const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+          await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url.split('?')[0] }).eq('id', Store.me().id));
+          Store.me().avatarUrl = url;
+          Store.state.profile.avatarUrl = url;
+          window.AppShell?.refreshIdentity?.();
+          renderProfilePage(root);
+          UI.toast({ title: 'Photo updated ✨', body: 'Your new look is live everywhere.', type: 'ok', icon: 'check' });
+        } catch (err) {
+          UI.toast({ title: 'Couldn\u2019t update photo', body: /bucket|not found|policy|row-level/i.test(err.message || '')
+            ? 'Photo storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).'
+            : err.message, type: 'bad', icon: 'alert', duration: 7000 });
+        } finally {
+          photoBtn.disabled = false;
+        }
+      });
+    }
     root.querySelector('#pfSettings').addEventListener('click', () => Router.go('settings'));
     root.querySelector('#claimQuest')?.addEventListener('click', e => {
       const q = Store.questToday();

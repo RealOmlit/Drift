@@ -268,7 +268,15 @@ window.SettingsPage = (() => {
       panel.innerHTML = `
         <h2>Moderation</h2>
         <p class="desc">Reports you filed. Visible to whoever operates this Drift project.</p>
+        <div class="set-group" style="margin-bottom:1.1rem;">
+          ${row('Safe mode 🛡️', 'Blur out swearing everywhere in chat. Click a blurred word to reveal it.', toggle('setSafe', s.safeMode))}
+        </div>
         <div id="modDash">${Mod.dashboardHTML()}</div>`;
+      panel.querySelector('#setSafe').addEventListener('change', e => {
+        s.safeMode = e.target.checked; Store.save();
+        UI.toast({ title: s.safeMode ? 'Safe mode on' : 'Safe mode off', body: s.safeMode ? 'Swearing is now blurred in every room.' : 'Messages show as written.', type: 'ok' });
+        if (window.Chat?.rerender) Chat.rerender();
+      });
       Mod.bindDashboard(panel);
     }
 

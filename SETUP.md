@@ -96,3 +96,15 @@ page can send via `Email.send({ to, subject, html })` from [`js/email.js`](./js/
   stored in the `reports` table for whoever operates the project.
 - Passwords, sessions and emails are handled by Supabase Auth (never stored in
   the app's own storage).
+
+## 6. Photos & custom avatars
+
+Run [`supabase-setup-images.sql`](./supabase-setup-images.sql) in the SQL Editor
+(same place you ran the main setup). It adds:
+
+- `profiles.avatar_url` — custom profile photos (upload from your profile page)
+- Two public Storage buckets: `avatars` and `chat-images`
+- Policies so users can only write inside their own folder
+
+Chat image posting runs every picture through an on-device NSFW classifier
+(NSFW.js) **before** upload — blocked images never leave your browser.
