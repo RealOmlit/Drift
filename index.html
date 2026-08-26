@@ -13,11 +13,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2.1.0">
-  <link rel="stylesheet" href="./css/base.css?v=2.1.0">
-  <link rel="stylesheet" href="./css/components.css?v=2.1.0">
-  <link rel="stylesheet" href="./css/animations.css?v=2.1.0">
-  <link rel="stylesheet" href="./css/landing.css?v=2.1.0">
+  <link rel="stylesheet" href="./css/tokens.css?v=2.1.1">
+  <link rel="stylesheet" href="./css/base.css?v=2.1.1">
+  <link rel="stylesheet" href="./css/components.css?v=2.1.1">
+  <link rel="stylesheet" href="./css/animations.css?v=2.1.1">
+  <link rel="stylesheet" href="./css/landing.css?v=2.1.1">
 </head>
 <body class="land-body">
   <div class="aurora"></div>
@@ -43,13 +43,19 @@
   </nav>
 
   <!-- ===================== HERO ===================== -->
-  <header class="hero container">
+  <header class="hero container" id="top">
+    <div class="hero-glow" aria-hidden="true">
+      <span class="glow-orb go-1"></span>
+      <span class="glow-orb go-2"></span>
+      <span class="glow-orb go-3"></span>
+      <span class="hero-halo"></span>
+    </div>
     <div class="hero-badges anim-in">
       <span class="chip"><span class="chip-dot"></span> Real-time rooms</span>
       <span class="chip badge-ai" style="border:none;">✨ Zephyr AI inside</span>
       <span class="chip">🏆 Community XP</span>
     </div>
-    <h1 class="anim-in anim-in-1">Where conversations<br><span class="grad-text">drift into motion.</span></h1>
+    <h1 class="anim-in anim-in-1">Where conversations<br><span class="grad-text shimmer">drift into motion.</span></h1>
     <p class="hero-sub anim-in anim-in-2">
       Drift is a next-generation chat platform: real-time rooms with live
       presence, an AI companion woven into every conversation, and a community
@@ -57,14 +63,20 @@
     </p>
     <div class="hero-ctas anim-in anim-in-3">
       <a class="btn btn-primary btn-lg" href="./signup.html">Get Started — it's free</a>
-      <a class="btn btn-glass btn-lg" href="./login.html">Explore Rooms →</a>
+      <a class="btn btn-glass btn-lg" href="./login.html">Log in</a>
     </div>
     <div class="hero-online anim-in anim-in-4">
       <span class="dot online"></span> <b data-online-count>—</b>&nbsp;people drifting right now
     </div>
+    <div class="trust-row anim-in anim-in-5">
+      <span class="t-chip">🔒 Passwords hashed — never stored readable</span>
+      <span class="t-chip">🛡️ Row-level security on every message</span>
+      <span class="t-chip">🚫 No ads · no trackers · no data selling</span>
+      <span class="t-chip">♾️ Free forever</span>
+    </div>
 
     <!-- Animated product preview -->
-    <div class="hero-stage anim-in anim-in-5" id="heroStage">
+    <div class="hero-stage anim-in anim-in-6" id="heroStage">
       <div class="float-chip fc-1">🎯 Instant polls</div>
       <div class="float-chip fc-2">⚡ Quick Pulse trending</div>
       <div class="float-chip fc-3">🎮 Mini activities</div>
@@ -86,6 +98,10 @@
         </div>
       </div>
     </div>
+    <a class="scroll-cue" href="#features" aria-label="Scroll to features">
+      <span>See what's inside</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v14"/><path d="m5 12 7 7 7-7"/></svg>
+    </a>
   </header>
 
   <!-- ===================== CATEGORY MARQUEE ===================== -->
@@ -235,9 +251,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/config.js?v=2.1.0"></script>
-  <script src="./js/supabase-client.js?v=2.1.0"></script>
-  <script src="./js/utils.js?v=2.1.0"></script>
-  <script src="./js/landing.js?v=2.1.0"></script>
+  <script src="./js/config.js?v=2.1.1"></script>
+  <script src="./js/supabase-client.js?v=2.1.1"></script>
+  <script src="./js/utils.js?v=2.1.1"></script>
+  <script src="./js/landing.js?v=2.1.1"></script>
 </body>
 </html>
