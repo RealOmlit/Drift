@@ -46,6 +46,7 @@ window.Auth = (() => {
 
   /* ------------------------------- sign up ------------------------------- */
   async function signUp({ username, email, password, displayName, avatarEmoji = '', hue = null }) {
+    if (!SB.configured()) throw new Error('This site isn\u2019t connected to its chat database yet.');
     username = (username || '').trim();
     email = (email || '').trim().toLowerCase();
     const err = await validateUsername(username);
@@ -79,6 +80,7 @@ window.Auth = (() => {
 
   /* -------------------------------- log in -------------------------------- */
   async function signIn(identifier, password /* remember kept for API compat */) {
+    if (!SB.configured()) throw new Error('This site isn\u2019t connected to its chat database yet.');
     identifier = (identifier || '').trim();
     let email = identifier.toLowerCase();
     if (!EMAIL_RE.test(email)) {

@@ -242,6 +242,7 @@ window.Store = (() => {
   /** All known profiles (people directory / search). Fetches once per session. */
   let directoryPromise = null;
   function allProfiles() {
+    if (!SB.configured()) return Promise.resolve([]);
     if (!directoryPromise) {
       directoryPromise = SB.unwrap(
         SB.client.from('profiles').select('*').neq('id', state.profile?.id || '').order('created_at', { ascending: true }).limit(500)

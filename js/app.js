@@ -390,7 +390,6 @@ window.AppShell = (() => {
 
   /* ------------------------------ Boot ------------------------------ */
   async function boot() {
-    if (!window.SB.guard()) return;          // unconfigured → setup screen, stop here
     Store.init();                            // local UI prefs
     if (!(await Auth.requireAuth())) return; // async — real session check
     SettingsPage.applyTheme();

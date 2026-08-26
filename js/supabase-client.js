@@ -2,11 +2,10 @@
    Drift · supabase-client.js
    Single shared Supabase client + a light setup reminder.
 
-   Loads after the supabase-js CDN script (see HTML). If credentials are not
-   configured in js/config.js:
-     · landing page  → small dismissible corner note
-     · app pages     → a one-time inline panel (they can't work without data)
-   Nothing blocks or redirects; dismissing is remembered for the session.
+   Loads after the supabase-js CDN script (see HTML). When credentials are
+   present in js/config.js this module is invisible. Without them the site
+   still renders normally; only the landing page shows a small dismissible
+   corner note, and sign-in attempts explain what's missing.
    ========================================================================== */
 
 window.SB = (() => {
@@ -26,7 +25,7 @@ window.SB = (() => {
     try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
   }
 
-  /* Corner note — used on the landing page only. */
+  /* Corner note — landing page only, never blocks anything. */
   function showCornerNote() {
     if (dismissed() || document.getElementById('drift-setup-note')) return;
     const el = document.createElement('div');
@@ -48,40 +47,15 @@ window.SB = (() => {
     el.querySelector('#drift-setup-x').addEventListener('click', dismiss);
   }
 
-  /* Centered panel — app/login/signup can't function without a database. */
-  function showSetupPanel() {
-    if (document.getElementById('drift-setup-note')) return;
-    const el = document.createElement('div');
-    el.id = 'drift-setup-note';
-    el.style.cssText =
-      'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;' +
-      'background:#05060c;color:#e7e9f5;font-family:Inter,system-ui,sans-serif;padding:1.5rem;';
-    el.innerHTML = `
-      <div style="max-width:520px;width:100%;border:1px solid #2a2d45;border-radius:16px;padding:1.8rem;background:#0b0d1a;">
-        <h1 style="font-size:1.25rem;margin:0 0 .6rem;">⚙️ One-time setup</h1>
-        <p style="color:#9aa0c3;line-height:1.65;margin:0 0 1rem;">
-          Drift stores accounts and messages in a free Supabase database.
-          Connect yours and this screen disappears forever:
-        </p>
-        <ol style="color:#9aa0c3;line-height:1.9;margin:0 0 1.1rem;padding-left:1.2rem;">
-          <li>Create a project at <b style="color:#c7cbf0">supabase.com</b> (free)</li>
-          <li>Run <code style="color:#7dd3fc">supabase-setup.sql</code> in its SQL Editor</li>
-          <li>Paste the URL + anon key into <code style="color:#7dd3fc">js/config.js</code></li>
-        </ol>
-        <p style="color:#666c92;font-size:.85rem;margin:0;">
-          Full walkthrough in <b>SETUP.md</b>. Refresh after editing config.js.
-        </p>
-      </div>`;
-    document.body.appendChild(el);
-  }
-
   function guard() {
     if (!CFG.REAL_MODE || !window.supabase?.createClient) {
-      const run = () => (isLanding() ? showCornerNote() : showSetupPanel());
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', run);
-      } else {
-        run();
+      if (isLanding()) {
+        const run = () => showCornerNote();
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', run);
+        } else {
+          run();
+        }
       }
       return false;
     }
@@ -109,5 +83,5 @@ window.SB = (() => {
   return { client, guard, unwrap, configured: () => !!client };
 })();
 
-// Light check on load — shows a note when unconfigured, nothing more.
+// Light check on load — a corner note on the landing page, nothing more.
 window.SB.guard();

@@ -40,6 +40,26 @@ Refresh the site. The "Setup required" banner disappears once valid keys are in
 browser profile with another account — you'll see each other's messages appear
 live and the online counter reflect reality.
 
+## 5. Real emails via Gmail (Edge Function)
+
+Drift sends mail through a Supabase **Edge Function** (`supabase/functions/send-email`),
+so your Gmail password never touches the browser. The function verifies the
+caller's Supabase session and rate-limits to 5 emails/hour/user.
+
+1. **Gmail App Password** — in your Google Account enable 2-Step Verification,
+   then open *Security → App passwords* and create one (16 characters).
+   A regular account password will NOT work.
+2. **Install the CLI** — `npm i -g supabase`, then `supabase login`.
+3. **Deploy + set secrets** (run inside this repo):
+
+   ```bash
+   supabase functions deploy send-email --project-ref YOUR-PROJECT-REF
+   supabase secrets set GMAIL_USER=you@gmail.com GMAIL_APP_PASSWORD=abcdwxyzabcdwxyz
+   ```
+
+That's it — new signups now receive a branded welcome email, and any signed-in
+page can send via `Email.send({ to, subject, html })` from [`js/email.js`](./js/email.js).
+
 ## Notes & limits
 
 - **Zephyr AI** is wired to [AIML API](https://aimlapi.com) (OpenAI-compatible)
