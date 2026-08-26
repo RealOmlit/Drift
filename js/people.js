@@ -1,12 +1,15 @@
 /* ==========================================================================
-   Drift · people.js — people directory, friends, and profile cards.
+   Drift · people.js — real people directory, follows and profile cards.
+   Data comes from public.profiles / follows / presence. No demo users.
    ========================================================================== */
 
 window.People = (() => {
   'use strict';
 
-  const state = { tab: 'online', q: '' };
+  const state = { tab: 'all', q: '', loaded: false, users: [] };
   const isFriend = id => Store.me()?.following.includes(id) && Store.me().followers.includes(id);
+  const isOnline = id => Backend.onlineUserIds().includes(id);
+  const isFollowing = id => !!Store.me()?.following.includes(id);
 
   /* ============================== Page ============================== */
   function renderPage(root) {
@@ -24,15 +27,14 @@ window.People = (() => {
             <input class="input" id="ppSearch" placeholder="Search people…" value="${U.esc(state.q)}">
           </div>
           <div class="seg" id="ppTabs">
-            ${['friends', 'requests', 'online', 'all'].map(t =>
-              `<button data-t="${t}" class="${state.tab === t ? 'on' : ''}">${t[0].toUpperCase() + t.slice(1)}${t === 'requests' && pendingRequests().length ? ` (${pendingRequests().length})` : ''}</button>`).join('')}
+            ${['friends', 'online', 'all'].map(t =>
+              `<button data-t="${t}" class="${state.tab === t ? 'on' : ''}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}
           </div>
         </div>
 
-        <div id="ppGrid"></div>
+        <div id="ppGrid"><div class="view-inner">${UI.skeletonCards(6)}</div></div>
       </div>`;
 
-    drawGrid();
     U.$('#ppSearch').addEventListener('input', U.debounce(e => { state.q = e.target.value.toLowerCase(); drawGrid(); }, 140));
     U.$('#ppTabs').addEventListener('click', e => {
       const b = e.target.closest('[data-t]'); if (!b) return;
@@ -40,71 +42,67 @@ window.People = (() => {
       U.$$('#ppTabs button').forEach(x => x.classList.toggle('on', x === b));
       drawGrid();
     });
+
+    loadDirectory().then(drawGrid).catch(err =>
+      U.$('#ppGrid').innerHTML = emptyHTML('Couldn\u2019t load people', err.message));
+
+    Store.on('presence', () => { if (U.$('#ppGrid')) drawGrid(); });
+    Store.on('profile:loaded', () => { if (U.$('#ppGrid')) drawGrid(); });
   }
 
-  const pendingRequests = () =>
-    DemoData.users.filter(u => Store.me()?.followers.includes(u.id) && !Store.me().following.includes(u.id));
+  async function loadDirectory() {
+    if (state.loaded) return;
+    state.users = await Store.allProfiles();
+    state.loaded = true;
+  }
 
   function filteredUsers() {
-    let users = [...DemoData.users];
-    if (state.tab === 'friends') users = users.filter(u => isFriend(u.id));
-    else if (state.tab === 'requests') users = pendingRequests();
-    else if (state.tab === 'online') users = users.filter(u => u.status !== 'offline');
+    let users = [...state.users];
+    if (state.tab === 'friends') users = users.filter(u => Store.me().followers.includes(u.id));
+    else if (state.tab === 'online') users = users.filter(u => isOnline(u.id));
     if (state.q) users = users.filter(u =>
       u.username.toLowerCase().includes(state.q) ||
       u.displayName.toLowerCase().includes(state.q) ||
       (u.bio || '').toLowerCase().includes(state.q));
-    return users;
+    // Friends first, then online, then rest
+    return users.sort((a, b) =>
+      (Store.me().followers.includes(b.id) - Store.me().followers.includes(a.id)) ||
+      (isOnline(b.id) - isOnline(a.id)));
   }
 
   function personCard(u) {
     const friend = isFriend(u.id);
+    const following = isFollowing(u.id);
     const mutual = mutualRooms(u).length;
+    const online = isOnline(u.id);
     return `
       <article class="card card-glow hoverable person-card" data-open-user="${u.id}">
-        ${U.avatar(u, { size: 62, presence: true, ring: true })}
+        ${U.avatar(u, { size: 62, presence: online, ring: true })}
         <div class="p-name">${U.esc(u.displayName)}
-          ${u.status === 'online' ? '<span class="dot online"></span>' : ''}
+          ${online ? '<span class="dot online"></span>' : ''}
         </div>
         <div class="small faint">@${U.esc(u.username)}</div>
         <div class="p-status">${U.esc(u.statusMsg || '')}</div>
-        <div class="small faint">${u.status === 'offline' ? 'last seen ' + U.fmtRel(u.lastSeen || Date.now() - 36e5) : mutual + ' shared room' + (mutual === 1 ? '' : 's')}</div>
+        <div class="small faint">${online ? 'online now' : u.lastSeen ? 'last seen ' + U.fmtRel(u.lastSeen) : mutual + ' shared room' + (mutual === 1 ? '' : 's')}</div>
         <div class="p-actions">
-          ${friend
-            ? `<button class="btn btn-glass btn-sm" data-act="unfriend" data-u="${u.id}">Friends ✓</button>`
-            : `<button class="btn btn-primary btn-sm" data-act="add" data-u="${u.id}">${U.icon('user-plus', 14)} Connect</button>`}
+          ${following
+            ? `<button class="btn btn-glass btn-sm" data-act="unfollow" data-u="${u.id}">Following ✓</button>`
+            : `<button class="btn btn-primary btn-sm" data-act="follow" data-u="${u.id}">${U.icon('user-plus', 14)} Follow</button>`}
           <button class="icon-btn sm" data-act="menu" data-u="${u.id}" aria-label="More">${U.icon('dots', 15)}</button>
         </div>
       </article>`;
   }
 
-  function requestBanner(u) {
-    return `
-      <div class="card req-banner">
-        ${U.avatar(u, { size: 46 })}
-        <div><b>${U.esc(u.displayName)}</b><div class="small muted">wants to connect with you</div></div>
-        <div class="req-actions">
-          <button class="btn btn-ok btn-sm" data-act="accept" data-u="${u.id}">${U.icon('check', 14)} Accept</button>
-          <button class="btn btn-glass btn-sm" data-act="reject" data-u="${u.id}">Ignore</button>
-        </div>
-      </div>`;
-  }
-
   function drawGrid() {
     const grid = U.$('#ppGrid'); if (!grid) return;
-
-    if (state.tab === 'requests') {
-      const reqs = pendingRequests();
-      grid.innerHTML = reqs.length
-        ? `<div class="page-grid">${reqs.map(requestBanner).join('')}</div>`
-        : emptyHTML('No pending requests', 'When someone wants to connect, they\'ll show up here.');
-      bindGrid(grid); return;
-    }
-
     const users = filteredUsers();
     grid.innerHTML = users.length
       ? `<div class="people-grid">${users.map(personCard).join('')}</div>`
-      : emptyHTML('Nobody found', 'Try a different search or switch tabs.');
+      : emptyHTML(
+          state.tab === 'friends' ? 'No friends yet' : state.tab === 'online' ? 'Nobody online' : 'Nobody found',
+          state.tab === 'friends'
+            ? 'Follow people to build your orbit — they\u2019ll show up here.'
+            : 'Try a different search or switch tabs.');
     bindGrid(grid);
   }
 
@@ -126,58 +124,40 @@ window.People = (() => {
     };
   }
 
-  function handleAction(act, uid) {
-    const meP = Store.me();
+  async function handleAction(act, uid) {
     switch (act) {
-      case 'add': {
-        if (!meP.pendingSent.includes(uid)) {
-          meP.pendingSent.push(uid);
-          Notifs.push('friend', { title: 'Request sent', body: `${Store.getUser(uid)?.displayName} will be notified`, actorId: uid, silent: true });
-          // Simulated acceptance a bit later [BACKEND: real-time acceptance]
-          setTimeout(() => acceptSimulatedRequest(Store.getUser(uid)), U.randInt(6000, 16000));
+      case 'follow': {
+        try {
+          await Store.setFollow(uid, true);
+          if (!Store.me().following.includes(uid)) Store.me().following.push(uid);
+          UI.toast({ title: 'Following ✦', body: `${Store.getUser(uid)?.displayName} was notified`, type: 'ok', icon: 'user-plus' });
+        } catch (e) {
+          UI.toast({ title: 'Couldn\u2019t follow', body: e.message, type: 'bad', icon: 'alert' });
         }
-        UI.toast({ title: 'Request sent ✦', body: `Connecting with ${Store.getUser(uid)?.displayName}`, type: 'ok', icon: 'user-plus' });
         break;
       }
-      case 'accept': {
-        meP.following.push(uid);
-        meP.followers = meP.followers.filter(f => f !== uid); // consumed the inbound request
-        Store.addXP(6, 'New connection');
-        UI.toast({ title: 'You are now connected 🎉', body: `${Store.getUser(uid)?.displayName} joined your circle`, type: 'xp', icon: 'user-plus' });
-        break;
-      }
-      case 'reject': meP.followers = meP.followers.filter(f => f !== uid); break;
-      case 'unfriend': {
-        meP.following = meP.following.filter(f => f !== uid);
-        meP.followers = meP.followers.filter(f => f !== uid);
-        UI.toast({ title: 'Connection removed', type: 'info', icon: 'x' });
+      case 'unfollow': {
+        try {
+          await Store.setFollow(uid, false);
+          Store.me().following = Store.me().following.filter(f => f !== uid);
+          UI.toast({ title: 'Unfollowed', type: 'info', icon: 'x' });
+        } catch (e) {
+          UI.toast({ title: 'Couldn\u2019t unfollow', body: e.message, type: 'bad', icon: 'alert' });
+        }
         break;
       }
     }
-    Store.save();
     drawGrid();
-  }
-
-  /** Called by the realtime sim when a bot "accepts" your request. */
-  function acceptSimulatedRequest(bot) {
-    const meP = Store.me();
-    if (!bot || !meP) return;
-    if (!meP.following.includes(bot.id)) meP.following.push(bot.id);
-    if (!meP.followers.includes(bot.id)) meP.followers.push(bot.id);
-    meP.pendingSent = meP.pendingSent.filter(x => x !== bot.id);
-    Store.save();
-    Notifs.push('friend', { title: `${bot.displayName} accepted your request`, body: 'Say hi on their profile', actorId: bot.id });
   }
 
   function userMenu(anchor, uid) {
     const u = Store.getUser(uid);
-    const meP = Store.me();
     const blocked = Mod.isBlocked(uid), muted = Mod.isMuted(uid);
     UI.menu(anchor, [
       { label: 'View profile', icon: 'user', onClick: () => openProfileCard(uid) },
-      ...(isFriend(uid)
-        ? [{ label: 'Remove connection', icon: 'x', onClick: () => handleAction('unfriend', uid) }]
-        : [{ label: 'Connect', icon: 'user-plus', onClick: () => handleAction('add', uid) }]),
+      ...(isFollowing(uid)
+        ? [{ label: 'Unfollow', icon: 'x', onClick: () => handleAction('unfollow', uid) }]
+        : [{ label: 'Follow', icon: 'user-plus', onClick: () => handleAction('follow', uid) }]),
       { sepBefore: true },
       { label: muted ? 'Unmute' : 'Mute', icon: 'volume', onClick: () => Mod.toggleMute(uid) },
       { label: blocked ? 'Unblock' : 'Block', icon: 'ban', danger: true, onClick: () => Mod.toggleBlock(uid) },
@@ -193,8 +173,7 @@ window.People = (() => {
     const u = self ? Store.me() : Store.getUser(userId);
     if (!u) return;
     const info = Store.lvlInfo(u.xp || 0);
-    const stats = self ? u.stats : pseudoStats(u);
-    const badges = badgeList(u, stats);
+    const online = self || isOnline(userId);
 
     const m = UI.openModal({
       slim: true,
@@ -206,17 +185,17 @@ window.People = (() => {
         <div class="pc-cover" style="--pc-grad:${U.avatarBg(u)}"></div>
         <div class="pc-inner">
           <div class="pc-avatar-wrap">
-            <span class="level-ring">${U.avatar(u, { size: 84, presence: true })}</span>
+            <span class="level-ring">${U.avatar(u, { size: 84, presence: online })}</span>
             ${self ? '<button class="btn btn-glass btn-sm" data-edit>Edit</button>' : ''}
           </div>
           <div class="pc-name">${U.esc(u.displayName)}
-            ${badges.map(b => `<span title="${b.label}">${b.icon}</span>`).join('')}
+            ${badgeList(u).map(b => `<span title="${b.label}">${b.icon}</span>`).join('')}
           </div>
           <div class="pc-handle">@${U.esc(u.username)} · Level ${info.level}</div>
           ${u.statusMsg ? `<div class="pc-bio">"${U.esc(u.statusMsg)}"</div>` : ''}
           ${u.bio ? `<div class="pc-bio">${U.esc(u.bio)}</div>` : ''}
           <div class="small faint" style="margin-top:.35rem;">
-            ${u.status === 'offline' ? 'Last seen ' + U.fmtRel(u.lastSeen || Date.now()) : u.status === 'away' ? 'Away — may be afk' : 'Online now'}
+            ${online ? 'Online now' : u.lastSeen ? 'Last seen ' + U.fmtRel(u.lastSeen) : 'Offline'}
           </div>
 
           <div class="pc-level">
@@ -226,17 +205,19 @@ window.People = (() => {
           </div>
 
           <div class="pc-stats">
-            <div class="pc-stat"><b>${U.fmtCount(stats.msgs)}</b><span>Messages</span></div>
-            <div class="pc-stat"><b>${U.fmtCount(stats.reactions)}</b><span>Reactions</span></div>
-            <div class="pc-stat"><b>${mutualRooms(u).length}</b><span>Shared rooms</span></div>
+            ${self ? `
+              <div class="pc-stat"><b>${U.fmtCount(u.stats.msgs)}</b><span>Messages</span></div>
+              <div class="pc-stat"><b>${U.fmtCount(u.stats.reactionsGiven)}</b><span>Reactions</span></div>` : `
+              <div class="pc-stat"><b>${mutualRooms(u).length}</b><span>Shared rooms</span></div>
+              <div class="pc-stat"><b>${Math.max(1, Math.round((Date.now() - u.joinedAt) / 864e5))}</b><span>Days here</span></div>`}
             <div class="pc-stat"><b>${Math.max(1, Math.round((Date.now() - u.joinedAt) / 864e5))}</b><span>Days here</span></div>
           </div>
 
           ${!self ? `
           <div class="row" style="margin-top:1rem;">
-            ${isFriend(userId)
-              ? '<button class="btn btn-glass grow" data-unfriend>Friends ✓</button>'
-              : '<button class="btn btn-primary grow" data-connect>' + U.icon('user-plus', 16) + ' Connect</button>'}
+            ${isFollowing(userId)
+              ? '<button class="btn btn-glass grow" data-unfollow>Following ✓</button>'
+              : '<button class="btn btn-primary grow" data-follow>' + U.icon('user-plus', 16) + ' Follow</button>'}
             <button class="icon-btn" data-menu aria-label="More">${U.icon('dots')}</button>
           </div>` : ''}
         </div>`
@@ -244,29 +225,22 @@ window.People = (() => {
 
     const card = m.card;
     card.querySelector('[data-edit]')?.addEventListener('click', () => { m.close(); Router.go('settings', null, 'profile'); });
-    card.querySelector('[data-connect]')?.addEventListener('click', e => {
-      handleAction('add', userId);
-      e.currentTarget.outerHTML = '<button class="btn btn-glass grow">Pending…</button>';
+    card.querySelector('[data-follow]')?.addEventListener('click', async e => {
+      await handleAction('follow', userId);
+      e.currentTarget.outerHTML = '<button class="btn btn-glass grow">Following ✓</button>';
     });
-    card.querySelector('[data-unfriend]')?.addEventListener('click', () => { handleAction('unfriend', userId); m.close(); });
+    card.querySelector('[data-unfollow]')?.addEventListener('click', async () => { await handleAction('unfollow', userId); m.close(); });
     card.querySelector('[data-menu]')?.addEventListener('click', e => userMenu(e.currentTarget, userId));
-
-    // animate XP bar in
-    setTimeout(() => { /* width transition handles it */ }, 60);
   }
 
-  function pseudoStats(u) {
-    const h = U.hashCode(u.username);
-    return { msgs: 40 + h % 900, reactions: 20 + h % 400 };
-  }
-
-  function badgeList(u, stats) {
+  /** Badges are earned, never invented: derived from real activity. */
+  function badgeList(u) {
     const b = [];
-    b.push({ icon: '🚀', label: 'Early Drifter' });
-    if ((stats.msgs || 0) > 50) b.push({ icon: '💬', label: 'Conversation Starter' });
-    if ((stats.reactions || 0) > 40) b.push({ icon: '⚡', label: 'Reaction Giver' });
+    const days = Math.round((Date.now() - u.joinedAt) / 864e5);
+    if (days < 14) b.push({ icon: '🌱', label: 'New Drifter' });
+    if ((u.stats?.msgs || 0) >= 10) b.push({ icon: '💬', label: 'Conversation Starter' });
+    if ((u.stats?.reactionsGiven || 0) >= 10) b.push({ icon: '⚡', label: 'Reaction Giver' });
     if (Store.lvlInfo(u.xp || 0).level >= 3) b.push({ icon: '🏆', label: 'Rising Star' });
-    if ((u.badges || []).includes('starter')) b.push({ icon: '✨', label: 'Founding Member' });
     return b.slice(0, 4);
   }
 
@@ -276,6 +250,7 @@ window.People = (() => {
     const info = Store.lvlInfo(u.xp);
     const quest = Store.questToday();
     const stats = u.stats;
+    const streak = u.streak?.count || 0;
     root.innerHTML = `
       <div class="view-inner" style="max-width:760px;">
         <div class="card" style="padding:0;overflow:hidden;">
@@ -286,7 +261,7 @@ window.People = (() => {
               <h2>${U.esc(u.displayName)}</h2>
               <div class="profile-handle">@${U.esc(u.username)} · joined ${new Date(u.joinedAt).toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
               <div class="badge-row">
-                <span class="chip"><span class="chip-dot"></span> ${u.status === 'online' ? 'Online' : u.status}</span>
+                <span class="chip"><span class="chip-dot"></span> Online</span>
                 ${u.statusMsg ? `<span class="chip">“${U.esc(u.statusMsg)}”</span>` : ''}
               </div>
             </div>
@@ -299,7 +274,7 @@ window.People = (() => {
             <div class="card xp-card">
               <div class="spread"><div><div class="xp-num grad-text">${U.fmtCount(u.xp)} XP</div>
                 <div class="small muted">Level ${info.level} Drifter</div></div>
-                <div class="streak">🔥 <span>${Store.state.meta.streak.count}-day streak</span></div>
+                ${streak > 1 ? `<div class="streak">🔥 <span>${streak}-day streak</span></div>` : ''}
               </div>
               <div class="bar-track" style="margin-top:.7rem;"><div class="bar-fill" style="width:${info.pct}%"></div></div>
               <div class="small faint" style="margin-top:.4rem;">${info.nextLvl - info.cur} XP until level ${info.level + 1} — chat, react and vote to earn more.</div>
@@ -311,8 +286,8 @@ window.People = (() => {
                  ['⚡', 'Reaction Giver', stats.reactionsGiven >= 10, stats.reactionsGiven + '/10 reactions'],
                  ['📊', 'Poll Master', stats.pollsVoted >= 3, stats.pollsVoted + '/3 polls'],
                  ['🎮', 'Player One', stats.gamesPlayed >= 1, stats.gamesPlayed + '/1 activities'],
-                 ['🔥', 'Week Warrior', Store.state.meta.streak.count >= 7, Store.state.meta.streak.count + '/7 day streak'],
-                 ['✨', 'Founding Member', true, 'season one']]
+                 ['🔥', 'Week Warrior', streak >= 7, streak + '/7 day streak'],
+                 ['🤝', 'Social Butterfly', u.following.length >= 3, u.following.length + '/3 follows']]
                 .map(([ic, name, got, prog]) => `
                 <div class="card achv ${got ? 'got' : ''}">
                   <div class="a-ic">${ic}</div>
@@ -356,5 +331,5 @@ window.People = (() => {
     });
   }
 
-  return { renderPage, renderProfilePage, openProfileCard, acceptSimulatedRequest, isFriend, userMenu, pendingRequests };
+  return { renderPage, renderProfilePage, openProfileCard, isFriend, userMenu };
 })();

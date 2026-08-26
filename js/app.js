@@ -51,7 +51,7 @@ window.Router = (() => {
       case 'rooms':     return paint(view, root => Rooms.renderMyRoomsPage(root));
       case 'people':    return paint(view, root => People.renderPage(root));
       case 'notifs':    return paint(view, root => Notifs.renderPage(root), () => Notifs.refreshBadges());
-      case 'zephyr':    return paint(view, root => AI.renderPanel(root));
+      case 'zephyr':    return paint(view, root => DriftConfig.AI_ENABLED ? AI.renderPanel(root) : renderAIDisabled(root));
       case 'profile':   return paint(view, root => People.renderProfilePage(root));
       case 'search':    return paint(view, root => Finder.renderSearchPage(root));
       case 'settings':  return paint(view, root => SettingsPage.render(root, current.sub));
@@ -77,6 +77,16 @@ window.Router = (() => {
 
   function closePaletteIfOpen() { try { Finder.closePalette(); } catch (e) {} }
 
+  function renderAIDisabled(root) {
+    root.innerHTML = `
+      <div class="view-inner" style="max-width:560px;">
+        <div class="empty"><div class="e-icon">✨</div>
+          <h4>Zephyr is offline</h4>
+          <p>The AI companion needs a real model endpoint — no fake responses here.
+             See SETUP.md to connect one.</p>
+        </div>`;
+  }
+
   window.addEventListener('hashchange', handleHashChange);
 
   return {
@@ -101,6 +111,7 @@ window.AppShell = (() => {
     const u = Store.me();
     const info = Store.lvlInfo(u.xp);
     const quest = Store.questToday();
+    const onlineIds = Backend.onlineUserIds();
 
     // "Continue chatting": joined rooms sorted by latest activity
     const recent = Store.state.rooms
@@ -108,8 +119,11 @@ window.AppShell = (() => {
       .sort((a, b) => lastActivity(b) - lastActivity(a)).slice(0, 5);
     const trending = [...Store.state.rooms]
       .filter(r => r.visibility === 'public' || r.members.includes('me'))
-      .sort((a, b) => b.momentum - a.momentum).slice(0, 4);
-    const friendsOnline = DemoData.users.filter(x => u.followers.includes(x.id) && x.status !== 'offline').slice(0, 8);
+      .sort((a, b) => b.memberCount - a.memberCount).slice(0, 4);
+    const friendsOnline = u.followers
+      .map(id => Store.getUser(id))
+      .filter(x => x && onlineIds.includes(x.id)).slice(0, 8);
+    const streak = u.streak?.count || 0;
     const hour = new Date().getHours();
     const greet = hour < 5 ? 'Night owl hours' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
@@ -118,14 +132,14 @@ window.AppShell = (() => {
         <div class="home-hero">
           <div class="home-hello">
             <h1>${greet}, <span>${U.esc(u.displayName.split(' ')[0])}</span>
-              ${Store.state.meta.streak.count > 1 ? `<span class="streak">🔥 ${Store.state.meta.streak.count}-day streak</span>` : ''}
+              ${streak > 1 ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}
             </h1>
             <p class="sub muted">${quest.progress >= quest.goal && !quest.claimed ? 'Your daily quest is complete — claim it below!' : quest.label} · Level ${info.level}</p>
           </div>
-          <button class="btn btn-primary" data-go="zephyr">✨ Ask Zephyr</button>
+          ${DriftConfig.AI_ENABLED ? '<button class="btn btn-primary" data-go="zephyr">✨ Ask Zephyr</button>' : ''}
         </div>
 
-        <!-- Quick Pulse -->
+        <!-- Active rooms ticker -->
         <div class="pulse-ticker">
           <div class="pulse-track" id="pulseTrack"></div>
         </div>
@@ -134,7 +148,7 @@ window.AppShell = (() => {
           ${statCard('activity', '<b data-online-count>—</b><span>drifters online</span>')}
           ${statCard('layers', `<b>${Store.state.rooms.filter(r => r.members.includes('me')).length}</b><span>your rooms</span>`)}
           ${statCard('zap', `<b>${U.fmtCount(u.xp)}</b><span>community XP</span>`)}
-          ${statCard('flame', `<b>${trending[0]?.momentum || 0}</b><span>top momentum</span>`)}
+          ${statCard('flame', `<b>${U.fmtCount(u.stats.msgs)}</b><span>messages sent</span>`)}
         </div>
 
         <div class="section-label">${U.icon('clock', 17)} Continue chatting</div>
@@ -142,7 +156,7 @@ window.AppShell = (() => {
 
         <div class="two-col">
           <div>
-            <div class="section-label">${U.icon('flame', 17)} Trending rooms</div>
+            <div class="section-label">${U.icon('users', 17)} Popular rooms</div>
             <div class="page-grid">${trending.map(r => Rooms.roomCard(r)).join('')}</div>
           </div>
           <div>
@@ -154,7 +168,7 @@ window.AppShell = (() => {
                       ${U.avatar(f, { size: 46, presence: true })}
                       <span class="fb-name">${U.esc(f.displayName)}</span>
                     </div>`).join('')}</div>`
-                : '<p class="small muted">Connect with people from the People page to see them here.</p>'}
+                : '<p class="small muted">Follow people from the People page — when they\u2019re online they\u2019ll appear here.</p>'}
               <button class="btn btn-glass btn-sm btn-block" style="margin-top:.7rem;" data-go="people">Find people</button>
             </div>
 
@@ -169,23 +183,18 @@ window.AppShell = (() => {
                 : quest.progress >= quest.goal ? '<button class="btn btn-primary btn-sm" id="homeClaim">Claim!</button>'
                 : `<span class="small faint">${quest.progress}/${quest.goal}</span>`}
             </div>
-
-            <div class="card card-glow lit" style="margin-top:1rem;">
-              <div class="row" style="gap:.7rem;">
-                <div class="ai-av" style="width:38px;height:38px;">✨</div>
-                <div><b class="small" style="font-family:var(--font-d)">Zephyr's tip</b>
-                <p class="small muted">Try “summarize this room” inside a busy channel — I'll catch you up in seconds.</p></div>
-              </div>
-            </div>
           </div>
         </div>
       </div>`;
 
-    // Quick Pulse ticker (doubled for seamless marquee)
-    const chips = DemoData.TOPICS.map(t =>
-      `<button class="pulse-chip" data-topic-room="${t.room}" title="${U.esc(t.blurb)}">
-        <span class="tagc">${U.esc(t.tag)}</span><span class="heat">🔥${t.heat}</span>
-      </button>`).join('');
+    // Active-rooms ticker (real public rooms, biggest first; doubled for seamless marquee)
+    const active = [...Store.state.rooms].filter(r => r.visibility === 'public')
+      .sort((a, b) => b.memberCount - a.memberCount).slice(0, 10);
+    const chipHTML = t =>
+      `<button class="pulse-chip" data-topic-room="${t.id}" title="${U.esc(t.desc)}">
+        <span class="tagc">${U.esc(t.icon + ' ' + t.name)}</span><span class="heat">👥${t.memberCount}</span>
+      </button>`;
+    const chips = active.map(chipHTML).join('');
     U.$('#pulseTrack').innerHTML = chips + chips;
     U.$$('#pulseTrack .pulse-chip').forEach(c => c.addEventListener('click', () => Router.go('room', [c.dataset.topicRoom])));
     U.$('#homeClaim')?.addEventListener('click', e => {
@@ -221,6 +230,12 @@ window.AppShell = (() => {
     // Mobile top bar
     U.$('#mobSearchBtn')?.insertAdjacentHTML('afterbegin', U.icon('search', 19));
     U.$('#mobBell')?.insertAdjacentHTML('afterbegin', U.icon('bell', 19));
+
+    // No AI endpoint configured → hide Zephyr entry points entirely.
+    if (!DriftConfig.AI_ENABLED) {
+      U.$$('[data-view="zephyr"]').forEach(b => b.remove());
+      U.$('#btnAIDrawer')?.remove();
+    }
   }
 
   function setRailActive(name) {
@@ -306,7 +321,7 @@ window.AppShell = (() => {
     });
 
     // First-visit tour
-    if (!Store.state.meta.onboarded) setTimeout(startTour, 900);
+    if (!Store.me().onboarded) setTimeout(startTour, 900);
 
     refreshUnreadBadges();
     Notifs.refreshBadges();
@@ -334,9 +349,9 @@ window.AppShell = (() => {
   function startTour() {
     const steps = [
       { sel: innerWidth > 900 ? '[data-view="discover"]' : '#bottomNav [data-view="discover"]', title: '🔎 Discover rooms', text: 'Browse communities by vibe — gaming, coding, study and more. Or create your own in seconds.' },
-      { sel: innerWidth > 900 ? '[data-view="zephyr"]' : '#bottomNav [data-view="zephyr"]', title: '✨ Meet Zephyr', text: 'Your built-in AI companion. Summaries, icebreakers, translations — right inside Drift.' },
-      { sel: innerWidth > 900 ? '#bellBtn' : '#mobBell', title: '🔔 Notifications live here', text: 'Mentions, friend requests and trending rooms land here — with toasts so you never miss a beat.' },
-      { sel: null, title: "That's the spirit ✨", text: 'Jump into Orbit Lounge to feel the flow. You can replay this tour anytime from Settings → Profile… actually, just enjoy!' }
+      ...(DriftConfig.AI_ENABLED ? [{ sel: innerWidth > 900 ? '[data-view="zephyr"]' : '#bottomNav [data-view="zephyr"]', title: '✨ Meet Zephyr', text: 'Your built-in AI companion. Summaries, icebreakers, translations — right inside Drift.' }] : []),
+      { sel: innerWidth > 900 ? '#bellBtn' : '#mobBell', title: '🔔 Notifications live here', text: 'Mentions, new followers and room activity land here — with toasts so you never miss a beat.' },
+      { sel: null, title: "That's the spirit ✨", text: 'Join a public room or create your own, then say hi. Everything you see is real people in real time!' }
     ];
     let i = 0;
     const scrimRoot = U.$('#tour-root');
@@ -367,16 +382,17 @@ window.AppShell = (() => {
     }
     function end() {
       scrimRoot.innerHTML = '';
-      Store.state.meta.onboarded = true;
-      Store.save();
+      Store.me().onboarded = true;
+      Store.touchProfile();
     }
     draw();
   }
 
   /* ------------------------------ Boot ------------------------------ */
-  function boot() {
-    Store.init();               // must run first so Auth.restore() can see accounts
-    if (!Auth.requireAuth()) return;
+  async function boot() {
+    if (!window.SB.guard()) return;          // unconfigured → setup screen, stop here
+    Store.init();                            // local UI prefs
+    if (!(await Auth.requireAuth())) return; // async — real session check
     SettingsPage.applyTheme();
     Backend.start();
     injectChrome();
@@ -386,9 +402,10 @@ window.AppShell = (() => {
     // Welcome mat
     setTimeout(() => {
       const q = Store.questToday();
+      const unread = Notifs.unreadCount();
       UI.toast({
         title: `Welcome back, ${Store.me().displayName} ✦`,
-        body: `${Notifs.unreadCount()} notifications · Daily quest: ${q.label}`,
+        body: `${unread ? unread + ' new notification' + (unread > 1 ? 's' : '') + ' · ' : ''}Daily quest: ${q.label}`,
         icon: 'sparkles', type: 'info', duration: 6000,
         onTap: () => Notifs.refreshBadges()
       });

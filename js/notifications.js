@@ -1,6 +1,7 @@
 /* ==========================================================================
    Drift · notifications.js — notification center, bell dropdown, badges.
-   In production these arrive via websocket/FCM pushes (see backend.js).
+   Rows come from the notifications table (SQL triggers on follows/joins),
+   streamed live by backend.js. Local events (mentions) are pushed here too.
    ========================================================================== */
 
 window.Notifs = (() => {
@@ -21,18 +22,13 @@ window.Notifs = (() => {
 
   function unreadCount() { return list().filter(n => !n.read).length; }
 
-  /**
-   * Push a notification. Respects the user's notification preferences and
-   * raises a toast + updates any badge in the DOM.
-   */
-  // [BACKEND] → real pushes arrive here via subscription callbacks
+  /** Push a LOCAL notification (toasts/badges). Server ones arrive via realtime. */
   function push(type, { title, body = '', actorId = null, roomId = null, silent = false } = {}) {
     const prefs = Store.state.settings.notifs;
     if (prefs[type] === false) return null;
-    const n = { id: U.uid('n'), type, title, body, actorId, roomId, ts: Date.now(), read: false };
+    const n = { id: U.uid('local'), type, title, body, actorId, roomId, ts: Date.now(), read: false };
     list().unshift(n);
     if (list().length > 60) list().length = 60;
-    Store.save();
     Store.emit('notif:new', n);
     if (!silent) {
       UI.toast({
@@ -45,14 +41,21 @@ window.Notifs = (() => {
 
   /** Route a notification click to the right place. */
   function open(n) {
-    n.read = true; Store.save();
+    n.read = true;
+    if (!String(n.id).startsWith('local')) Store.markNotification(n.id, true).catch(() => {});
     if (n.roomId) Router.go('room', [n.roomId]);
     else if (n.actorId) People.openProfileCard(n.actorId);
     else Router.go('notifs');
   }
 
-  const markAllRead = () => { list().forEach(n => n.read = true); Store.save(); Store.emit('notif:read'); };
-  const markRead = id => { const n = list().find(x => x.id === id); if (n) { n.read = true; Store.save(); } };
+  const markAllRead = () => {
+    list().forEach(n => { n.read = true; if (!String(n.id).startsWith('local')) Store.markNotification(n.id, true).catch(() => {}); });
+    Store.emit('notif:read');
+  };
+  const markRead = id => {
+    const n = list().find(x => x.id === id);
+    if (n) { n.read = true; if (!String(id).startsWith('local')) Store.markNotification(id, true).catch(() => {}); }
+  };
 
   /* ------------------------------ dropdown ------------------------------ */
   function renderDropdown(anchor) {

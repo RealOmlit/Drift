@@ -58,8 +58,9 @@ window.Chat = (() => {
       return;
     }
     if (r.visibility === 'public' && !Rooms.isJoined(r)) {
-      // Public rooms can be previewed read-only until joined? Keep simple: join silently.
-      r.members.push('me'); r.memberCount += 1; Store.save();
+      // Messages are members-only (RLS) — joining is instant, so do it for real.
+      Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
+      return;
     }
 
     root.innerHTML = layoutHTML(r);
@@ -79,7 +80,7 @@ window.Chat = (() => {
     );
 
     // Mark read after paint so unread logic sees the visit
-    setTimeout(() => { me().reads[roomId] = Date.now(); Store.save(); }, 400);
+    setTimeout(() => { me().reads[roomId] = Date.now(); Store.save(); Store.touchProfile(); }, 400);
     window.AppShell?.setRailActive?.('rooms');
   }
 
@@ -118,7 +119,7 @@ window.Chat = (() => {
           <div class="rh-actions">
             <button class="icon-btn hide-m" id="btnSearchInRoom" data-tip="Search in room">${U.icon('search', 18)}</button>
             <button class="icon-btn hide-m" id="btnFocus" data-tip="Focus mode">${U.icon('zap', 18)}</button>
-            <button class="ai-ask-btn hide-m" id="btnAIDrawer">✨ Ask Zephyr</button>
+            ${DriftConfig.AI_ENABLED ? '<button class="ai-ask-btn hide-m" id="btnAIDrawer">✨ Ask Zephyr</button>' : ''}
             <button class="icon-btn" id="btnRightPanel" title="Info panel">${U.icon('info', 18)}</button>
             <button class="icon-btn" id="btnRoomMenu">${U.icon('dots', 18)}</button>
           </div>
@@ -181,7 +182,7 @@ window.Chat = (() => {
       const r = room();
       UI.menu(e.currentTarget, [
         { header: true, label: r.name },
-        { label: '✨ Zephyr tools', icon: 'sparkles', onClick: () => switchTab('tools') },
+        ...(DriftConfig.AI_ENABLED ? [{ label: '✨ Zephyr tools', icon: 'sparkles', onClick: () => switchTab('tools') }] : []),
         { label: 'Room rules', icon: 'shield', onClick: showRules },
         { label: 'Copy invite link', icon: 'copy', onClick: async () => {
             await UI.copyText(`${location.origin}${location.pathname}#/room/${r.id}`);
@@ -261,12 +262,7 @@ window.Chat = (() => {
     me().stats.msgs++;
     Store.questProgress('send');
     Store.addXP(5, 'Message sent');
-
-    // Mention notifications for people I tagged
-    [...text.matchAll(/@([a-z0-9_]{3,20})/gi)].forEach(mm => {
-      const bot = DemoData.users.find(u => u.username.toLowerCase() === mm[1].toLowerCase());
-      if (bot) setTimeout(() => Notifs.push('message', { title: `${bot.displayName} saw your mention`, body: `In #${r.name}`, actorId: bot.id, roomId }), U.randInt(6000, 14000));
-    });
+    Store.touchProfile();
 
     ta.value = ''; autosize(ta);
     setReply(null);
@@ -364,8 +360,7 @@ window.Chat = (() => {
 
   function emptyRoomHTML() {
     return `<div class="empty" style="margin-top:18vh;"><div class="e-icon">${U.icon('message', 26)}</div>
-      <h4>The floor is yours</h4><p>Nobody has said anything yet. Break the ice — or ask Zephyr for topics.</p>
-      <button class="btn btn-glass btn-sm" onclick="AI.openDrawer('${roomId}')">✨ Suggest topics</button></div>`;
+      <h4>The floor is yours</h4><p>Nobody has said anything yet. Be the first to say hi 👋</p></div>`;
   }
 
   function authorOf(m) { return Store.getUser(m.userId); }
@@ -468,8 +463,9 @@ window.Chat = (() => {
 
   function pollHTML(m, ctx, u, mine) {
     const opts = m.poll.options;
+    const myId = Store.me()?.id;
     const total = opts.reduce((n, o) => n + o.votes.length, 0);
-    const myVote = opts.findIndex(o => o.votes.includes('me'));
+    const myVote = opts.findIndex(o => o.votes.includes(myId));
     const top = Math.max(...opts.map(o => o.votes.length), 1);
     return `
     <div class="msg gap" data-mid="${m.id}">
@@ -482,7 +478,7 @@ window.Chat = (() => {
             const pct = total ? Math.round(o.votes.length / total * 100) : 0;
             return `<button class="poll-opt ${myVote === i ? 'voted' : ''}" data-poll-vote="${i}">
               <span class="po-fill ${o.votes.length >= top && total ? 'win' : ''}" style="--pct:${total ? pct : 0}"></span>
-              <span class="po-lbl">${o.votes.includes('me') ? `<span class="po-check">✔ </span>` : ''}${U.esc(o.label)}</span>
+              <span class="po-lbl">${o.votes.includes(myId) ? `<span class="po-check">✔ </span>` : ''}${U.esc(o.label)}</span>
               <span class="po-pct">${total ? pct + '%' : ''}</span>
             </button>`;
           }).join('')}
@@ -506,7 +502,7 @@ window.Chat = (() => {
         <span class="lp-favicon">${U.esc(domain[0].toUpperCase())}</span>
         <span class="grow"><span class="lp-domain">${U.esc(domain)}</span>
         <span class="lp-title">${U.esc(title)}</span>
-        <span class="lp-note">static preview · demo</span></span>
+         <span class="lp-note">external link</span></span>
       </a>`;
     } catch (e) { return ''; }
   }
@@ -576,7 +572,7 @@ window.Chat = (() => {
     const card = e.target.closest('[data-user-card], [data-mention]');
     if (card) {
       const uname = card.dataset.userCard || card.dataset.mention;
-      const user = uname === 'me' ? me() : DemoData.users.find(x => x.username.toLowerCase() === uname) || Store.getUser(uname);
+      const user = uname === 'me' ? me() : Store.getUser(uname);
       if (user) People.openProfileCard(user.id);
       return;
     }
@@ -605,19 +601,24 @@ window.Chat = (() => {
     if (act) handleAction(act, act.closest('[data-mid]')?.dataset.mid);
   }
 
-  function castVote(mid, optIdx) {
+  async function castVote(mid, optIdx) {
     const msg = Store.roomMessages(roomId).find(x => x.id === mid);
     if (!msg || msg.type !== 'poll') return;
-    let first = true;
-    msg.poll.options.forEach((o, i) => {
-      const has = o.votes.includes('me');
-      if (has && i !== optIdx) { o.votes.splice(o.votes.indexOf('me'), 1); first = false; }
-      else if (has && i === optIdx) first = false;
-    });
-    msg.poll.options[optIdx].votes.push('me');
-    Store.save();
+    const myId = Store.me()?.id;
+    const hadVoted = msg.poll.options.some(o => o.votes.includes(myId));
+    try {
+      const updated = await SB.unwrap(
+        SB.client.rpc('cast_vote', { p_message: mid, p_option: optIdx })
+      );
+      // rpc returns the full poll jsonb — apply it
+      if (updated && updated.options) msg.poll = updated;
+      else if (msg.poll) { /* realtime UPDATE will refresh us */ }
+    } catch (e) {
+      UI.toast({ title: 'Vote failed', body: e.message, type: 'bad', icon: 'alert' });
+      return;
+    }
     Store.emit('msg:update', msg);
-    if (first) { me().stats.pollsVoted++; Store.addXP(3, 'Poll vote'); Store.questProgress('vote'); }
+    if (!hadVoted) { me().stats.pollsVoted++; Store.addXP(3, 'Poll vote'); Store.questProgress('vote'); }
   }
 
   function handleAction(btn, mid) {
@@ -721,14 +722,13 @@ window.Chat = (() => {
   }
 
   function togglePin(msg) {
-    msg.pinned = !msg.pinned;
-    Store.save();
-    Store.emit('msg:update', msg);
-    Store.composeMessage(roomId, 'sys', msg.pinned
-      ? `📌 **${me().displayName}** pinned a message`
-      : `Unpinned a message`, { type: 'system' });
+    Store.updateMessage(roomId, msg.id, { pinned: !msg.pinned })
+      .catch(e => UI.toast({ title: 'Pin failed', body: e.message, type: 'bad', icon: 'alert' }));
+    if (!msg.pinned) {
+      Store.composeMessage(roomId, 'sys', `📌 **${me().displayName}** pinned a message`, { type: 'system' });
+      UI.toast({ title: 'Pinned to the top', type: 'ok', icon: 'pin' });
+    }
     renderPinnedBar();
-    if (msg.pinned) UI.toast({ title: 'Pinned to the top', type: 'ok', icon: 'pin' });
   }
 
   function renderPinnedBar() {
@@ -789,8 +789,10 @@ window.Chat = (() => {
   function updateOnlineSub() {
     const el = U.$('[data-online-sub]'); if (!el) return;
     const r = room();
-    const online = r.members.filter(id => id !== 'me' && Store.getUser(id)?.status === 'online').length + 1;
-    el.textContent = `${online} online here`;
+    const onlineIds = Backend.onlineUserIds();
+    const online = new Set([...onlineIds, me()?.id]).size > 0
+      ? r.members.filter(id => id === 'me' || onlineIds.includes(id)).length : 1;
+    el.textContent = `${Math.max(online, 1)} online here`;
   }
 
   function onRoomUpdate(updated) { if (updated.id === roomId) updateHeadMeta(); }
@@ -818,11 +820,11 @@ window.Chat = (() => {
         ${owner ? memberRowHTML(owner, 'owner') : ''}
         <div class="rr-section-title">House rules</div>
         <ul class="rules-box">${(r.rules || []).map(x => `<li>${U.esc(x)}</li>`).join('')}</ul>
-        <div class="rr-section-title">Momentum</div>
+        <div class="rr-section-title">Room activity</div>
         <div class="card" style="padding:.8rem .9rem;">
-          <div class="spread"><span class="small muted">Room energy</span><b>${r.momentum}/100</b></div>
-          <div class="bar-track" style="margin-top:.5rem;"><div class="bar-fill" style="width:${r.momentum}%"></div></div>
-          <div class="small faint" style="margin-top:.45rem;">Rises as the room chats. High momentum = trending 🔥</div>
+          <div class="spread"><span class="small muted">Members online here</span>
+            <b>${r.members.filter(id => id === 'me' || Backend.onlineUserIds().includes(id)).length}</b></div>
+          <div class="small faint" style="margin-top:.45rem;">Presence is live — who you see is who's actually here.</div>
         </div>`;
     }
     if (tab === 'members') {
@@ -850,14 +852,15 @@ window.Chat = (() => {
     }
     if (tab === 'tools') {
       body.innerHTML = `
+        ${DriftConfig.AI_ENABLED ? `
         <div class="rr-section-title" style="margin-top:0;">Zephyr quick actions</div>
         ${[['Summarize recent chat', 'summarize this room', 'list'],
            ['Explain latest messages', 'explain the latest messages', 'info'],
            ['Suggest conversation topics', 'suggest topics', 'bulb'],
            ['Draft a better room description', 'generate a room description', 'wand'],
            ['Moderation coaching', 'moderation tips', 'shield']].map(([label, q, ic]) => `
-          <button class="member-row" data-zq="${U.esc(q)}">${U.icon(ic, 17)}<span class="mr-info mr-n">${label}</span></button>`).join('')}
-        <div class="rr-section-title">Mini activities</div>
+          <button class="member-row" data-zq="${U.esc(q)}">${U.icon(ic, 17)}<span class="mr-info mr-n">${label}</span></button>`).join('')}` : ''}
+        <div class="rr-section-title" style="margin-top:0;">Mini activities</div>
         <div class="row" style="gap:.5rem;">
           <button class="btn btn-glass btn-sm grow" id="tRace">${U.icon('zap', 15)} Reaction Race</button>
           <button class="btn btn-glass btn-sm grow" id="tTrivia">${U.icon('bulb', 15)} Trivia Rush</button>
@@ -869,7 +872,7 @@ window.Chat = (() => {
           ${[['Messages', Store.roomMessages(roomId).length],
              ['Members', U.fmtCount(r.memberCount)],
              ['Pins', Store.roomMessages(roomId).filter(m => m.pinned).length],
-             ['Momentum', r.momentum]].map(([k, v]) => `<div class="pc-stat"><b>${v}</b><span>${k}</span></div>`).join('')}
+             ['Online', r.members.filter(id => id === 'me' || Backend.onlineUserIds().includes(id)).length]].map(([k, v]) => `<div class="pc-stat"><b>${v}</b><span>${k}</span></div>`).join('')}
         </div>`;
       body.querySelectorAll('[data-zq]').forEach(b => b.addEventListener('click', () => AI.openDrawer(roomId, b.dataset.zq)));
       body.querySelector('#tRace').addEventListener('click', () => Activities.launch('race', roomId));

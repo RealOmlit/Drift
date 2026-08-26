@@ -79,7 +79,7 @@ window.SettingsPage = (() => {
         <button class="btn btn-primary" id="prSave">Save profile</button>`;
 
       panel.querySelector('#prEmoji').addEventListener('click', e => {
-        UI.emojiPicker(e.currentTarget, em => { Store.me().avatarEmoji = em; Store.save(); e.currentTarget.textContent = `Avatar emoji: ${em} ✏️`; });
+        UI.emojiPicker(e.currentTarget, em => { Store.me().avatarEmoji = em; Store.touchProfile(); e.currentTarget.textContent = `Avatar emoji: ${em} ✏️`; });
       });
       panel.querySelectorAll('#prAvail button').forEach(b => b.addEventListener('click', () => {
         Store.me().status = b.dataset.v; Store.save(); Store.emit('presence');
@@ -90,7 +90,8 @@ window.SettingsPage = (() => {
         u.displayName = panel.querySelector('#prName').value.trim() || u.username;
         u.bio = panel.querySelector('#prBio').value.trim();
         u.statusMsg = panel.querySelector('#prStatus').value.trim();
-        Store.save();
+
+        Store.touchProfile();
         UI.toast({ title: 'Profile saved ✨', type: 'ok', icon: 'check' });
         window.AppShell?.refreshIdentity();
       });
@@ -232,7 +233,7 @@ window.SettingsPage = (() => {
     if (section === 'moderation') {
       panel.innerHTML = `
         <h2>Moderation</h2>
-        <p class="desc">Reports from across your rooms. Demo scope: everything is local to this browser.</p>
+        <p class="desc">Reports you filed. Visible to whoever operates this Drift project.</p>
         <div id="modDash">${Mod.dashboardHTML()}</div>`;
       Mod.bindDashboard(panel);
     }
@@ -241,13 +242,12 @@ window.SettingsPage = (() => {
       const u = Store.me();
       panel.innerHTML = `
         <h2>Account</h2>
-        <p class="desc">Credentials & data. ⚠️ Demo auth only — connect Supabase/Firebase before real use.</p>
+        <p class="desc">Credentials are handled by Supabase Auth — passwords are never stored in this app.</p>
         <div class="set-group">
           ${row('Username', '@' + U.esc(u.username), '<button class="btn btn-glass btn-sm" id="acUser">Change</button>')}
           ${row('Email', U.esc(u.email), '<button class="btn btn-glass btn-sm" id="acEmail">Change</button>')}
           ${row('Password', '••••••••', '<button class="btn btn-glass btn-sm" id="acPass">Change</button>')}
-          ${row('Export my data', 'Download rooms, messages & settings as JSON.', '<button class="btn btn-glass btn-sm" id="acExport">' + U.icon('download', 14) + ' Export</button>')}
-          ${row('Reset demo world', 'Wipes local data & reseeds the demo.', '<button class="btn btn-danger btn-sm" id="acReset">Reset</button>')}
+          ${row('Export my data', 'Download your profile, rooms & messages as JSON.', '<button class="btn btn-glass btn-sm" id="acExport">' + U.icon('download', 14) + ' Export</button>')}
         </div>
         <button class="btn btn-danger btn-block" id="acLogout" style="max-width:320px;">${U.icon('logout', 16)} Log out of Drift</button>`;
 
@@ -255,7 +255,8 @@ window.SettingsPage = (() => {
         try {
           const v = await UI.prompt({ title: 'Change username', label: 'New username', value: Store.me().username, okLabel: 'Update' });
           if (!v) return;
-          Auth.changeUsername(v);
+          const btn = panel.querySelector('#acUser'); btn.disabled = true;
+          await Auth.changeUsername(v);
           window.AppShell?.refreshIdentity();
           UI.toast({ title: 'Username updated → @' + Store.me().username, type: 'ok' }); draw();
         } catch (err) { UI.toast({ title: err.message, type: 'bad' }); }
@@ -264,10 +265,10 @@ window.SettingsPage = (() => {
         const v = await UI.prompt({ title: 'Change email', label: 'New email', value: Store.me().email || '' });
         if (!v) return;
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { UI.toast({ title: 'Invalid email', type: 'bad' }); return; }
-        const acctKey = Store.state.session?.username;
-        if (Store.state.accounts[acctKey]) Store.state.accounts[acctKey].email = v.toLowerCase();
-        Store.me().email = v.toLowerCase();
-        Store.save(); UI.toast({ title: 'Email updated', type: 'ok' }); draw();
+        try {
+          await Auth.changeEmail(v);
+          UI.toast({ title: 'Email update started', body: 'Check the new inbox for a confirmation link.', type: 'ok' }); draw();
+        } catch (err) { UI.toast({ title: err.message, type: 'bad' }); }
       });
       panel.querySelector('#acPass').addEventListener('click', async () => {
         const cur = await UI.prompt({ title: 'Current password', label: 'Enter current password' });
@@ -278,18 +279,13 @@ window.SettingsPage = (() => {
         catch (err) { UI.toast({ title: err.message, type: 'bad' }); }
       });
       panel.querySelector('#acExport').addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify({ exportedAt: Date.now(), profile: Store.me(), rooms: Store.state.rooms.filter(r => r.members.includes('me')), settings: S() }, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify({ exportedAt: Date.now(), profile: { ...Store.me(), email: undefined }, rooms: Store.state.rooms.filter(r => r.members.includes('me')), settings: S() }, null, 2)], { type: 'application/json' });
         const a = U.el('a', { href: URL.createObjectURL(blob), download: 'drift-data.json' });
         document.body.appendChild(a); a.click(); a.remove();
         UI.toast({ title: 'Data exported', body: 'drift-data.json downloaded.', type: 'ok', icon: 'download' });
       });
-      panel.querySelector('#acReset').addEventListener('click', async () => {
-        if (!(await UI.confirm({ title: 'Reset demo world?', body: 'All local messages, accounts and settings are wiped, then the demo re-seeds.', okLabel: 'Reset everything', danger: true }))) return;
-        Store.resetAll();
-        location.href = './index.html';
-      });
       panel.querySelector('#acLogout').addEventListener('click', async () => {
-        if (!(await UI.confirm({ title: 'Log out?', body: 'Your demo data stays on this device.', okLabel: 'Log out', danger: true }))) return;
+        if (!(await UI.confirm({ title: 'Log out?', body: 'You can log back in any time with your email and password.', okLabel: 'Log out', danger: true }))) return;
         Auth.signOut();
       });
     }

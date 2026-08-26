@@ -1,183 +1,198 @@
 /* ==========================================================================
-   Drift · backend.js — realtime layer
-   ───────────────────────────────────────────────────────────────────────────
-   ⚠️  DEMO REALTIME SIMULATION
-   This file *simulates* a live server: ambient bot chatter, typing
-   indicators, presence fluctuations, poll votes and notifications.
-   Nothing here talks to a network. It exists so the UI can be built and
-   evaluated exactly as it would behave against Supabase/Firebase.
+   Drift · backend.js — REAL realtime layer on Supabase.
 
-   PRODUCTION INTEGRATION POINTS (see README):
-     Backend.start()        → open real subscriptions (postgres_changes / onSnapshot)
-     Backend.stop()         → tear down listeners
-     Backend.sendTyping()   → broadcast typing events
-     Backend.presence()     → replace simulated presence with auth presence channel
-   Every function that must be replaced is marked with `// [BACKEND]`.
+   · postgres_changes → live messages, reactions, rooms, notifications
+   · a presence channel → genuine "drifters online" count + per-user status
+   · broadcast        → typing indicators between real clients
+
+   Public API (unchanged): start(), stop(), sendTyping(roomId),
+   plus onlineUserIds() for presence-aware UI.
    ========================================================================== */
 
 window.Backend = (() => {
   'use strict';
-  const CFG = window.DriftConfig;
-  const SIM = CFG.SIM;
-  let timers = [];
+  let channel = null;
+  let heartbeat = null;
+  const online = new Map();          // userId → presence ref info
 
-  /* ------------------------- helpers ------------------------- */
-  function later(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; }
-  function every(fn, ms) { const t = setInterval(fn, ms); timers.push(t); return t; }
-
-  /** Pick an ambient speaker for a room (bots only). */
-  function pickSpeaker(room) {
-    const bots = room.members.filter(id => id !== 'me');
-    return bots.length ? U.rand(bots) : null;
+  function routeMessage(payload) {
+    const row = payload.new;
+    if (!row) return;
+    const room = Store.getRoom(row.room_id);
+    if (!room) return;                       // room not cached → not joined/public slice
+    if (room.messages.some(m => m.id === row.id)) return;  // our own insert already landed
+    // Reactions don't exist at INSERT time — none to fetch.
+    room.messages.push(rowToMsgShim(row));
+    trimAndEmit(row.room_id, row.id);
   }
 
-  /** Compose a believable line for the room's category. */
-  function botLine(room) {
-    const pool = window.DemoData.CHATTER[room.category] || [];
-    return U.chance(0.18)
-      ? U.rand(window.DemoData.GENERIC)
-      : U.rand(pool.length ? pool : window.DemoData.GENERIC);
+  function rowToMsgShim(row) {
+    return {
+      id: row.id, roomId: row.room_id,
+      userId: row.user_id || 'sys',
+      text: row.content || '',
+      ts: Date.parse(row.created_at),
+      edited: row.edited || false,
+      deleted: row.deleted || false,
+      pinned: row.pinned || false,
+      type: row.type || 'text',
+      replyTo: row.reply_to || null,
+      poll: row.poll || null,
+      meta: row.meta || null,
+      reactions: {}, seen: false
+    };
   }
 
-  /* ------------------------- simulation loops ------------------------- */
+  function trimAndEmit(roomId, id) {
+    const room = Store.getRoom(roomId);
+    if (!room) return;
+    if (room.messages.length > DriftConfig.MESSAGE_WINDOW * 2)
+      room.messages.splice(0, room.messages.length - DriftConfig.MESSAGE_WINDOW * 2);
+    const m = room.messages.find(x => x.id === id);
+    if (m) Store.emit('msg:new', m);
+  }
 
-  // [BACKEND] Presence: replace with a Supabase Realtime presence channel /
-  // Firebase onDisconnect()+presence ref. Here we simply wobble a number.
-  function startPresence() {
-    every(() => {
-      const m = Store.state.meta;
-      m.onlineCount = U.clamp(m.onlineCount + U.randInt(-7, 9), 1105, 1490);
-      Store.emit('presence', m.onlineCount);
-      // Occasionally flip a demo user's status so lists feel alive
-      if (U.chance(0.35)) {
-        const b = U.rand(window.DemoData.users);
-        if (b.status !== 'offline') b.status = U.rand(['online', 'online', 'away']);
-        else if (U.chance(0.25)) { b.status = 'online'; b.lastSeen = null; }
-        Store.emit('presence', m.onlineCount);
+  function routeUpdate(payload) {
+    const row = payload.new;
+    if (!row) return;
+    const room = Store.getRoom(row.room_id);
+    if (!room) return;
+    const m = room.messages.find(x => x.id === row.id);
+    if (!m) return;
+    Object.assign(m, {
+      text: row.content, edited: row.edited, deleted: row.deleted,
+      pinned: row.pinned, type: row.type, poll: row.poll, meta: row.meta
+    });
+    Store.emit('msg:update', m);
+  }
+
+  async function routeReactionInsert(payload) {
+    const r = payload.new;
+    if (!r) return;
+    for (const room of Store.state.rooms) {
+      const m = room.messages.find(x => x.id === r.message_id);
+      if (m) {
+        m.reactions[r.emoji] = m.reactions[r.emoji] || [];
+        if (!m.reactions[r.emoji].includes(r.user_id)) m.reactions[r.emoji].push(r.user_id);
+        Store.emit('msg:update', m);
+        return;
       }
-    }, SIM.presenceTickMs);
+    }
   }
-
-  // [BACKEND] Messages & typing: replace with room-scoped subscriptions.
-  function startAmbientChat() {
-    every(() => {
-      const view = window.Router && Router.current;
-      // Prefer the room the user is looking at (feels most "live")
-      const room = view && view.name === 'room'
-        ? Store.getRoom(view.params[0])
-        : Store.getRoom(U.rand(['r1', 'r2', 'r3', 'r7']));
-      if (!room || !Store.me()) return;
-      const speaker = pickSpeaker(room);
-      if (!speaker || Mod.isMuted(speaker)) return;
-
-      const name = DemoData.userById(speaker)?.username || 'someone';
-      Store.emit('typing', { roomId: room.id, userId: speaker });
-
-      later(() => {
-        Store.emit('typing-stop', { roomId: room.id, userId: speaker });
-        const msg = Store.composeMessage(room.id, speaker, botLine(room));
-        if (msg && U.chance(0.4)) {
-          // Bots react to each other sometimes
-          later(() => {
-            Store.toggleReaction(room.id, msg.id, U.rand(['🔥', '😂', '💡', '🤝', '❤️']), U.rand(room.members.filter(i => i !== speaker)));
-          }, U.randInt(2500, 9000));
-        }
-        // Read receipts for the user's own recent messages (simulated)
-        markOwnSeen(room.id);
-      }, SIM.typingLeadMs + U.randInt(0, 1200));
-    }, U.randInt(SIM.botMessageMinMs, SIM.botMessageMaxMs));
-  }
-
-  // Simulated "others read your message" ticks
-  function markOwnSeen(roomId) {
-    const mine = Store.roomMessages(roomId).filter(m => m.userId === 'me' && !m.seen);
-    if (!mine.length || !Store.state.settings.readReceipts) return;
-    const m = mine[0];
-    Store.updateMessage(roomId, m.id, { seen: true });
-  }
-
-  // [BACKEND] Poll votes would arrive via message updates in production.
-  function startPollVotes() {
-    every(() => {
-      Store.state.rooms.forEach(room => {
-        room.messages.filter(m => m.type === 'poll').forEach(m => {
-          if (U.chance(0.30)) {
-            const voters = room.members.filter(id => id !== 'me');
-            const v = U.rand(voters);
-            if (v && !m.poll.options.some(o => o.votes.includes(v))) {
-              U.rand(m.poll.options).votes.push(v);
-              Store.save();
-              Store.emit('msg:update', m);
-            }
-          }
-        });
-      });
-    }, 21000);
-  }
-
-  // [BACKEND] Notifications: push via websockets / FCM in production.
-  function startNotifications() {
-    every(() => {
-      if (!Store.me() || !U.chance(SIM.notifChance)) return;
-      const kind = U.rand(['room_activity', 'friend', 'achievement']);
-      if (kind === 'room_activity') {
-        const room = U.rand(Store.state.rooms.filter(r => r.visibility !== 'private'));
-        Notifs.push('room_activity', {
-          title: `${room.name} is picking up steam`,
-          body: `Momentum ${room.momentum} · ${U.randInt(3, 24)} new members today`,
-          roomId: room.id
-        });
-      } else if (kind === 'friend') {
-        const bot = U.rand(DemoData.users.filter(u => u.status !== 'offline'));
-        People.acceptSimulatedRequest(bot);
-      } else {
-        const badges = [
-          ['Conversation Starter', 'You\'ve been keeping rooms alive'],
-          ['Reaction Giver', 'Your reactions spread good vibes'],
-          ['Night Owl', 'Burning the midnight Drift oil']
-        ];
-        const [title, body] = U.rand(badges);
-        Notifs.push('achievement', { title: `Badge unlocked: ${title}`, body });
+  function routeReactionDelete(payload) {
+    const r = payload.old;
+    if (!r || !r.message_id) return;
+    for (const room of Store.state.rooms) {
+      const m = room.messages.find(x => x.id === r.message_id);
+      if (m && m.reactions[r.emoji]) {
+        m.reactions[r.emoji] = m.reactions[r.emoji].filter(u => u !== r.user_id);
+        if (!m.reactions[r.emoji].length) delete m.reactions[r.emoji];
+        Store.emit('msg:update', m);
+        return;
       }
-    }, 52000);
+    }
   }
 
-  /**
-   * Bot members gradually discover brand-new rooms and join them,
-   * generating believable member growth + notifications for owners.
-   */
-  function startRoomGrowth() {
-    every(() => {
-      const mine = Store.state.rooms.filter(r => r.ownerId === 'me');
-      if (!mine.length || !U.chance(0.5)) return;
-      const room = U.rand(mine);
-      const joiner = U.rand(DemoData.users);
-      if (joiner && !room.members.includes(joiner.id)) {
-        room.members.push(joiner.id);
-        room.memberCount += 1;
-        Store.save();
-        Store.emit('room:update', room);
-        Notifs.push('room_activity', {
-          title: `${joiner.displayName} joined ${room.name}`,
-          body: 'Your room keeps growing 🌱', roomId: room.id, actorId: joiner.id
-        });
-      }
-    }, 47000);
+  function routeNotification(payload) {
+    const n = payload.new;
+    if (!n || n.user_id !== Store.me()?.id) return;
+    const mapped = {
+      id: n.id, type: n.type, title: n.title, body: n.body,
+      actorId: n.actor_id, roomId: n.room_id,
+      ts: Date.parse(n.created_at), read: false
+    };
+    Store.state.notifications.unshift(mapped);
+    Store.emit('notif:new', mapped);
   }
 
-  /* ------------------------- public API ------------------------- */
+  function refreshPresenceCount() {
+    Store.state.meta.onlineCount = online.size;
+    Store.emit('presence', online.size);
+  }
+
   function start() {
-    stop();
-    startPresence();
-    startAmbientChat();
-    startPollVotes();
-    startNotifications();
-    startRoomGrowth();
+    if (!SB.configured() || channel) return;
+    const meId = Store.me()?.id;
+
+    channel = SB.client.channel('drift-live', { config: { presence: { key: meId } } });
+
+    // --- realtime database streams -----------------------------------------
+    channel
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        routeMessage)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        routeUpdate)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'reactions' },
+        routeReactionInsert)
+      .on('postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'reactions' },
+        routeReactionDelete)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        routeNotification)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'rooms' },
+        () => Store.refreshRooms().then(() => Store.emit('rooms:changed')).catch(() => {}))
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'room_members' },
+        () => Store.refreshRooms().then(() => Store.emit('rooms:changed')).catch(() => {}))
+
+    // --- typing broadcasts --------------------------------------------------
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.userId === Store.me()?.id) return;
+        Store.emit('typing', payload);
+        setTimeout(() => Store.emit('typing-stop', payload), 6000);
+      })
+
+    // --- real presence ------------------------------------------------------
+      .on('presence', { event: 'sync' }, () => {
+        online.clear();
+        Object.entries(channel.presenceState()).forEach(([key, metas]) => {
+          const meta = Array.isArray(metas) ? metas[0] : metas;
+          if (meta?.user_id) online.set(meta.user_id, key);
+        });
+        refreshPresenceCount();
+      })
+      .subscribe(async status => {
+        if (status !== 'SUBSCRIBED') return;
+        const me = Store.me();
+        if (me) {
+          await channel.track({ user_id: me.id, at: Date.now() });
+          Store.touchStreak();
+        }
+      });
+
+    // Keep presence + last_seen fresh on long-lived tabs.
+    heartbeat = setInterval(() => {
+      const me = Store.me();
+      if (me && channel) channel.track({ user_id: me.id, at: Date.now() });
+      Store.touchPresence();
+    }, DriftConfig.PRESENCE_TICK_MS);
+
+    window.addEventListener('beforeunload', () => { try { channel?.untrack(); } catch (e) {} });
   }
-  function stop() { timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = []; }
 
-  /** Composer calls this so other clients could show "X is typing". [BACKEND] */
-  function sendTyping(roomId) { /* demo: no-op */ }
+  function stop() {
+    if (heartbeat) clearInterval(heartbeat);
+    heartbeat = null;
+    if (channel) { try { SB.client.removeChannel(channel); } catch (e) {} }
+    channel = null;
+    online.clear();
+  }
 
-  return { start, stop, sendTyping };
+  function sendTyping(roomId) {
+    if (!channel) return;
+    const me = Store.me();
+    channel.send({
+      type: 'broadcast', event: 'typing',
+      payload: { roomId, userId: me?.id, name: me?.displayName }
+    }).then(() => {}, () => {});
+  }
+
+  const onlineUserIds = () => [...online.keys()];
+
+  return { start, stop, sendTyping, onlineUserIds };
 })();

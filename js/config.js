@@ -1,44 +1,51 @@
 /* ==========================================================================
    Drift · config.js
    Central configuration. Everything a deployer may want to touch lives here.
-   NOTE: This is a FRONT-END DEMO build. No secrets belong in this file.
+   No secrets belong in this file — the anon key below is public by design;
+   access control is enforced by row-level security in supabase-setup.sql.
    ========================================================================== */
 
 window.DriftConfig = {
   APP_NAME: 'Drift',
   TAGLINE: 'Conversations in motion.',
-  VERSION: '1.0.0',
+  VERSION: '2.0.0',
+
+  /* ------------------------------------------------------------------
+     SUPABASE — the real backend.
+     1) Create a free project at https://supabase.com
+     2) Run supabase-setup.sql in its SQL Editor
+     3) Paste your project's URL + anon key here (Settings → API)
+     Until both values are set, pages show a "Setup required" screen.
+     Full instructions: SETUP.md
+  ------------------------------------------------------------------ */
+  SUPABASE_URL: '',
+  SUPABASE_ANON_KEY: '',
+
+  /** True when the real backend is wired up. */
+  REAL_MODE: false, // recomputed below
 
   /**
-   * Backend provider for the demo.
-   *  'demo'      → everything runs locally in the browser (localStorage).
-   *  'supabase'  → wire up js/backend.js (see README → "Connect Supabase").
-   *  'firebase'  → wire up js/backend.js (see README → "Connect Firebase").
-   * The UI stays identical in all modes.
+   * Zephyr AI assistant. Disabled by default: there is no fake offline
+   * engine anymore. Point AI_PROXY_URL at a serverless function that holds
+   * YOUR API key server-side, then set AI_ENABLED to true.
    */
-  BACKEND_PROVIDER: 'demo',
+  AI_ENABLED: false,
+  AI_PROXY_URL: null,
 
-  /**
-   * AI assistant ("Zephyr") configuration.
-   * SECURITY: Never put a real API key here or anywhere in front-end code.
-   * Point AI_PROXY_URL at YOUR serverless function / edge function that
-   * forwards requests to OpenAI / Anthropic / etc. with the key kept server-side.
-   * When left null, Zephyr falls back to the built-in offline demo engine.
-   */
-  AI_PROXY_URL: null, // e.g. 'https://your-worker.workers.dev/api/zephyr'
+  /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
+  STORAGE_PREFIX: 'drift.v2.',
 
-  /** Simulated presence baseline used by the demo presence engine. */
-  PRESENCE_BASELINE: 1284,
+  /** How many recent messages are loaded per room. */
+  MESSAGE_WINDOW: 60,
 
-  /** localStorage namespace — bump to invalidate old demo data. */
-  STORAGE_PREFIX: 'drift.v1.',
-
-  /** Demo behaviour knobs */
-  SIM: {
-    botMessageMinMs: 14000,   // min delay between ambient bot messages
-    botMessageMaxMs: 34000,
-    typingLeadMs: 1800,       // how long bots "type" before a message lands
-    presenceTickMs: 9000,
-    notifChance: 0.22         // chance per tick of a simulated notification
-  }
+  /** Presence heartbeat interval (ms). */
+  PRESENCE_TICK_MS: 30000
 };
+
+// Real mode is on only when both credentials look filled in.
+window.DriftConfig.REAL_MODE = Boolean(
+  window.DriftConfig.SUPABASE_URL &&
+  /^https:\/\/.+/.test(window.DriftConfig.SUPABASE_URL) &&
+  window.DriftConfig.SUPABASE_ANON_KEY &&
+  window.DriftConfig.SUPABASE_ANON_KEY.length > 20
+);

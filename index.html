@@ -56,10 +56,10 @@
     </p>
     <div class="hero-ctas anim-in anim-in-3">
       <a class="btn btn-primary btn-lg" href="./signup.html">Get Started — it's free</a>
-      <a class="btn btn-glass btn-lg" href="./login.html?demo=1">Explore Rooms →</a>
+      <a class="btn btn-glass btn-lg" href="./signup.html">Explore Rooms →</a>
     </div>
     <div class="hero-online anim-in anim-in-4">
-      <span class="dot online"></span> <b data-online-count>1,284</b>&nbsp;people drifting right now
+      <span class="dot online"></span> <b data-online-count>—</b>&nbsp;people drifting right now
     </div>
 
     <!-- Animated product preview -->
@@ -185,10 +185,10 @@
   <!-- ===================== STATS BAND ===================== -->
   <section class="stats-band reveal">
     <div class="container stats-grid">
-      <div><div class="stat-num" data-count="12400">0</div><div class="stat-lbl">Drifters onboard</div></div>
-      <div><div class="stat-num" data-count="480">0</div><div class="stat-lbl">Live rooms</div></div>
-      <div><div class="stat-num" data-count="1200000">0</div><div class="stat-lbl">Messages this week</div></div>
-      <div><div class="stat-num" data-count="98">0</div><div class="stat-lbl">% would recommend</div></div>
+      <div><div class="stat-num" data-online-count>—</div><div class="stat-lbl">Drifting right now</div></div>
+      <div><div class="stat-num" data-count="100">0</div><div class="stat-lbl">% real people, no bots</div></div>
+      <div><div class="stat-num">Live</div><div class="stat-lbl">Realtime messages</div></div>
+      <div><div class="stat-num">$0</div><div class="stat-lbl">Free forever tier</div></div>
     </div>
   </section>
 
@@ -197,10 +197,10 @@
     <div class="cta-panel reveal" id="zephyr">
       <span class="eyebrow">Ready to drift?</span>
       <h2>Your people are already talking.</h2>
-      <p>Jump into the demo — no server needed. Or bring your own backend later; Drift is built Supabase/Firebase-ready.</p>
+      <p>Create a free account and start your first room in seconds — every message is real and synced live.</p>
       <div class="hero-ctas" style="margin-top:1.6rem;">
         <a class="btn btn-primary btn-lg" href="./signup.html">Create free account</a>
-        <a class="btn btn-glass btn-lg" href="./login.html?demo=1">Try instant demo</a>
+        <a class="btn btn-glass btn-lg" href="./login.html">Log in</a>
       </div>
     </div>
   </section>
@@ -211,7 +211,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <span class="logo"><svg width="26" height="26" viewBox="0 0 48 48"><defs><linearGradient id="lg2" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lg2)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg><span class="logo-name">Dri<b>ft</b></span></span>
-          <p>An open, frontend-first chat platform concept. Demo runs fully in your browser.</p>
+          <p>A realtime chat platform — real accounts, live presence, messages synced through Postgres.</p>
         </div>
         <div class="footer-col">
           <h5>Product</h5>
@@ -219,11 +219,11 @@
         </div>
         <div class="footer-col">
           <h5>Developers</h5>
-          <a href="https://github.com" target="_blank" rel="noopener">GitHub repo ↗</a><a href="./README.md">Documentation</a><a href="./README.md#connect-supabase-or-firebase">Backend guide</a>
+          <a href="https://github.com" target="_blank" rel="noopener">GitHub repo ↗</a><a href="./README.md">Documentation</a><a href="./SETUP.md">Backend guide</a>
         </div>
         <div class="footer-col">
           <h5>Account</h5>
-          <a href="./login.html">Log in</a><a href="./signup.html">Sign up</a><a href="./app.html">Demo mode</a>
+          <a href="./login.html">Log in</a><a href="./signup.html">Sign up</a><a href="./app.html">Open app</a>
         </div>
       </div>
       <div class="footer-base">
@@ -233,7 +233,9 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/config.js"></script>
+  <script src="./js/supabase-client.js"></script>
   <script src="./js/utils.js"></script>
   <script src="./js/landing.js"></script>
 </body>

@@ -1,14 +1,15 @@
 /* ==========================================================================
    Drift · finder.js — global search: command palette (Ctrl/⌘+K) and the
-   full search page across rooms, people, messages and topics.
+   full search page across rooms, people and messages.
    ========================================================================== */
 
 window.Finder = (() => {
   'use strict';
 
-  const FILTERS = ['all', 'rooms', 'people', 'messages', 'topics'];
+  const FILTERS = ['all', 'rooms', 'people', 'messages'];
   let st = { q: '', filter: 'all', index: 0, results: [] };
   let paletteEl = null;
+  let peopleCache = [];
 
   /* ============================== indexing ============================== */
   function search(q, filter = 'all') {
@@ -20,7 +21,8 @@ window.Finder = (() => {
       r.visibility !== 'private' || Rooms.isJoined(r))
       .filter(r => match(r.name) || match(r.desc) || (r.tags || []).some(match) || match(r.category))
       .slice(0, 6);
-    const people = DemoData.users.filter(u =>
+    // Directory may still be loading — cache whatever we have.
+    const people = peopleCache.filter(u =>
       match(u.username) || match(u.displayName) || match(u.bio)).slice(0, 6);
     const messages = [];
     Store.state.rooms.forEach(r => {
@@ -32,14 +34,15 @@ window.Finder = (() => {
       });
     });
     messages.sort((a, b) => b.m.ts - a.m.ts);
-    const topics = DemoData.TOPICS.filter(t => match(t.tag) || match(t.blurb));
 
     return {
       rooms, people,
       messages: messages.slice(0, 8),
-      topics
+      topics: []
     };
   }
+
+  Store.allProfiles?.().then(users => { peopleCache = users; }).catch(() => {});
 
   function flatten(res, filter) {
     const out = [];
@@ -49,8 +52,6 @@ window.Finder = (() => {
       res.people.forEach(x => out.push({ type: 'person', x }));
     if ((filter === 'all' || filter === 'messages') && res.messages.length)
       res.messages.forEach(({ m, room }) => out.push({ type: 'message', x: m, room }));
-    if ((filter === 'all' || filter === 'topics') && res.topics.length)
-      res.topics.forEach(x => out.push({ type: 'topic', x }));
     return out;
   }
 
@@ -165,7 +166,7 @@ window.Finder = (() => {
     if (!st.q.trim()) {
       box.innerHTML = `
         <div class="pal-group">Try searching for</div>
-        ${['speedrun', 'lofi', 'rust vs go', '#css-gods', 'Nova'].map(s =>
+        ${['welcome', 'introduce yourself', 'game night', 'music', 'help'].map(s =>
           `<button class="pal-item" data-fill="${s}">${U.icon('search', 14)}<span class="pi-t" style="font-weight:500;color:var(--txt2)">${s}</span></button>`).join('')}`;
       box.querySelectorAll('[data-fill]').forEach(b => b.addEventListener('click', () => {
         paletteEl.querySelector('#palInput').value = b.dataset.fill;

@@ -34,9 +34,9 @@
         <p>Your rooms kept the momentum. Zephyr saved you a recap. The memes, tragically, cannot be unread.</p>
       </div>
       <div class="auth-mini-stats">
-        <div><b data-count-online>1,284</b><span>online now</span></div>
-        <div><b>480</b><span>live rooms</span></div>
-        <div><b>✨</b><span>Zephyr inside</span></div>
+        <div><b data-count-online>—</b><span>online now</span></div>
+        <div><b>∞</b><span>rooms to build</span></div>
+        <div><b>🔒</b><span>real accounts</span></div>
       </div>
     </aside>
 
@@ -69,25 +69,21 @@
 
         <div class="remember-row">
           <label><input type="checkbox" id="rememberMe" checked> Remember me</label>
-          <a href="#" onclick="return false;" title="Demo build — no email flow yet">Forgot password?</a>
+          <a href="#" onclick="return false;">Forgot password?</a>
         </div>
 
         <button class="btn btn-primary btn-block btn-lg" id="loginBtn" type="submit">Dive back in →</button>
       </form>
 
-      <div class="demo-hint">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5M12 7.6h.01"/></svg>
-        <span>Demo mode: accounts live only in your browser. <button type="button" id="demoBtn">Try instant demo →</button></span>
-      </div>
-
       <p class="form-foot">Just looking around? <a href="./index.html">Back to home</a></p>
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/config.js"></script>
+  <script src="./js/supabase-client.js"></script>
   <script src="./js/utils.js"></script>
   <script src="./js/store.js"></script>
-  <script src="./js/demo-data.js"></script>
   <script src="./js/ui.js"></script>
   <script src="./js/auth.js"></script>
   <script>
@@ -96,7 +92,7 @@
       'use strict';
       Store.init();
 
-      if (Auth.redirectIfAuthed()) return;
+      Auth.redirectIfAuthed().then(authed => { if (authed) return; });
 
       const form = document.getElementById('loginForm');
       const btn = document.getElementById('loginBtn');
@@ -105,7 +101,6 @@
         e.preventDefault();
         const id = document.getElementById('loginId').value.trim();
         const pw = document.getElementById('loginPw').value;
-        const remember = document.getElementById('rememberMe').checked;
         let ok = true;
         document.getElementById('fId').classList.toggle('invalid', !id && !(ok = false));
         document.getElementById('fPw').classList.toggle('invalid', !pw && !(ok = false));
@@ -113,25 +108,13 @@
 
         btn.disabled = true; btn.textContent = 'Checking…';
         try {
-          await Auth.signIn(id, pw, remember);
+          await Auth.signIn(id, pw);
           location.href = './app.html';
         } catch (err) {
           btn.disabled = false; btn.textContent = 'Dive back in →';
           UI.toast({ title: 'Couldn\u2019t log in', body: err.message, type: 'bad', icon: 'alert' });
         }
       });
-
-      document.getElementById('demoBtn').addEventListener('click', () => {
-        Auth.signInDemo();
-      });
-
-      // Arriving from the landing "Explore Rooms" button → spotlight the demo option
-      if (location.search.includes('demo=1')) {
-        const b = document.getElementById('demoBtn');
-        b.style.animation = 'pulse-ring 1.6s ease-out 3';
-        setTimeout(() => b.click && window.scrollTo({ top: 0 }), 300);
-        b.closest('.demo-hint').style.borderColor = 'var(--ac2)';
-      }
 
       // Password visibility toggles
       document.querySelectorAll('[data-pw-toggle]').forEach(b => b.addEventListener('click', () => {
@@ -140,14 +123,22 @@
         b.style.color = inp.type === 'text' ? 'var(--ac2)' : '';
       }));
 
-      // Living counter on brand panel
-      let base = window.DriftConfig.PRESENCE_BASELINE;
-      setInterval(() => {
-        base += Math.round((Math.random() - .45) * 12);
-        base = Math.max(1150, Math.min(1500, base));
-        const el = document.querySelector('[data-count-online]');
-        if (el) el.textContent = base.toLocaleString();
-      }, 3800);
+      // Real online counter (anon presence subscription)
+      if (window.SB?.configured()) {
+        try {
+          const ch = SB.client.channel('drift-lobby');
+          const seen = new Set();
+          ch.on('presence', { event: 'sync' }, () => {
+            seen.clear();
+            Object.entries(ch.presenceState()).forEach(([k, metas]) => {
+              const meta = Array.isArray(metas) ? metas[0] : metas;
+              if (meta?.user_id) seen.add(meta.user_id);
+            });
+            const el = document.querySelector('[data-count-online]');
+            if (el) el.textContent = U.fmtCount(seen.size || 0);
+          }).subscribe();
+        } catch (e) {}
+      }
     })();
   </script>
 </body>

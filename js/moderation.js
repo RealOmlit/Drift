@@ -1,6 +1,7 @@
 /* ==========================================================================
-   Drift · moderation.js — reports, mutes, blocks and the mod dashboard.
-   Demo scope: all actions are local to this browser session.
+   Drift · moderation.js — reports, mutes, blocks and the report dashboard.
+   Reports are stored in the reports table (visible to the project operator);
+   mutes/blocks are enforced locally in your browser.
    ========================================================================== */
 
 window.Mod = (() => {
@@ -36,7 +37,7 @@ window.Mod = (() => {
         okLabel: 'Block', danger: true
       }))) return;
       list.push(userId);
-      addReport({ kind: 'block', userId, note: 'User blocked' });
+      addReport({ kind: 'block', userId, reason: 'User blocked' });
       UI.toast({ title: `${u.displayName} blocked`, type: 'warn', icon: 'ban' });
     }
     Store.save();
@@ -44,13 +45,12 @@ window.Mod = (() => {
   }
 
   /* -------------------------------- reports -------------------------------- */
+  /** Persist a report to the database and mirror it into local state. */
   function addReport({ kind, messageId, roomId, userId, reason, note }) {
-    Store.state.reports.unshift({
-      id: U.uid('rep'), kind, messageId, roomId, userId,
-      reason: reason || note || 'unspecified', ts: Date.now(), status: 'open'
-    });
-    if (Store.state.reports.length > 40) Store.state.reports.length = 40;
-    Store.save();
+    Store.fileReport({
+      kind, messageId, roomId, userId,
+      reason: reason || note || 'unspecified'
+    }).catch(e => UI.toast({ title: 'Report failed to send', body: e.message, type: 'bad', icon: 'alert' }));
     Store.emit('reports:update');
   }
 
@@ -103,19 +103,12 @@ window.Mod = (() => {
     });
   }
 
-  /** Escalate a report (mod dashboard): demo "bans" the bot from the room. */
+  /** Escalate a report: recorded for the project operator to review. */
   function escalate(report) {
+    if (!report) return;
     report.status = 'escalated';
-    const room = report.roomId ? Store.getRoom(report.roomId) : null;
-    if (room && report.userId && report.userId !== room.ownerId) {
-      room.members = room.members.filter(m => m !== report.userId);
-      room.memberCount -= 1;
-    }
-    const u = Store.getUser(report.userId);
-    if (u && u.isDemo) { u.status = 'offline'; u.lastSeen = Date.now(); }
     Store.save();
-    Store.emit('room:update', room || {});
-    UI.toast({ title: 'Escalated', body: u ? `${u.displayName} removed & flagged.` : 'Action recorded.', type: 'warn', icon: 'shield' });
+    UI.toast({ title: 'Escalated', body: 'The report was flagged for review.', type: 'warn', icon: 'shield' });
   }
 
   /* --------------------------- moderation dashboard ---------------------------

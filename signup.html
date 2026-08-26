@@ -91,26 +91,22 @@
         <button class="btn btn-primary btn-block btn-lg" id="signupBtn" type="submit">Create account 🚀</button>
       </form>
 
-      <div class="demo-hint">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5M12 7.6h.01"/></svg>
-        <span>Demo build: accounts are stored only in this browser's localStorage. Never reuse a real password here.</span>
-      </div>
-
-      <p class="form-foot">Just looking around? <a href="./index.html">Back to home</a></p>
+      <p class="form-foot">Already have an account? <a href="./login.html">Log in</a> · <a href="./index.html">Back to home</a></p>
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/config.js"></script>
+  <script src="./js/supabase-client.js"></script>
   <script src="./js/utils.js"></script>
   <script src="./js/store.js"></script>
-  <script src="./js/demo-data.js"></script>
   <script src="./js/ui.js"></script>
   <script src="./js/auth.js"></script>
   <script>
     (() => {
       'use strict';
       Store.init();
-      if (Auth.redirectIfAuthed()) return;
+      Auth.redirectIfAuthed();
 
       const $ = id => document.getElementById(id);
       let chosenEmoji = '';
@@ -150,8 +146,13 @@
         const pw = $('suPass').value;
         let ok = true;
 
-        const uErr = Auth.validateUsername(username) || (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? null : 'Enter a valid email address.') || (pw.length >= 8 ? null : 'Password needs at least 8 characters.');
-        if (Auth.validateUsername(username)) { $('userErr').textContent = Auth.validateUsername(username); $('fUser').classList.add('invalid'); ok = false; }
+        let uErr = null;
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) uErr = '3–20 chars · letters, numbers, underscores.';
+        else {
+          try { uErr = await Auth.validateUsername(username); }
+          catch (err) { UI.toast({ title: 'Check failed', body: err.message, type: 'bad', icon: 'alert' }); return; }
+        }
+        if (uErr) { $('userErr').textContent = uErr; $('fUser').classList.add('invalid'); ok = false; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $('fEmail').classList.add('invalid'); ok = false; }
         if (pw.length < 8) { $('fPass').classList.add('invalid'); ok = false; }
         if (!ok) return;
@@ -159,12 +160,18 @@
         const btn = $('signupBtn');
         btn.disabled = true; btn.textContent = 'Building your room key…';
         try {
-          await Auth.signUp({
+          const res = await Auth.signUp({
             username, email, password: pw,
             displayName: $('suName').value.trim() || username,
             avatarEmoji: chosenEmoji, hue
           });
-          location.href = './app.html?welcome=1';
+          if (res && res.pendingConfirmation) {
+            btn.textContent = 'Confirm your email ✉️';
+            UI.toast({ title: 'Almost there!', body: 'Check your inbox to confirm your email, then log in.', type: 'info', duration: 9000 });
+            setTimeout(() => { location.href = './login.html'; }, 4000);
+          } else {
+            location.href = './app.html?welcome=1';
+          }
         } catch (err) {
           btn.disabled = false; btn.textContent = 'Create account 🚀';
           UI.toast({ title: 'Sign-up failed', body: err.message, type: 'bad', icon: 'alert' });
@@ -172,7 +179,7 @@
       });
 
       document.querySelectorAll('[data-pw-toggle]').forEach(b => b.addEventListener('click', () => {
-        const inp = $(b.dataset.pwToggle);
+        const inp = document.getElementById(b.dataset.pwToggle);
         inp.type = inp.type === 'password' ? 'text' : 'password';
         b.style.color = inp.type === 'text' ? 'var(--ac2)' : '';
       }));

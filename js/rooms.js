@@ -1,5 +1,7 @@
 /* ==========================================================================
-   Drift · rooms.js — room discovery, creation, membership & settings.
+   Drift · rooms.js — REAL room discovery, creation, membership & settings.
+   Rooms live in Postgres; joining/leaving/creating hits the database and
+   realtime keeps every connected client in sync.
    ========================================================================== */
 
 window.Rooms = (() => {
@@ -19,20 +21,21 @@ window.Rooms = (() => {
     random:     { label: 'Random',     icon: 'dice',    grad: 'linear-gradient(135deg,#fbbf24,#fb7185)' }
   };
 
-  const state = { category: 'all', search: '', sort: 'trending' };
+  const state = { category: 'all', search: '', sort: 'newest' };
+  const myId = () => Store.me()?.id;
   const isJoined = room => Array.isArray(room?.members) && room.members.includes('me');
-  const isOwner = room => room.ownerId === 'me';
-  const isMod = room => isOwner(room) || (room.mods || []).includes('me');
+  const isOwner = room => !!myId() && room.ownerId === myId();
+  const isMod = room => isOwner(room) || (room.mods || []).includes(myId());
   const catOf = key => CATEGORIES[key] || CATEGORIES.general;
 
   /* ============================== Cards ============================== */
   function roomCard(room) {
     const c = catOf(room.category);
     const joined = isJoined(room);
-    const hot = room.momentum >= 80;
+    const fresh = Date.now() - room.createdAt < 864e5 * 3;   // created within 3 days
     return `
       <article class="card card-glow hoverable room-card ${joined ? 'joined-mark' : ''}" data-room="${room.id}">
-        ${hot ? '<span class="badge badge-hot rc-badge">🔥 Trending</span>' : ''}
+        ${fresh && !joined ? '<span class="badge badge-new rc-badge">✦ New</span>' : ''}
         <div class="rc-top">
           <div class="rc-icon" style="--rc-bg:${c.grad}">${room.visibility === 'private' ? U.icon('lock', 20) : room.icon}</div>
           <div class="grow">
@@ -44,7 +47,6 @@ window.Rooms = (() => {
         <div class="rc-foot">
           <span class="row" style="gap:.35rem;">${U.icon('users', 14)} ${U.fmtCount(room.memberCount)}</span>
           <span class="sep"></span>
-          <span class="momentum" title="Momentum ${room.momentum}"><i></i><i></i><i></i><i></i></span>
           <span style="margin-left:auto;">
             ${joined ? '<b style="color:var(--ok);font-size:.78rem;">Joined</b>'
                      : room.visibility === 'private' ? `<span class="badge badge-lock">${U.icon('lock',11)} Private</span>`
@@ -60,7 +62,7 @@ window.Rooms = (() => {
       <article class="card hoverable mini-room" data-room="${room.id}">
         <div class="spread">
           <div class="mr-icon" style="--av-bg:${c.grad}">${room.icon}</div>
-          ${room.momentum >= 80 ? '<span class="momentum"><i></i><i></i><i></i><i></i></span>' : ''}
+          ${isJoined(room) ? '<span class="badge badge-new">joined</span>' : ''}
         </div>
         <div>
           <div style="font-family:var(--font-d);font-weight:700;font-size:.95rem;">${U.esc(room.name)}</div>
@@ -94,15 +96,15 @@ window.Rooms = (() => {
         <div class="toolbar">
           <div class="input-wrap grow" style="min-width:220px;">
             ${U.icon('search', 16, 'lead')}
-            <input class="input" id="discSearch" placeholder="Search rooms, topics, vibes…" value="${U.esc(state.search)}">
+            <input class="input" id="discSearch" placeholder="Search rooms…" value="${U.esc(state.search)}">
           </div>
           <div class="seg" id="discSort">
-            ${['trending', 'newest', 'biggest'].map(s => `<button data-sort="${s}" class="${state.sort === s ? 'on' : ''}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}
+            ${['biggest', 'newest'].map(s => `<button data-sort="${s}" class="${state.sort === s ? 'on' : ''}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}
           </div>
         </div>
 
         <div class="chip-row" id="discCats" style="margin-bottom:1.1rem;"></div>
-        <div id="discGrid"></div>
+        <div id="discGrid"><div class="view-inner">${UI.skeletonCards(6)}</div></div>
       </div>`;
 
     drawCategoryChips();
@@ -138,9 +140,8 @@ window.Rooms = (() => {
       r.desc.toLowerCase().includes(state.search) ||
       (r.tags || []).some(t => t.includes(state.search)) ||
       r.category.includes(state.search));
-    if (state.sort === 'trending') rooms = [...rooms].sort((a, b) => b.momentum - a.momentum);
     if (state.sort === 'biggest') rooms = [...rooms].sort((a, b) => b.memberCount - a.memberCount);
-    if (state.sort === 'newest') rooms = [...rooms].sort((a, b) => b.createdAt - a.createdAt);
+    else rooms = [...rooms].sort((a, b) => b.createdAt - a.createdAt);
     return rooms;
   }
 
@@ -160,7 +161,8 @@ window.Rooms = (() => {
   function renderMyRoomsPage(root) {
     const joined = Store.state.rooms.filter(isJoined);
     const owned = joined.filter(isOwner);
-    const suggested = Store.state.rooms.filter(r => !isJoined(r) && r.visibility === 'public').sort((a, b) => b.momentum - a.momentum).slice(0, 6);
+    const suggested = Store.state.rooms.filter(r => !isJoined(r) && r.visibility === 'public')
+      .sort((a, b) => b.memberCount - a.memberCount).slice(0, 6);
 
     root.innerHTML = `
       <div class="view-inner">
@@ -173,7 +175,7 @@ window.Rooms = (() => {
         `<div class="empty"><div class="e-icon">${U.icon('layers', 26)}</div><h4>No rooms yet</h4>
           <p>Join a public room or spin up your own — it takes about ten seconds.</p>
           <button class="btn btn-primary btn-sm" id="btnCreateEmpty">Browse discover</button></div>`}
-        ${suggested.length ? `<div class="section-label">${U.icon('flame', 17)} Trending right now</div>
+        ${suggested.length ? `<div class="section-label">${U.icon('flame', 17)} Popular right now</div>
         <div class="rooms-grid">${suggested.map(miniRoomCard).join('')}</div>` : ''}
       </div>`;
     root.querySelector('#btnCreate2').addEventListener('click', () => createRoomModal());
@@ -182,23 +184,35 @@ window.Rooms = (() => {
 
   /* ========================= Join / leave / create ========================= */
   async function joinRoom(roomId, opts = {}) {
-    const room = Store.getRoom(roomId); if (!room || isJoined(room)) return true;
-    if (room.visibility === 'private' && !opts.codeTrusted) {
+    let room = Store.getRoom(roomId);
+    if (room && isJoined(room)) return true;
+
+    if ((!room || room.visibility === 'private') && !opts.codeTrusted) {
       const code = await UI.prompt({
-        title: `🔒 ${room.name} is private`,
+        title: `🔒 Private room`,
         label: 'Enter invite code',
         placeholder: 'DRIFT-XXXX',
         okLabel: 'Join'
       });
       if (code == null) return false;
-      if (code.trim().toUpperCase() !== room.privateCode) {
-        UI.toast({ title: 'Wrong invite code', body: 'Ask the owner for the current code.', type: 'bad', icon: 'lock' });
+      try {
+        const newId = await SB.unwrap(SB.client.rpc('join_room_with_code', { code }));
+        roomId = roomId || newId;
+        await Store.refreshRooms();
+        room = Store.getRoom(newId) || Store.getRoom(roomId);
+      } catch (e) {
+        UI.toast({ title: 'Couldn\u2019t join', body: e.message, type: 'bad', icon: 'lock' });
+        return false;
+      }
+    } else {
+      try { await Store.joinRoomDb(roomId); } catch (e) {
+        UI.toast({ title: 'Couldn\u2019t join', body: e.message, type: 'bad', icon: 'alert' });
         return false;
       }
     }
-    room.members.push('me');
+    if (!room) return false;
+    room.members = [...new Set([...room.members, 'me'])];
     room.memberCount += 1;
-    Store.save();
     Store.emit('room:update', room);
     Notifs.push('system', { title: `Welcome to ${room.name}`, body: 'Say hi — first messages get the best seats.', roomId, silent: false });
     Store.addXP(10, 'Joined a new community');
@@ -209,14 +223,18 @@ window.Rooms = (() => {
   async function leaveRoom(roomId) {
     const room = Store.getRoom(roomId); if (!room) return;
     if (isOwner(room)) {
-      UI.toast({ title: 'You own this room', body: 'Transfer ownership or delete it instead.', type: 'warn', icon: 'crown' });
+      UI.toast({ title: 'You own this room', body: 'Delete it from room settings instead.', type: 'warn', icon: 'crown' });
       return;
     }
-    if (!(await UI.confirm({ title: `Leave ${room.name}?`, body: 'You can rejoin any time unless it\'s private.', okLabel: 'Leave', danger: true }))) return;
+    if (!(await UI.confirm({ title: `Leave ${room.name}?`, body: 'You can rejoin any time unless it\u2019s private.', okLabel: 'Leave', danger: true }))) return;
+    try { await Store.leaveRoomDb(roomId); } catch (e) {
+      UI.toast({ title: 'Couldn\u2019t leave', body: e.message, type: 'bad', icon: 'alert' });
+      return;
+    }
     room.members = room.members.filter(m => m !== 'me');
     room.memberCount -= 1;
     delete Store.me().reads[roomId];
-    Store.save();
+    Store.touchProfile();
     UI.toast({ title: `Left ${room.name}`, type: 'info', icon: 'logout' });
     if (Router.current?.name === 'room' && Router.current.params[0] === roomId) Router.go('rooms');
   }
@@ -234,9 +252,9 @@ window.Rooms = (() => {
           <div class="field" style="flex:1;">
             <label>Description</label>
             <textarea class="input" id="crDesc" rows="3" maxlength="160" placeholder="What's the vibe?"></textarea>
-            <div class="input-hint row" style="justify-content:flex-end;">
+            ${DriftConfig.AI_ENABLED ? `<div class="input-hint row" style="justify-content:flex-end;">
               <button class="lnk" id="crAI" style="color:var(--ac2);font-weight:600;font-size:.8rem;">✨ Generate with Zephyr</button>
-            </div>
+            </div>` : ''}
           </div>
           <div class="field" style="width:120px;">
             <label>Icon</label>
@@ -264,9 +282,8 @@ window.Rooms = (() => {
     const $n = m.card.querySelector('#crName'), $d = m.card.querySelector('#crDesc');
 
     function preview() {
-      const c = CATEGORIES[form.category];
       m.card.querySelector('#crPreview').innerHTML =
-        roomCard({ id: '', name: form.name || 'Your Room Name', desc: form.desc || 'Your description appears here — set the tone.', icon: form.icon, category: form.category, memberCount: 1, momentum: 50, visibility: form.visibility, tags: [] }).replace('data-room=""', '');
+        roomCard({ id: '', name: form.name || 'Your Room Name', desc: form.desc || 'Your description appears here — set the tone.', icon: form.icon, category: form.category, memberCount: 1, visibility: form.visibility, tags: [], createdAt: Date.now() }).replace('data-room=""', '');
     }
     preview();
 
@@ -285,57 +302,58 @@ window.Rooms = (() => {
     m.card.querySelector('#crIcon').addEventListener('click', e => {
       UI.emojiPicker(e.currentTarget, em => { form.icon = em; e.currentTarget.textContent = em; preview(); });
     });
-    m.card.querySelector('#crAI').addEventListener('click', () => {
+    m.card.querySelector('#crAI')?.addEventListener('click', () => {
       const btn = m.card.querySelector('#crAI');
       btn.textContent = '✨ Thinking…';
-      const name = form.name.trim() || 'New Room';
-      setTimeout(() => {
-        const text = AI.roomDescription(name, form.category);
-        $d.value = text; form.desc = text; preview();
-        btn.textContent = '✨ Regenerate';
-      }, 650);
+      const text = AI.roomDescription(form.name.trim() || 'New Room', form.category);
+      setTimeout(() => { $d.value = text; form.desc = text; preview(); btn.textContent = '✨ Regenerate'; }, 500);
     });
     m.card.querySelector('[data-close2]').addEventListener('click', m.close);
 
-    m.card.querySelector('#crGo').addEventListener('click', () => {
+    m.card.querySelector('#crGo').addEventListener('click', async () => {
       if (form.name.trim().length < 3) { UI.toast({ title: 'Name too short', body: 'Give it at least 3 characters.', type: 'warn' }); return; }
-      const room = {
-        id: U.uid('r'),
-        name: form.name.trim(),
-        desc: form.desc.trim() || 'A brand-new Drift room.',
-        icon: form.icon,
-        category: form.category,
-        tags: [],
-        visibility: form.visibility,
-        privateCode: form.visibility === 'private' ? 'DRIFT-' + Math.random().toString(36).slice(2, 6).toUpperCase() : null,
-        ownerId: 'me',
-        mods: ['me'],
-        members: ['me'],
-        memberCount: 1,
-        momentum: 42,
-        createdAt: Date.now(),
-        slowMode: 0,
-        rules: ['Be kind. Keep it relevant. Mods have final say.'],
-        messages: [{
-          id: U.uid('m'), roomId: null, userId: 'me', ts: Date.now(),
-          text: `🎉 ${form.name.trim()} is officially open! Pin your house rules here.`,
-          edited: false, deleted: false, pinned: true, reactions: {}, replyTo: null, type: 'text', seen: true, poll: null, meta: null
-        }]
-      };
-      room.messages[0].roomId = room.id;
-      Store.state.rooms.unshift(room);
-      Store.save();
-      Store.addXP(25, 'Created a room');
-      m.close();
-      UI.toast({ title: `${room.name} is live 🚀`, body: 'Invite friends from the room menu.', type: 'xp', icon: 'rocket' });
-      UI.confetti(innerWidth / 2, innerHeight * 0.35);
-      Router.go('room', [room.id]);
+      const go = m.card.querySelector('#crGo');
+      go.disabled = true;
+      try {
+        const rows = await SB.unwrap(
+          SB.client.from('rooms').insert({
+            name: form.name.trim(),
+            description: form.desc.trim() || 'A brand-new Drift room.',
+            icon: form.icon,
+            category: form.category,
+            visibility: form.visibility,
+            invite_code: form.visibility === 'private'
+              ? 'DRIFT-' + Math.random().toString(36).slice(2, 6).toUpperCase()
+              : null,
+            owner_id: Store.me().id,
+            mods: [Store.me().id],
+            rules: ['Be kind. Keep it relevant. Mods have final say.']
+          }).select('*')
+        );
+        const r = rows[0];
+        await Store.joinRoomDb(r.id);
+        await Store.refreshRooms();
+        const room = Store.getRoom(r.id);
+        // Opening system message (real, persisted, pinned)
+        await Store.composeMessage(r.id, 'me',
+          `🎉 ${form.name.trim()} is officially open! Pin your house rules here.`,
+          { type: 'system' }).then(msg => msg && Store.updateMessage(r.id, msg.id, { pinned: true }));
+        Store.addXP(25, 'Created a room');
+        m.close();
+        UI.toast({ title: `${room?.name || form.name} is live 🚀`, body: 'Invite friends from the room menu.', type: 'xp', icon: 'rocket' });
+        UI.confetti(innerWidth / 2, innerHeight * 0.35);
+        Router.go('room', [r.id]);
+      } catch (e) {
+        go.disabled = false;
+        UI.toast({ title: 'Couldn\u2019t create room', body: e.message, type: 'bad', icon: 'alert' });
+      }
     });
   }
 
   /* =========================== Room settings =========================== */
   function settingsModal(roomId) {
     const room = Store.getRoom(roomId); if (!room) return;
+    const meUid = myId();
     const owner = isOwner(room);
     const mod = isMod(room);
 
@@ -360,16 +378,17 @@ window.Rooms = (() => {
           </div>
           <div class="card set-row">
             <div class="s-main"><b>Moderators</b><p>${owner ? 'Tap members below to grant or revoke moderator powers.' : 'Only the owner can change moderators.'}</p></div>
-            <span class="badge badge-live">${(room.mods||[]).length + 1} mods</span>
+            <span class="badge badge-live">${(room.mods||[]).length + (room.mods.includes(room.ownerId) ? 0 : 1)} mods</span>
           </div>
           <div style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:.15rem;" id="rsMembers">
             ${room.members.map(uid => {
+              if (uid === 'me') return '';
               const u = Store.getUser(uid); if (!u) return '';
               const role = uid === room.ownerId ? 'owner' : (room.mods || []).includes(uid) ? 'mod' : '';
               return `<button class="member-row" data-uid="${uid}">
                 ${U.avatar(u, { size: 32 })}
                 <span class="mr-info"><span class="mr-n">${U.esc(u.displayName)} ${role ? `<span class="role-tag ${role}">${role}</span>` : ''}</span></span>
-                ${uid !== 'me' && owner ? `<span class="small" style="color:${role === 'mod' ? 'var(--bad)' : 'var(--ac2)'};font-weight:600;">${role === 'mod' ? 'Revoke' : 'Promote'}</span>` : ''}
+                ${uid !== meUid && owner ? `<span class="small" style="color:${role === 'mod' ? 'var(--bad)' : 'var(--ac2)'};font-weight:600;">${role === 'mod' ? 'Revoke' : 'Promote'}</span>` : ''}
               </button>`;
             }).join('')}
           </div>
@@ -391,41 +410,59 @@ window.Rooms = (() => {
       UI.toast({ title: 'Invite code copied', type: 'ok', icon: 'copy' });
     });
     if (mod) {
-      m.card.querySelector('#rsSlow').addEventListener('change', e => {
-        room.slowMode = parseInt(e.target.value, 10);
-        Store.save();
-        UI.toast({ title: `Slow mode ${room.slowMode ? 'every ' + room.slowMode + 's' : 'off'}`, type: 'ok', icon: 'clock' });
+      m.card.querySelector('#rsSlow').addEventListener('change', async e => {
+        const val = parseInt(e.target.value, 10);
+        try {
+          await SB.unwrap(SB.client.from('rooms').update({ slow_mode: val }).eq('id', roomId));
+          room.slowMode = val;
+          UI.toast({ title: `Slow mode ${val ? 'every ' + val + 's' : 'off'}`, type: 'ok', icon: 'clock' });
+        } catch (err) {
+          UI.toast({ title: 'Save failed', body: err.message, type: 'bad', icon: 'alert' });
+        }
       });
     }
     m.card.querySelector('#rsMembers').addEventListener('click', e => {
       const row = e.target.closest('[data-uid]'); if (!row) return;
       const uid = row.dataset.uid;
-      if (!owner || uid === 'me' || uid === room.ownerId) return;
+      if (!owner || uid === meUid || uid === room.ownerId) return;
       room.mods = room.mods || [];
       const i = room.mods.indexOf(uid);
-      if (i >= 0) { room.mods.splice(i, 1); Notifs.push('system', { title: `${Store.getUser(uid)?.displayName} is no longer a mod`, body: `In ${room.name}`, roomId }); }
-      else { room.mods.push(uid); Notifs.push('system', { title: `${Store.getUser(uid)?.displayName} promoted to moderator`, body: `In ${room.name}`, roomId, actorId: uid }); }
-      Store.save(); m.close(); settingsModal(roomId);
+      if (i >= 0) { room.mods.splice(i, 1); }
+      else { room.mods.push(uid); }
+      SB.unwrap(SB.client.from('rooms').update({ mods: room.mods }).eq('id', roomId))
+        .catch(err => UI.toast({ title: 'Save failed', body: err.message, type: 'bad', icon: 'alert' }));
+      m.close(); settingsModal(roomId);
     });
     m.card.querySelector('#rsDelete')?.addEventListener('click', async () => {
       m.close();
       if (!(await UI.confirm({ title: `Delete ${room.name}?`, body: 'Every message disappears forever. There is no undo.', okLabel: 'Delete forever', danger: true }))) return;
-      Store.state.rooms = Store.state.rooms.filter(r => r.id !== roomId);
-      Store.save();
-      UI.toast({ title: 'Room deleted', type: 'info', icon: 'trash' });
-      Router.go('rooms');
+      try {
+        await SB.unwrap(SB.client.from('rooms').delete().eq('id', roomId));
+        Store.state.rooms = Store.state.rooms.filter(r => r.id !== roomId);
+        UI.toast({ title: 'Room deleted', type: 'info', icon: 'trash' });
+        Router.go('rooms');
+      } catch (e) {
+        UI.toast({ title: 'Delete failed', body: e.message, type: 'bad', icon: 'alert' });
+      }
     });
     m.card.querySelector('[data-close2]').addEventListener('click', m.close);
-    m.card.querySelector('#rsSave')?.addEventListener('click', () => {
-      room.name = m.card.querySelector('#rsName').value.trim() || room.name;
-      room.desc = m.card.querySelector('#rsDesc').value.trim() || room.desc;
-      room.rules = m.card.querySelector('#rsRules').value.split('\n').map(x => x.trim()).filter(Boolean);
-      room.icon = m.card.querySelector('#rsIcon').textContent.trim() || room.icon;
-      Store.save();
-      Store.emit('room:update', room);
-      m.close();
-      UI.toast({ title: 'Room updated', type: 'ok', icon: 'check' });
-      if (Router.current?.name === 'room' && Router.current.params[0] === roomId) Chat.rerender();
+    m.card.querySelector('#rsSave')?.addEventListener('click', async () => {
+      const patch = {
+        name: m.card.querySelector('#rsName').value.trim() || room.name,
+        description: m.card.querySelector('#rsDesc').value.trim(),
+        rules: m.card.querySelector('#rsRules').value.split('\n').map(x => x.trim()).filter(Boolean),
+        icon: m.card.querySelector('#rsIcon').textContent.trim() || room.icon
+      };
+      try {
+        await SB.unwrap(SB.client.from('rooms').update(patch).eq('id', roomId));
+        Object.assign(room, { name: patch.name, desc: patch.description, rules: patch.rules, icon: patch.icon });
+        Store.emit('room:update', room);
+        m.close();
+        UI.toast({ title: 'Room updated', type: 'ok', icon: 'check' });
+        if (Router.current?.name === 'room' && Router.current.params[0] === roomId) Chat.rerender();
+      } catch (e) {
+        UI.toast({ title: 'Save failed', body: e.message, type: 'bad', icon: 'alert' });
+      }
     });
   }
 

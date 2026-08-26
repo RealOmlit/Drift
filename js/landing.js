@@ -75,14 +75,21 @@ window.Landing = (() => {
     }), { threshold: .5 });
     U.$$('[data-count]').forEach(el => cio.observe(el));
 
-    // Living online counter
+    // REAL online counter — subscribes to the lobby presence channel.
+    // Shows "—" until a Supabase project is configured in js/config.js.
     const oc = U.$('[data-online-count]');
-    if (oc) {
-      let base = window.DriftConfig.PRESENCE_BASELINE;
-      setInterval(() => {
-        base = U.clamp(base + U.randInt(-8, 11), 1150, 1500);
-        oc.textContent = U.fmtCount(base);
-      }, 4000);
+    if (oc && window.SB?.configured()) {
+      try {
+        const ch = SB.client.channel('drift-lobby');
+        ch.on('presence', { event: 'sync' }, () => {
+          let n = 0;
+          Object.values(ch.presenceState()).forEach(metas => {
+            const meta = Array.isArray(metas) ? metas[0] : metas;
+            if (meta?.user_id) n++;
+          });
+          oc.textContent = U.fmtCount(n);
+        }).subscribe();
+      } catch (e) { /* counter stays as-is */ }
     }
 
     // Smooth anchors

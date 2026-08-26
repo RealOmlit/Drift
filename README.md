@@ -4,9 +4,9 @@
   <img src="./assets/favicon.svg" width="72" alt="Drift logo">
 </p>
 
-**Drift** is a premium, modern chat platform concept built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. It looks and feels like a startup-quality social product: rooms with a visible *momentum* score, an AI companion named **Zephyr** woven into every conversation, community XP, polls, mini-games, smart notifications and a fully responsive UI.
+**Drift** is a premium, modern chat platform built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. Rooms, an AI companion named **Zephyr**, community XP, polls, mini-games, smart notifications and a fully responsive UI.
 
-> ⚠️ **This is a frontend demo.** Authentication, messages and presence run locally in your browser so the project works on GitHub Pages out of the box. The architecture is deliberately structured so a real backend (Supabase / Firebase) can be connected later — every integration point is marked in code.
+> ✅ **This is a real chat app.** Accounts, messages and presence run on **Supabase** (Postgres + Auth + Realtime). No demo bots or fake counters. To bring your own deployment online, follow **[SETUP.md](./SETUP.md)** — create a free Supabase project, run `supabase-setup.sql`, paste two keys into `js/config.js`. Until configured, pages show a setup guide instead of a broken app.
 
 ---
 

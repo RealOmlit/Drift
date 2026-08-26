@@ -68,8 +68,24 @@ window.Activities = (() => {
   }
 
   /* =============================== Trivia Rush =============================== */
+  /* Static question bank — game content, not simulated users. */
+  const TRIVIA = [
+    { q: 'Which data structure works on FIFO?', o: ['Stack', 'Queue', 'Tree', 'Heap'], a: 1 },
+    { q: 'What does "HTTP" stand for?', o: ['HyperText Transfer Protocol', 'High Transfer Text Protocol', 'HyperTransfer Type Protocol', 'Home Tool Markup Protocol'], a: 0 },
+    { q: 'Which planet has the most moons?', o: ['Jupiter', 'Saturn', 'Uranus', 'Neptune'], a: 1 },
+    { q: 'In CSS, which property stacks elements on top of each other?', o: ['float', 'z-index', 'overflow', 'position-table'], a: 1 },
+    { q: 'What year did the first iPhone launch?', o: ['2005', '2006', '2007', '2008'], a: 2 },
+    { q: 'Which language runs natively in web browsers?', o: ['Python', 'C++', 'JavaScript', 'Ruby'], a: 2 },
+    { q: 'What is the chemical symbol for gold?', o: ['Go', 'Gd', 'Au', 'Ag'], a: 2 },
+    { q: 'Which company developed the React library?', o: ['Google', 'Meta (Facebook)', 'Microsoft', 'Twitter'], a: 1 },
+    { q: 'How many bits are in a byte?', o: ['4', '8', '16', '32'], a: 1 },
+    { q: 'Which ocean is the largest?', o: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], a: 3 },
+    { q: 'In Git, which command stages all changes?', o: ['git push', 'git add .', 'git commit -a!', 'git stage --all'], a: 1 },
+    { q: 'What does CPU stand for?', o: ['Central Process Unit', 'Computer Personal Unit', 'Central Processing Unit', 'Core Processing Utility'], a: 2 }
+  ];
+
   function trivia(roomId) {
-    const questions = U.shuffle(DemoData.TRIVIA).slice(0, 3);
+    const questions = U.shuffle(TRIVIA).slice(0, 3);
     let idx = 0, score = 0;
     const stage = rootEl();
 
