@@ -8,7 +8,7 @@
 window.DriftConfig = {
   APP_NAME: 'Drift',
   TAGLINE: 'Conversations in motion.',
-  VERSION: '2.2.1',
+  VERSION: '2.2.2',
 
   /* ------------------------------------------------------------------
      SUPABASE — the real backend.
