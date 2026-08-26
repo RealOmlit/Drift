@@ -8,7 +8,7 @@
 window.DriftConfig = {
   APP_NAME: 'Drift',
   TAGLINE: 'Conversations in motion.',
-  VERSION: '2.0.7',
+  VERSION: '2.0.8',
 
   /* ------------------------------------------------------------------
      SUPABASE — the real backend.
@@ -35,7 +35,7 @@ window.DriftConfig = {
   AI_PROXY_URL: null,                                   // optional secure proxy
   AI_BASE_URL: 'https://api.aimlapi.com/v1',
   AI_MODEL: 'gpt-4o-mini',
-  AI_API_KEY: '',
+  AI_API_KEY: '5edd6b5ca9e2165c948eba8a4f46e47a',
 
   /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
   STORAGE_PREFIX: 'drift.v2.',
