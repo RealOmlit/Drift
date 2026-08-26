@@ -18,8 +18,8 @@ window.DriftConfig = {
      Until both values are set, pages show a "Setup required" screen.
      Full instructions: SETUP.md
   ------------------------------------------------------------------ */
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: '',
+  SUPABASE_URL: 'https://pqrmvqdjuekaowyqmvkg.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxcm12cWRqdWVrYW93eXFtdmtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2ODgzMTgsImV4cCI6MjEwMzI2NDMxOH0.mxafgW6kFB1RjmxxqOj_f_I5T4fCPD0kol8JxU-M8Zw',
 
   /** True when the real backend is wired up. */
   REAL_MODE: false, // recomputed below
