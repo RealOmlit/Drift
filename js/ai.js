@@ -86,7 +86,10 @@ window.AI = (() => {
           `API error ${resp.status}`;
         throw new Error(msg);
       }
-      return data?.choices?.[0]?.message?.content?.trim() || null;
+      let out = data?.choices?.[0]?.message?.content?.trim() || null;
+      // Qwen-family models sometimes leak hidden reasoning — strip it.
+      if (out) out = out.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      return out || null;
     } finally {
       clearTimeout(timer);
     }
