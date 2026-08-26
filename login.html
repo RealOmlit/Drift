@@ -12,11 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2.0.2">
-  <link rel="stylesheet" href="./css/base.css?v=2.0.2">
-  <link rel="stylesheet" href="./css/components.css?v=2.0.2">
-  <link rel="stylesheet" href="./css/animations.css?v=2.0.2">
-  <link rel="stylesheet" href="./css/auth.css?v=2.0.2">
+  <link rel="stylesheet" href="./css/tokens.css?v=2.0.3">
+  <link rel="stylesheet" href="./css/base.css?v=2.0.3">
+  <link rel="stylesheet" href="./css/components.css?v=2.0.3">
+  <link rel="stylesheet" href="./css/animations.css?v=2.0.3">
+  <link rel="stylesheet" href="./css/auth.css?v=2.0.3">
 </head>
 <body class="auth-body">
   <div class="aurora"></div>
@@ -80,12 +80,12 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/config.js?v=2.0.2"></script>
-  <script src="./js/supabase-client.js?v=2.0.2"></script>
-  <script src="./js/utils.js?v=2.0.2"></script>
-  <script src="./js/store.js?v=2.0.2"></script>
-  <script src="./js/ui.js?v=2.0.2"></script>
-  <script src="./js/auth.js?v=2.0.2"></script>
+  <script src="./js/config.js?v=2.0.3"></script>
+  <script src="./js/supabase-client.js?v=2.0.3"></script>
+  <script src="./js/utils.js?v=2.0.3"></script>
+  <script src="./js/store.js?v=2.0.3"></script>
+  <script src="./js/ui.js?v=2.0.3"></script>
+  <script src="./js/auth.js?v=2.0.3"></script>
   <script>
     // Auth pages bootstrap: restore session or show login form.
     (() => {
@@ -127,22 +127,17 @@
       function showVerifyBanner(err, identifier) {
         document.getElementById('verifyBanner')?.remove();
         if (!err.unconfirmed && !err.exists) return;
-        const email = err.email || identifier;
-        const el = document.createElement('div');
-        el.id = 'verifyBanner';
-        el.style.cssText =
-          'border:1px solid #2a2d45;background:#0b0d1a;border-radius:12px;' +
-          'padding:.85rem 1rem;margin-bottom:1.1rem;font-size:.86rem;color:#c7cbf0;line-height:1.6;';
+        const el = U.el('div', { id: 'verifyBanner', class: 'verify-banner' });
         el.innerHTML =
-          '<b style="color:#fff;">✉️ One step left.</b> Verify <code style="color:#7dd3fc">' +
-          U.esc(email) + '</code> to activate your account.<br>' +
-          '<button type="button" id="resendVf" class="btn btn-glass btn-sm" style="margin-top:.55rem;">Resend verification link</button>';
+          '<b>✉️ One step left.</b> Verify <code></code> to activate your account.<br>' +
+          '<button type="button" id="resendVf" class="btn btn-glass btn-sm">Resend verification link</button>';
+        el.querySelector('code').textContent = err.email || identifier;
         form.prepend(el);
         const rb = el.querySelector('#resendVf');
         rb.addEventListener('click', async () => {
           rb.disabled = true; rb.textContent = 'Sending…';
           try {
-            await Auth.resendConfirmation(email);
+            await Auth.resendConfirmation(err.email || identifier);
             rb.textContent = 'Link sent ✓ check your inbox (and spam)';
             UI.toast({ title: 'Verification sent', body: 'Open the newest email and tap Confirm — Drift opens right after.', type: 'ok', duration: 9000 });
           } catch (e2) {

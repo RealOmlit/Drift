@@ -52,6 +52,22 @@
 .pw-toggle { position: absolute; right: .55rem; color: var(--txt3); padding: .35rem; border-radius: 8px; }
 .pw-toggle:hover { color: var(--txt1); }
 
+/* Email verification banner (unconfirmed-account recovery) */
+.verify-banner {
+  border: 1px solid var(--brd-1); background: var(--bg1); border-radius: 14px;
+  padding: .85rem 1rem; margin-bottom: 1.1rem;
+  font-size: .87rem; color: var(--txt2); line-height: 1.6;
+  animation: banner-in .25s ease;
+}
+.verify-banner b { color: var(--txt1); }
+.verify-banner code { color: var(--ac2); background: none; padding: 0; font-size: .95em; }
+.verify-banner .btn { margin-top: .55rem; }
+
+@keyframes banner-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
 @media (max-width: 860px) {
   .auth-shell { grid-template-columns: 1fr; min-height: 0; width: min(480px, 100%); }
   .auth-side { display: none; }
