@@ -72,7 +72,10 @@ window.Notifs = (() => {
     const html = `
       <div class="spread" style="padding:.35rem .5rem .55rem;">
         <b style="font-family:var(--font-d);font-size:.95rem;">Notifications</b>
-        <button class="lnk small" style="color:var(--ac2);font-weight:600;" data-markall>Mark all read</button>
+        <span style="display:inline-flex;gap:.25rem;align-items:center;">
+          <button class="lnk small" style="color:var(--ac2);font-weight:600;" data-markall>Mark all read</button>
+          <button class="icon-btn sm" data-closepop aria-label="Close notifications">${U.icon('x', 15)}</button>
+        </span>
       </div>
       <div style="display:flex;flex-direction:column;gap:.3rem;" data-items>
         ${items.length ? items.map(notifCardHTML).join('') : '<div class="empty" style="padding:1.4rem;"><p>All caught up ✨</p></div>'}
@@ -105,6 +108,7 @@ window.Notifs = (() => {
       const card = e.target.closest('[data-notif]');
       if (card) { cleanup(); open(list().find(n => n.id === card.dataset.notif)); return; }
       if (e.target.closest('[data-markall]')) { markAllRead(); refreshBadges(); cleanup(); return; }
+      if (e.target.closest('[data-closepop]')) { cleanup(); return; }
       if (e.target.closest('[data-viewall]')) { cleanup(); Router.go('notifs'); }
     });
 
