@@ -21,7 +21,21 @@ window.AI = (() => {
     avatar: '✨'
   };
 
-  const remoteConfigured = () => !!(CFG.AI_ENABLED && (CFG.AI_API_KEY || CFG.AI_PROXY_URL));
+  const remoteConfigured = () => !!(CFG.AI_ENABLED && (effectiveKey() || CFG.AI_PROXY_URL));
+
+  /* Personal API key — pasted in Settings → Zephyr AI, kept in this browser
+     only. config.js AI_API_KEY (if ever set) takes precedence for everyone. */
+  const KEY_LS = () => CFG.STORAGE_PREFIX + 'aiKey';
+  function storedKey() {
+    try { return localStorage.getItem(KEY_LS()) || ''; } catch (e) { return ''; }
+  }
+  function setStoredKey(k) {
+    try {
+      if (k) localStorage.setItem(KEY_LS(), k.trim());
+      else localStorage.removeItem(KEY_LS());
+    } catch (e) {}
+  }
+  const effectiveKey = () => CFG.AI_API_KEY || storedKey();
 
   /* =====================================================================
       REMOTE INTEGRATION LAYER
@@ -61,7 +75,7 @@ window.AI = (() => {
         signal: ctrl.signal,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + CFG.AI_API_KEY
+          'Authorization': 'Bearer ' + effectiveKey()
         },
         body: JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: 600, temperature: 0.7 })
       });
@@ -360,7 +374,7 @@ window.AI = (() => {
       <div class="small faint" style="margin-top:.45rem;display:flex;gap:.35rem;align-items:center;">
         ${U.icon('info', 13)} ${remoteConfigured()
           ? `Live model: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · powered by AIML API`
-          : 'Offline rule engine · add an API key in <span class="mono">js/config.js</span> for full power'}
+          : 'Offline rule engine · add your API key in <b>Settings → Zephyr AI</b> for full power'}
       </div>`;
   }
 
@@ -496,5 +510,5 @@ window.AI = (() => {
     scrollBottom(body);
   }
 
-  return { IDENTITY, respond, openDrawer, renderPanel, roomDescription, summarizeRoom, remoteConfigured };
+  return { IDENTITY, respond, openDrawer, renderPanel, roomDescription, summarizeRoom, remoteConfigured, storedKey, setStoredKey };
 })();

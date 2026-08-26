@@ -485,6 +485,10 @@ window.Store = (() => {
     await SB.unwrap(SB.client.from('notifications').update({ read }).eq('id', id));
     emit('notif:read');
   }
+  async function deleteNotification(id) {
+    await SB.unwrap(SB.client.from('notifications').delete().eq('id', id));
+    emit('notif:read');
+  }
 
   /* ------------------------------ XP & levels ------------------------------ */
   function lvlInfo(xp) {
@@ -558,7 +562,7 @@ window.Store = (() => {
     me, getUser, getRoom, roomMessages, allProfiles,
     composeMessage, updateMessage, toggleReaction,
     ensureProfile, afterLogin, forgetSession, refreshRooms, hydrateMessages,
-    joinRoomDb, leaveRoomDb, setFollow, fileReport, markNotification,
+    joinRoomDb, leaveRoomDb, setFollow, fileReport, markNotification, deleteNotification,
     addXP, lvlInfo, LEVELS,
     questToday, questProgress, touchStreak, touchProfile
   };

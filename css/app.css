@@ -165,7 +165,13 @@
 .notif-ic { width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid var(--brd-1);background:var(--glass-2); }
 .notif-main b{font-size:.9rem;display:block;} .notif-main p{font-size:.83rem;color:var(--txt2);} 
 .notif-time { font-size:.73rem;color:var(--txt3); white-space:nowrap; }
-.notif-dot { position:absolute; top:14px; right:12px; width:8px;height:8px;border-radius:50%;background:var(--ac1); box-shadow:0 0 8px var(--ac1); }
+.notif-dot { position:absolute; top:14px; right:34px; width:8px;height:8px;border-radius:50%;background:var(--ac1); box-shadow:0 0 8px var(--ac1); }
+.notif-x {
+  position:absolute; top:7px; right:7px; flex:none;
+  color:var(--txt3); opacity:.4; transition:opacity .15s ease, color .15s ease;
+}
+.notif-card:hover .notif-x, .notif-x:focus-visible { opacity:1; }
+.notif-x:hover { color:var(--bad); }
 .day-sep { font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin:1.2rem .2rem .5rem; }
 
 /* ================= Zephyr AI panel ================= */

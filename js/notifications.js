@@ -57,6 +57,15 @@ window.Notifs = (() => {
     if (n) { n.read = true; if (!String(id).startsWith('local')) Store.markNotification(id, true).catch(() => {}); }
   };
 
+  /** Remove a notification entirely (✕ button). Server rows get deleted too. */
+  function dismiss(id) {
+    const i = list().findIndex(x => x.id === id);
+    if (i < 0) return;
+    list().splice(i, 1);
+    if (!String(id).startsWith('local')) Store.deleteNotification(id).catch(() => {});
+    Store.emit('notif:read');
+  }
+
   /* ------------------------------ dropdown ------------------------------ */
   function renderDropdown(anchor) {
     const items = list().slice(0, 8);
@@ -65,7 +74,7 @@ window.Notifs = (() => {
         <b style="font-family:var(--font-d);font-size:.95rem;">Notifications</b>
         <button class="lnk small" style="color:var(--ac2);font-weight:600;" data-markall>Mark all read</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.3rem;">
+      <div style="display:flex;flex-direction:column;gap:.3rem;" data-items>
         ${items.length ? items.map(notifCardHTML).join('') : '<div class="empty" style="padding:1.4rem;"><p>All caught up ✨</p></div>'}
       </div>
       <hr style="border:none;border-top:1px solid var(--brd-1);margin:.4rem .2rem;">
@@ -83,6 +92,16 @@ window.Notifs = (() => {
     activeMenuRef(m);
 
     m.addEventListener('click', e => {
+      const x = e.target.closest('[data-dismiss]');
+      if (x) {
+        dismiss(x.dataset.dismiss);
+        refreshBadges();
+        const itemsEl = m.querySelector('[data-items]');
+        if (itemsEl) itemsEl.innerHTML = list().length
+          ? list().slice(0, 8).map(notifCardHTML).join('')
+          : '<div class="empty" style="padding:1.4rem;"><p>All caught up ✨</p></div>';
+        return;
+      }
       const card = e.target.closest('[data-notif]');
       if (card) { cleanup(); open(list().find(n => n.id === card.dataset.notif)); return; }
       if (e.target.closest('[data-markall]')) { markAllRead(); refreshBadges(); cleanup(); return; }
@@ -109,14 +128,15 @@ window.Notifs = (() => {
     const meta = TYPE_META[n.type] || TYPE_META.system;
     const actor = n.actorId ? Store.getUser(n.actorId) : null;
     return `
-      <button class="notif-card ${n.read ? '' : 'unread'}" data-notif="${n.id}" style="border:none;background:transparent;width:100%;">
+      <div class="notif-card ${n.read ? '' : 'unread'}" data-notif="${n.id}" role="button" tabindex="0">
         ${actor ? U.avatar(actor, { size: 38 }) : `<span class="notif-ic" style="color:${meta.color}">${U.icon(meta.icon, 18)}</span>`}
         <span class="notif-main grow">
           <b>${U.esc(n.title)}</b><p>${U.esc(n.body)}</p>
         </span>
         <span class="notif-time">${U.fmtRel(n.ts)}</span>
         ${n.read ? '' : '<span class="notif-dot"></span>'}
-      </button>`;
+        <button class="notif-x icon-btn sm" data-dismiss="${n.id}" aria-label="Dismiss notification">${U.icon('x', 13)}</button>
+      </div>`;
   }
 
   /* --------------------------- full page view --------------------------- */
@@ -149,6 +169,12 @@ window.Notifs = (() => {
     });
     wrap.innerHTML = html;
     wrap.onclick = e => {
+      const x = e.target.closest('[data-dismiss]');
+      if (x) {
+        dismiss(x.dataset.dismiss);
+        drawList(); refreshBadges();
+        return;
+      }
       const card = e.target.closest('[data-notif]');
       if (card) open(list().find(n => n.id === card.dataset.notif)), drawList(), refreshBadges();
     };
@@ -163,5 +189,5 @@ window.Notifs = (() => {
     });
   }
 
-  return { push, open, markAllRead, markRead, unreadCount, renderPage, renderDropdown, refreshBadges, TYPE_META };
+  return { push, open, markAllRead, markRead, dismiss, unreadCount, renderPage, renderDropdown, refreshBadges, TYPE_META };
 })();

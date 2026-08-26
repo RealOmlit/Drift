@@ -209,9 +209,16 @@ window.SettingsPage = (() => {
             <div class="grow"><b>Zephyr status</b>
               <p class="small muted">${live
                 ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : 'AIML API'}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
-                : '<b style="color:var(--warn)">Offline rule engine.</b> Add <span class="mono">AI_API_KEY</span> in <span class="mono">js/config.js</span> for real intelligence.'}</p>
+                : '<b style="color:var(--warn)">Offline rule engine.</b> Paste an API key below for real intelligence.'}</p>
             </div>
           </div>
+        </div>
+        <div class="field"><label>AIML API key</label>
+          <div class="row" style="gap:.55rem;">
+            <input class="input" id="aiKeyInput" type="password" placeholder="Paste your aimlapi.com key" autocomplete="off" value="${U.esc(AI.storedKey ? AI.storedKey() : '')}">
+            <button class="btn btn-glass btn-sm" id="aiKeySave">Save</button>
+          </div>
+          <div class="input-hint">Enables live answers for custom questions. Stored only in this browser — never uploaded. Get a key at <span class="mono">aimlapi.com</span>.</div>
         </div>
         <div class="field"><label>Persona</label>
           <div class="seg" id="aiPersona">
@@ -229,6 +236,16 @@ window.SettingsPage = (() => {
         s.aiPersona = b.dataset.p; Store.save(); draw();
       });
       panel.querySelector('#aiCtx').addEventListener('change', e => { s.aiContext = e.target.checked; Store.save(); });
+      panel.querySelector('#aiKeySave').addEventListener('click', e => {
+        const inp = panel.querySelector('#aiKeyInput');
+        AI.setStoredKey(inp.value.trim());
+        UI.toast({
+          title: AI.storedKey() ? 'API key saved' : 'API key removed',
+          body: AI.storedKey() ? 'Zephyr now answers with the live model.' : 'Zephyr falls back to the offline rule engine.',
+          type: 'ok'
+        });
+        draw();
+      });
     }
 
     if (section === 'moderation') {
