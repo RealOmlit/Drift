@@ -8,7 +8,7 @@
 window.DriftConfig = {
   APP_NAME: 'Drift',
   TAGLINE: 'Conversations in motion.',
-  VERSION: '2.0.9',
+  VERSION: '2.1.0',
 
   /* ------------------------------------------------------------------
      SUPABASE — the real backend.
@@ -33,9 +33,10 @@ window.DriftConfig = {
    */
   AI_ENABLED: true,
   AI_PROXY_URL: null,                                   // optional secure proxy
-  AI_BASE_URL: 'https://free.empero.org/v1',
-  AI_MODEL: 'Qwen/Qwen3.8-27B-FP8',
-  AI_API_KEY: 'free',
+  AI_BASE_URL: 'https://text.pollinations.ai/openai',   // keyless, CORS-friendly
+  AI_MODEL: 'openai',
+  AI_API_KEY: '',
+  AI_KEYLESS: true,                                     // provider needs no API key
 
   /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
   STORAGE_PREFIX: 'drift.v2.',

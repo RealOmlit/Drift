@@ -21,7 +21,8 @@ window.AI = (() => {
     avatar: '✨'
   };
 
-  const remoteConfigured = () => !!(CFG.AI_ENABLED && (effectiveKey() || CFG.AI_PROXY_URL));
+  const remoteConfigured = () =>
+    !!(CFG.AI_ENABLED && (CFG.AI_KEYLESS || effectiveKey() || CFG.AI_PROXY_URL));
 
   /* Personal API key — pasted in Settings → Zephyr AI, kept in this browser
      only. config.js AI_API_KEY (if ever set) takes precedence for everyone. */
@@ -69,14 +70,17 @@ window.AI = (() => {
   async function chatComplete(messages) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 30000);
+    // Keyless providers (e.g. pollinations /openai) use their endpoint as-is.
+    const url = /\/openai\/?$/.test(CFG.AI_BASE_URL)
+      ? CFG.AI_BASE_URL
+      : CFG.AI_BASE_URL + '/chat/completions';
+    const headers = { 'Content-Type': 'application/json' };
+    if (effectiveKey()) headers.Authorization = 'Bearer ' + effectiveKey();
     try {
-      const resp = await fetch(CFG.AI_BASE_URL + '/chat/completions', {
+      const resp = await fetch(url, {
         method: 'POST',
         signal: ctrl.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + effectiveKey()
-        },
+        headers,
         body: JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: 600, temperature: 0.7 })
       });
       const data = await resp.json().catch(() => null);
@@ -376,7 +380,7 @@ window.AI = (() => {
       </div>
       <div class="small faint" style="margin-top:.45rem;display:flex;gap:.35rem;align-items:center;">
         ${U.icon('info', 13)} ${remoteConfigured()
-          ? `Live model: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · powered by AIML API`
+          ? `Live model: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · powered by ${U.esc(new URL(CFG.AI_BASE_URL).host)}`
           : 'Offline rule engine · add your API key in <b>Settings → Zephyr AI</b> for full power'}
       </div>`;
   }

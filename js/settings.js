@@ -208,7 +208,7 @@ window.SettingsPage = (() => {
             <div class="ai-av">✨</div>
             <div class="grow"><b>Zephyr status</b>
               <p class="small muted">${live
-                ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : 'AIML API'}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
+                ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : U.esc(new URL(window.DriftConfig.AI_BASE_URL).host)}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
                 : '<b style="color:var(--warn)">Offline rule engine.</b> Paste an API key below for real intelligence.'}</p>
             </div>
           </div>

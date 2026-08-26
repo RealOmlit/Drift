@@ -16,6 +16,9 @@ window.Landing = (() => {
   ];
 
   function init() {
+    // Version chip(s)
+    U.$$('[data-app-version]').forEach(el => { el.textContent = 'v' + window.DriftConfig.VERSION; });
+
     // Nav scroll state
     const nav = U.$('#landNav');
     const onScroll = () => nav.classList.toggle('scrolled', scrollY > 24);

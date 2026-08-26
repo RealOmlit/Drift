@@ -6,17 +6,18 @@
   <title>Drift — Conversations in motion</title>
   <meta name="description" content="Drift is a modern real-time chat platform with rooms, live presence, a built-in AI companion and community XP. Free to use — deployable to GitHub Pages.">
   <meta name="theme-color" content="#05060c">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2.0.9">
-  <link rel="stylesheet" href="./css/base.css?v=2.0.9">
-  <link rel="stylesheet" href="./css/components.css?v=2.0.9">
-  <link rel="stylesheet" href="./css/animations.css?v=2.0.9">
-  <link rel="stylesheet" href="./css/landing.css?v=2.0.9">
+  <link rel="stylesheet" href="./css/tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="./css/base.css?v=2.1.0">
+  <link rel="stylesheet" href="./css/components.css?v=2.1.0">
+  <link rel="stylesheet" href="./css/animations.css?v=2.1.0">
+  <link rel="stylesheet" href="./css/landing.css?v=2.1.0">
 </head>
 <body class="land-body">
   <div class="aurora"></div>
@@ -56,7 +57,7 @@
     </p>
     <div class="hero-ctas anim-in anim-in-3">
       <a class="btn btn-primary btn-lg" href="./signup.html">Get Started — it's free</a>
-      <a class="btn btn-glass btn-lg" href="./signup.html">Explore Rooms →</a>
+      <a class="btn btn-glass btn-lg" href="./login.html">Explore Rooms →</a>
     </div>
     <div class="hero-online anim-in anim-in-4">
       <span class="dot online"></span> <b data-online-count>—</b>&nbsp;people drifting right now
@@ -227,16 +228,16 @@
         </div>
       </div>
       <div class="footer-base">
-        <span>© 2026 Drift · crafted for the open web</span>
+        <span>© 2026 Drift · <span class="app-version" data-app-version></span> · crafted for the open web</span>
         <span>Made with vanilla HTML/CSS/JS — zero frameworks</span>
       </div>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/config.js?v=2.0.9"></script>
-  <script src="./js/supabase-client.js?v=2.0.9"></script>
-  <script src="./js/utils.js?v=2.0.9"></script>
-  <script src="./js/landing.js?v=2.0.9"></script>
+  <script src="./js/config.js?v=2.1.0"></script>
+  <script src="./js/supabase-client.js?v=2.1.0"></script>
+  <script src="./js/utils.js?v=2.1.0"></script>
+  <script src="./js/landing.js?v=2.1.0"></script>
 </body>
 </html>

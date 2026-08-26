@@ -77,3 +77,24 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 .spread { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
 .grow { flex: 1; min-width: 0; }
 .hide { display: none !important; }
+
+/* ================= Premium finish ================= */
+.ver-chip {
+  font-size: .58rem; font-weight: 700; letter-spacing: .07em;
+  color: var(--txt3); background: var(--glass);
+  border: 1px solid var(--brd-1); border-radius: 99px;
+  padding: .1rem .42rem; line-height: 1.5; white-space: nowrap;
+}
+.rail .ver-chip { margin-bottom: .2rem; }
+::selection { background: color-mix(in srgb, var(--ac1) 32%, transparent); }
+:focus-visible { outline: 2px solid color-mix(in srgb, var(--ac1) 75%, transparent); outline-offset: 2px; border-radius: 6px; }
+html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--txt3) 38%, transparent) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--txt3) 34%, transparent);
+  border-radius: 99px; border: 3px solid transparent; background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--txt3) 58%, transparent); }
+::-webkit-scrollbar-track { background: transparent; }
+button, a, input, textarea { -webkit-tap-highlight-color: transparent; }
+img, svg { user-select: none; }

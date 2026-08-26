@@ -395,6 +395,7 @@ window.AppShell = (() => {
   /* ------------------------------ Boot ------------------------------ */
   async function boot() {
     Store.init();                            // local UI prefs
+    U.$$('.app-version').forEach(el => { el.textContent = 'v' + DriftConfig.VERSION; });
     if (!(await Auth.requireAuth())) return; // async — real session check
     SettingsPage.applyTheme();
     Backend.start();
