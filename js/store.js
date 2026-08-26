@@ -35,6 +35,7 @@ window.Store = (() => {
     return {
       theme: 'dark', accent: 'violet', font: 'm', motion: 'full', contrast: 'normal',
       compactMode: false,
+      customAccent: '', ambience: 'full',
       enterToSend: true,
       showTimestamps24h: false,
       linkPreviews: true,

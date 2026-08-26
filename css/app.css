@@ -450,3 +450,63 @@ body.focus-mode .shell .rail:hover { opacity:1; }
   .room-right { display:none; }
   .room-view.right-open .room-right { display:flex; position:fixed; inset:auto 0 0 0; top:var(--topbar-h); z-index:70; border-left:none; border-top:1px solid var(--brd-2); background:var(--bg1); }
 }
+
+/* ================= v2.1.4 · outside-the-chat premium polish ================= */
+/* Home hero: soft breathing glow behind the greeting */
+.home-hero { position: relative; }
+.home-hero::before {
+  content: ''; position: absolute; inset: -42% -8% auto; height: 180%; z-index: -1;
+  background: radial-gradient(52% 60% at 22% 40%, color-mix(in srgb, var(--ac1) 17%, transparent), transparent 70%),
+              radial-gradient(48% 58% at 78% 45%, color-mix(in srgb, var(--ac3) 13%, transparent), transparent 72%);
+  filter: blur(30px); opacity: .8; pointer-events: none;
+  animation: halo-breathe 8s ease-in-out infinite;
+}
+.home-hello .streak { margin-left: .5rem; }
+
+/* Stat cards: lift + accent ring on hover */
+.dash-stats .stat-card, .stat-card {
+  padding: .85rem 1rem; border-radius: var(--r-lg); border: 1px solid transparent;
+  transition: transform .18s var(--ease), border-color .18s, background .18s;
+}
+.stat-card:hover { transform: translateY(-3px); border-color: var(--brd-1); background: var(--glass); box-shadow: 0 14px 30px -18px var(--ring); }
+
+/* Section labels get a gradient tick */
+.section-label::before {
+  content: ''; width: 16px; height: 3px; border-radius: 99px;
+  background: var(--grad); flex: none;
+}
+
+/* Rail: living glow on the active item + logo sheen */
+.rail-btn.on { animation: rail-glow 3.2s ease-in-out infinite; }
+@keyframes rail-glow {
+  0%, 100% { box-shadow: 0 8px 20px -6px var(--ring); }
+  50% { box-shadow: 0 10px 28px -6px var(--ring); }
+}
+.rail > a svg { transition: transform .35s var(--spring), filter .35s; }
+.rail > a:hover svg { transform: rotate(-6deg) scale(1.06); filter: drop-shadow(0 4px 14px var(--ring)); }
+
+/* Quest card: gradient edge shimmer */
+.quest-card { position: relative; overflow: hidden; }
+.quest-card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--ac2) 9%, transparent) 46%, transparent 62%);
+  translate: -60% 0; animation: quest-sheen 5.5s ease-in-out infinite;
+}
+@keyframes quest-sheen { 0%, 55%, 100% { translate: -70% 0; } 25% { translate: 70% 0; } }
+
+/* Ambience control */
+:root[data-ambience='off'] .aurora { display: none; }
+:root[data-ambience='soft'] .aurora { opacity: .4; }
+
+/* Custom swatch (color picker) */
+.swatch.custom { position: relative; overflow: hidden; cursor: pointer; }
+.swatch.custom input { position: absolute; inset: -4px; opacity: 0; cursor: pointer; }
+.swatch.custom::after {
+  content: '＋'; position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: .8rem; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.55);
+}
+.swatch.custom.on::after { content: '✓'; }
+
+/* Gradient-ringed avatar on the home greeting */
+.me-orb { display: inline-grid; place-items: center; padding: 3px; border-radius: 50%; background: var(--grad); box-shadow: 0 6px 18px -6px var(--ring); flex: none; }
+.me-orb .avatar, .me-orb span[class*='av'] { border: 2px solid var(--bg1); }

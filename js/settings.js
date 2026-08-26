@@ -111,7 +111,16 @@ window.SettingsPage = (() => {
         <div class="card set-row"><div class="s-main"><b>Accent color</b><p>Used across gradients & highlights.</p></div>
           <div class="swatches">
             ${[['violet', '#7c5cff'], ['cyan', '#0ea5e9'], ['emerald', '#10b981'], ['amber', '#f59e0b'], ['rose', '#f43f5e']].map(([k, c]) =>
-              `<button class="swatch ${s.accent === k ? 'on' : ''}" data-accent-set="${k}" style="--sw-c:${c};background:${c};" aria-label="${k}"></button>`).join('')}
+              `<button class="swatch ${s.accent === k && !s.customAccent ? 'on' : ''}" data-accent-set="${k}" style="--sw-c:${c};background:${c};" aria-label="${k}"></button>`).join('')}
+            <label class="swatch custom ${s.customAccent ? 'on' : ''}" title="Custom color" style="--sw-c:${s.customAccent || 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)'};background:${s.customAccent || ''};">
+              <input type="color" id="accentPick" value="${s.customAccent || '#7c5cff'}" aria-label="Pick a custom accent color">
+            </label>
+          </div>
+        </div>
+        <div class="card set-row"><div class="s-main"><b>Ambient background</b><p>The soft aurora glow behind the app.</p></div>
+          <div class="seg" id="setAmbience">
+            ${[['off', 'Off'], ['soft', 'Soft'], ['full', 'Full']].map(([v, l]) =>
+              `<button data-v="${v}" class="${(s.ambience || 'full') === v ? 'on' : ''}">${l}</button>`).join('')}
           </div>
         </div>
         ${row('Font size', 'Comfortable reading at any distance.', `<div class="seg" id="setFont">
@@ -124,8 +133,15 @@ window.SettingsPage = (() => {
         S().theme = b.dataset.themeOpt; applyAndSave(); draw();
       }));
       panel.querySelectorAll('[data-accent-set]').forEach(b => b.addEventListener('click', () => {
-        S().accent = b.dataset.accentSet; applyAndSave(); draw();
+        S().accent = b.dataset.accentSet; S().customAccent = ''; applyAndSave(); draw();
       }));
+      panel.querySelector('#accentPick').addEventListener('input', e => {
+        S().customAccent = e.target.value; applyAndSave(); draw();
+      });
+      panel.querySelector('#setAmbience').addEventListener('click', e => {
+        const b = e.target.closest('[data-v]'); if (!b) return;
+        S().ambience = b.dataset.v; applyAndSave(); draw();
+      });
       panel.querySelector('#setFont').addEventListener('click', e => {
         const b = e.target.closest('[data-f]'); if (!b) return;
         S().font = b.dataset.f; applyAndSave(); draw();
@@ -314,11 +330,46 @@ window.SettingsPage = (() => {
     const s = S();
     const r = document.documentElement;
     r.dataset.theme = s.theme;
-    r.dataset.accent = s.accent;
+    r.dataset.accent = s.customAccent ? 'custom' : s.accent;
     r.dataset.font = s.font;
     r.dataset.motion = s.motion === 'reduced' ? 'reduced' : 'full';
     r.dataset.contrast = s.contrast === 'high' ? 'high' : 'normal';
+    r.dataset.ambience = s.ambience || 'full';
     document.body.classList.toggle('compact-mode', !!s.compactMode);
+    applyCustomAccent(s.customAccent);
+  }
+
+  /** Build a full accent palette from any picked color (stored as hex). */
+  let customStyleEl = null;
+  function applyCustomAccent(hex) {
+    if (!customStyleEl) {
+      customStyleEl = document.createElement('style');
+      customStyleEl.id = 'custom-accent';
+      document.head.appendChild(customStyleEl);
+    }
+    if (!hex) { customStyleEl.textContent = ''; return; }
+    const h = hueOfHex(hex);
+    const c1 = `hsl(${h} 86% 63%)`, c2 = `hsl(${(h + 42) % 360} 82% 62%)`, c3 = `hsl(${(h + 302) % 360} 78% 68%)`;
+    customStyleEl.textContent = `
+      :root[data-accent='custom'] {
+        --ac1: ${c1}; --ac2: ${c2}; --ac3: ${c3};
+        --grad: linear-gradient(120deg, ${c1}, ${c2});
+        --ring: hsla(${h}, 86%, 63%, .32);
+      }`;
+  }
+
+  function hueOfHex(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return 258;
+    const n = parseInt(m[1], 16);
+    const rr = ((n >> 16) & 255) / 255, gg = ((n >> 8) & 255) / 255, bb = (n & 255) / 255;
+    const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb), d = max - min;
+    if (!d) return 0;
+    let h = 0;
+    if (max === rr) h = ((gg - bb) / d) % 6;
+    else if (max === gg) h = (bb - rr) / d + 2;
+    else h = (rr - gg) / d + 4;
+    return Math.round(((h * 60) + 360) % 360);
   }
   function applyAndSave() { applyTheme(); Store.save(); }
 

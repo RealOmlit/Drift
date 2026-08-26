@@ -134,11 +134,14 @@ window.AppShell = (() => {
     root.innerHTML = `
       <div class="view-inner">
         <div class="home-hero">
-          <div class="home-hello">
-            <h1>${greet}, <span>${U.esc(u.displayName.split(' ')[0])}</span>
-              ${streak > 1 ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}
-            </h1>
-            <p class="sub muted">${quest.progress >= quest.goal && !quest.claimed ? 'Your daily quest is complete — claim it below!' : quest.label} · Level ${info.level}</p>
+          <div class="home-hello row" style="gap:1.05rem;">
+            <span class="me-orb">${U.avatar(u, { size: 54 })}</span>
+            <div>
+              <h1>${greet}, <span class="grad-text">${U.esc(u.displayName.split(' ')[0])}</span>
+                ${streak > 1 ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}
+              </h1>
+              <p class="sub muted">${quest.progress >= quest.goal && !quest.claimed ? 'Your daily quest is complete — claim it below!' : quest.label} · Level ${info.level}</p>
+            </div>
           </div>
           ${DriftConfig.AI_ENABLED ? '<button class="btn btn-primary" data-go="zephyr">✨ Ask Zephyr</button>' : ''}
         </div>
