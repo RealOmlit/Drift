@@ -12,11 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./css/tokens.css?v=2.0.1">
-  <link rel="stylesheet" href="./css/base.css?v=2.0.1">
-  <link rel="stylesheet" href="./css/components.css?v=2.0.1">
-  <link rel="stylesheet" href="./css/animations.css?v=2.0.1">
-  <link rel="stylesheet" href="./css/auth.css?v=2.0.1">
+  <link rel="stylesheet" href="./css/tokens.css?v=2.0.2">
+  <link rel="stylesheet" href="./css/base.css?v=2.0.2">
+  <link rel="stylesheet" href="./css/components.css?v=2.0.2">
+  <link rel="stylesheet" href="./css/animations.css?v=2.0.2">
+  <link rel="stylesheet" href="./css/auth.css?v=2.0.2">
 </head>
 <body class="auth-body">
   <div class="aurora"></div>
@@ -96,13 +96,13 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./js/config.js?v=2.0.1"></script>
-  <script src="./js/supabase-client.js?v=2.0.1"></script>
-  <script src="./js/utils.js?v=2.0.1"></script>
-  <script src="./js/store.js?v=2.0.1"></script>
-  <script src="./js/ui.js?v=2.0.1"></script>
-  <script src="./js/email.js?v=2.0.1"></script>
-  <script src="./js/auth.js?v=2.0.1"></script>
+  <script src="./js/config.js?v=2.0.2"></script>
+  <script src="./js/supabase-client.js?v=2.0.2"></script>
+  <script src="./js/utils.js?v=2.0.2"></script>
+  <script src="./js/store.js?v=2.0.2"></script>
+  <script src="./js/ui.js?v=2.0.2"></script>
+  <script src="./js/email.js?v=2.0.2"></script>
+  <script src="./js/auth.js?v=2.0.2"></script>
   <script>
     (() => {
       'use strict';
@@ -169,14 +169,23 @@
           if (window.Email) Email.welcome({ username, displayName: $('suName').value.trim() || username, email });
           if (res && res.pendingConfirmation) {
             btn.textContent = 'Confirm your email ✉️';
-            UI.toast({ title: 'Almost there!', body: 'Check your inbox to confirm your email, then log in.', type: 'info', duration: 9000 });
+            UI.toast({
+              title: 'Almost there!',
+              body: 'Open the email and tap Confirm — Drift opens automatically right after.',
+              type: 'info', duration: 10000
+            });
             setTimeout(() => { location.href = './login.html'; }, 4000);
           } else {
             location.href = './app.html?welcome=1';
           }
         } catch (err) {
           btn.disabled = false; btn.textContent = 'Create account 🚀';
-          UI.toast({ title: 'Sign-up failed', body: err.message, type: 'bad', icon: 'alert' });
+          UI.toast({
+            title: err.exists ? 'Account already exists' : 'Sign-up failed',
+            body: err.message, type: 'bad', icon: 'alert'
+          });
+          // Dormant account from a previous attempt → login can resend the link.
+          if (err.exists) setTimeout(() => { location.href = './login.html'; }, 3000);
         }
       });
 

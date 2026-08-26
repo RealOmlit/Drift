@@ -5,7 +5,7 @@
 
    Public API: current(), signUp(), signIn(), signOut(), restore(),
    requireAuth(), redirectIfAuthed(), changePassword(), changeUsername(),
-   changeEmail(), validateUsername(), passwordStrength()
+   changeEmail(), validateUsername(), passwordStrength(), resendConfirmation()
    ========================================================================== */
 
 window.Auth = (() => {
@@ -44,6 +44,13 @@ window.Auth = (() => {
     return null;
   }
 
+  /** Absolute URL of login.html on whatever host we're currently on —
+      used as the landing spot after a user clicks "Confirm" in email. */
+  function emailRedirectTo() {
+    try { return new URL('login.html', location.href).href; }
+    catch (e) { return location.origin + location.pathname.replace(/[^/]*$/, '') + 'login.html'; }
+  }
+
   /* ------------------------------- sign up ------------------------------- */
   async function signUp({ username, email, password, displayName, avatarEmoji = '', hue = null }) {
     if (!SB.configured()) throw new Error('This site isn\u2019t connected to its chat database yet.');
@@ -54,20 +61,34 @@ window.Auth = (() => {
     if (!EMAIL_RE.test(email)) throw new Error('Please enter a valid email address.');
     if ((password || '').length < 8) throw new Error('Password needs at least 8 characters.');
 
-    const res = await SB.unwrap(
-      SB.client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            display_name: (displayName || username).trim(),
-            avatar_emoji: avatarEmoji,
-            hue: hue ?? U.hueOf(username)
+    let res;
+    try {
+      res = await SB.unwrap(
+        SB.client.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: emailRedirectTo(),
+            data: {
+              username,
+              display_name: (displayName || username).trim(),
+              avatar_emoji: avatarEmoji,
+              hue: hue ?? U.hueOf(username)
+            }
           }
-        }
-      })
-    );
+        })
+      );
+    } catch (e) {
+      // Unconfirmed signup from an earlier attempt → account exists but is
+      // dormant. Point the user at login (which can resend the link).
+      if (/already registered|already exists|duplicate/i.test(e.message)) {
+        const err2 = new Error('That email already has an account — try logging in. Never verified it? The login screen can resend the link.');
+        err2.exists = true;
+        err2.email = email;
+        throw err2;
+      }
+      throw e;
+    }
 
     // Email confirmation disabled → session exists right away.
     if (!res.session) {
@@ -88,13 +109,36 @@ window.Auth = (() => {
       email = await SB.unwrap(SB.client.rpc('username_to_email', { u: identifier }));
       if (!email) throw new Error('No account found for that username.');
     }
-    await SB.unwrap(
-      SB.client.auth.signInWithPassword({ email, password })
-    );
+    try {
+      await SB.unwrap(
+        SB.client.auth.signInWithPassword({ email, password })
+      );
+    } catch (e) {
+      // Account exists but was never verified — recoverable, not lost.
+      if (/not confirmed|confirm/i.test(e.message)) {
+        const err = new Error('Your email hasn\u2019t been verified yet — check your inbox for the confirmation link.');
+        err.unconfirmed = true;
+        err.email = email;
+        throw err;
+      }
+      throw e;
+    }
     const { data } = await SB.client.auth.getUser();
     await Store.ensureProfile(data.user);
     await Store.afterLogin();
     return Store.state.profile;
+  }
+
+  /** Re-send the signup confirmation email (used when login says "unconfirmed"). */
+  async function resendConfirmation(email) {
+    if (!SB.configured()) throw new Error('This site isn\u2019t connected to its chat database yet.');
+    const { error } = await SB.client.auth.resend({
+      type: 'signup',
+      email: (email || '').trim().toLowerCase(),
+      options: { emailRedirectTo: emailRedirectTo() }
+    });
+    if (error) throw new Error(error.message || 'Couldn\u2019t send the email.');
+    return true;
   }
 
   /* ------------------------------- log out ------------------------------- */
@@ -158,6 +202,6 @@ window.Auth = (() => {
   return {
     current, signUp, signIn, signOut, restore,
     requireAuth, redirectIfAuthed, changePassword, changeUsername, changeEmail,
-    validateUsername, passwordStrength
+    validateUsername, passwordStrength, resendConfirmation
   };
 })();

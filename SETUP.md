@@ -14,11 +14,33 @@ hosting on GitHub Pages possible.
 3. Paste the entire contents of [`supabase-setup.sql`](./supabase-setup.sql) → **Run**.
    You should see `Success. No rows returned`.
 
-## 2. Turn off email confirmation (optional but recommended)
+## 2. Email confirmation & the "localhost refused to connect" fix
 
-**Authentication → Providers → Email**: disable *Confirm email* so people can
-log in immediately after signup. Leave it on if you want verified emails —
-signup will then say "check your inbox" before first login.
+New signups get a Supabase confirmation email. On fresh projects its **Confirm**
+button redirects to `http://localhost:3000` — that's what produces
+*"This site can't be reached · ERR_CONNECTION_REFUSED"*. Fix it one of two ways:
+
+**Option A — skip verification entirely (recommended for friends & family):**
+**Authentication → Sign In / Up → Confirm email: OFF.** People log in the
+moment they sign up, and nobody can ever get locked out of their account.
+
+**Option B — keep verification (works properly):**
+1. **Authentication → URL Configuration**
+   - Site URL: `https://YOUR-USERNAME.github.io/YOUR-REPO/`
+   - Redirect URLs: add `https://YOUR-USERNAME.github.io/YOUR-REPO/**`
+2. Now *Confirm* lands on your live login page and signs the user straight in.
+3. If someone closes the tab before confirming, their account is **not lost**:
+   logging in shows a *"Resend verification link"* button.
+
+> The app always tells Supabase to return users to your current host
+> (`emailRedirectTo`), so step B-1 only needs doing once per project.
+
+**Optional — send auth emails from Gmail instead of Supabase's sender:**
+Project Settings → Authentication → SMTP Settings: enable custom SMTP with
+host `smtp.gmail.com`, port `465`, username = your Gmail address, password =
+a 16-character Google **App Password** (Security → 2-Step Verification →
+App passwords). Verification mail then arrives from your Gmail with far higher
+limits than Supabase's built-in sender (which caps at ~2 emails/hour).
 
 ## 3. Wire the keys
 
