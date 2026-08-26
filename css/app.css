@@ -14,7 +14,21 @@
   padding: .9rem 0 1rem;
   background: color-mix(in srgb, var(--bg1) 72%, transparent);
   border-right: 1px solid var(--brd-1); backdrop-filter: blur(18px);
+  transition: width .22s var(--ease);
 }
+
+/* In rooms the rail collapses to a slim edge — hovering expands it back as
+   an overlay, so the chat never shifts around. */
+body.rail-min .rail {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 18px; overflow: hidden;
+}
+body.rail-min .rail > * { opacity: 0; pointer-events: none; transition: opacity .16s ease; }
+body.rail-min .rail:hover {
+  width: var(--rail-w); overflow: visible;
+  box-shadow: var(--sh3);
+}
+body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .rail .logo { margin-bottom: .6rem; }
 .rail-nav { display: flex; flex-direction: column; gap: .25rem; }
 .rail-btn {

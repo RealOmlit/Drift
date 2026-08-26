@@ -45,6 +45,10 @@ window.Router = (() => {
     closePaletteIfOpen();
     scrollTo(0, 0);
 
+    // In rooms the rail collapses to a slim edge (hover to expand) so chat
+    // gets the whole row.
+    document.body.classList.toggle('rail-min', current.name === 'room');
+
     switch (current.name) {
       case 'home':      return paint(view, root => AppShell.renderHome(root));
       case 'discover':  return paint(view, root => Rooms.renderDiscoverPage(root));
