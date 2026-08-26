@@ -15,18 +15,38 @@ window.Landing = (() => {
     { side: 'left', name: 'Kai', color: 'hsl(262 70% 60%)', text: 'friday. obviously. we ship fast here 😤' }
   ];
 
+  const RING_ROOMS = [
+    ['🛋️', 'Orbit Lounge', 'LIVE'],
+    ['🎮', 'Pixel Arena', '2.1k'],
+    ['👨‍💻', 'The Code Forge', 'HOT'],
+    ['📚', 'Late Night Study', ''],
+    ['🎧', 'Sound Wave', ''],
+    ['😂', 'Meme Harbor', 'HOT'],
+    ['🚀', 'Future Tech', ''],
+    ['⚽', 'Sports Bar', ''],
+    ['🎨', 'Design Deck', '']
+  ];
+
+  /** Arrange the community chips on a rotating 3D cylinder. */
+  function buildRing() {
+    const ring = U.$('#roomRing'); if (!ring) return;
+    const n = RING_ROOMS.length;
+    const itemW = 200;
+    const radius = Math.round((itemW / 2) / Math.tan(Math.PI / n)) + 46;
+    RING_ROOMS.forEach(([ic, name, tag], i) => {
+      const el = U.el('div', { class: 'ring-item' });
+      el.innerHTML = `<span class="ri-ic">${ic}</span><span class="ri-n">${U.esc(name)}${tag ? ` <small>${tag}</small>` : ''}</span>`;
+      el.style.transform = `rotateY(${(360 / n) * i}deg) translateZ(${radius}px)`;
+      ring.appendChild(el);
+    });
+  }
+
   function init() {
     // Version chip(s)
     U.$$('[data-app-version]').forEach(el => { el.textContent = 'v' + window.DriftConfig.VERSION; });
 
-    // Second, counter-scrolling row of rooms — clone keeps them in sync
-    const mq = U.$('.strip .marquee');
-    if (mq && !U.$('.marquee.rev')) {
-      const rev = mq.cloneNode(true);
-      rev.classList.add('rev');
-      rev.setAttribute('aria-hidden', 'true');
-      mq.parentElement.appendChild(rev);
-    }
+    // Spinning 3D ring of communities
+    buildRing();
 
     // Nav scroll state
     const nav = U.$('#landNav');

@@ -21,18 +21,22 @@ window.Backend = (() => {
     const room = Store.getRoom(row.room_id);
     if (!room) return;                       // room not cached → not joined/public slice
 
-    // My own message: the optimistic placeholder may still be on screen.
+    // Already landed through the HTTP path (optimistic swap / direct insert)?
+    if (room.messages.some(m => m.id === row.id)) return;
+
+    // My own message still showing its optimistic placeholder?
     if (row.user_id === Store.me()?.id) {
-      if (room.messages.some(m => m.id === row.id)) return;  // HTTP path already landed
-      const ti = room.messages.findIndex(m => m.pending && m.userId === 'me' && m.text === (row.content || ''));
-      if (ti < 0) return;
+      const ti = room.messages.findIndex(m =>
+        m.pending && m.userId === 'me' &&
+        m.text === (row.content || '') && m.type === (row.type || 'text'));
+      if (ti < 0) return;                    // nothing to reconcile — never double-append
       const oldId = room.messages[ti].id;
       room.messages.splice(ti, 1, rowToMsgShim(row));
       Store.emit('msg:replace', { oldId, msg: room.messages[ti] });
       return;
     }
 
-    // Reactions don't exist at INSERT time — none to fetch.
+    // Someone else's message — fresh insert.
     room.messages.push(rowToMsgShim(row));
     trimAndEmit(row.room_id, row.id);
   }
