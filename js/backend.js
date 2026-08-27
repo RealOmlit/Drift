@@ -243,18 +243,29 @@ window.Backend = (() => {
     if (id === 'me') id = Store.me()?.id;
     const info = id && online.get(id);
     if (info) return info.status || 'online';
-    // Not in presence → offline (or use DB status if available)
+    // Not in presence → check DB status, otherwise offline
     const p = Store.getUser(id);
-    return p?.status || 'offline';
+    if (p && p.status && p.status !== 'online') return p.status;
+    return 'offline';
   }
 
   function updateStatus(status) {
     const me = Store.me();
-    if (!me || !channel) return;
+    if (!me) return;
     me.status = status;
-    channel.track({ user_id: me.id, status, at: Date.now() }).then(()=>{},()=>{});
+    // Persist to localStorage/DB via Store
+    Store.touchProfile();
+    if (channel) {
+      channel.track({ user_id: me.id, status, at: Date.now() }).then(()=>{},()=>{});
+    }
+    // Update local presence map immediately so UI reflects without waiting for sync
+    online.set(me.id, { key: me.id, status, at: Date.now() });
+    // Also update cached profile
+    const cached = Store.getUser(me.id);
+    if (cached) cached.status = status;
     refreshPresenceCount();
     Store.emit('presence', Store.state.meta.onlineCount);
+    window.AppShell?.refreshIdentity?.();
   }
 
   return { start, stop, sendTyping, onlineUserIds, isOnline, getStatus, updateStatus };

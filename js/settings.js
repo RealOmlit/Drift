@@ -59,7 +59,7 @@ window.SettingsPage = (() => {
         <p class="desc">This is what other drifters see when they tap your name.</p>
 
         <div class="card" style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem;">
-          <span class="level-ring" style="--lvl-pct:${Store.lvlInfo(u.xp).pct};border-radius:50%;">${U.avatar(u, { size: 74 })}</span>
+          <span class="level-ring" style="--lvl-pct:${Store.lvlInfo(u.xp).pct};border-radius:50%;">${U.avatar(u, { size: 74, presence: true })}</span>
           <div class="grow">
             <b style="font-family:var(--font-d);font-size:1.1rem;">${U.esc(u.displayName)}</b>
             <div class="small faint">@${U.esc(u.username)} · Level ${Store.lvlInfo(u.xp).level}</div>
@@ -92,12 +92,9 @@ window.SettingsPage = (() => {
       });
       panel.querySelectorAll('#prAvail button').forEach(b => b.addEventListener('click', () => {
         const v = b.dataset.v;
-        Store.me().status = v;
-        Store.touchProfile();
         if (window.Backend?.updateStatus) Backend.updateStatus(v);
-        else { Store.save(); Store.emit('presence', Store.state.meta.onlineCount); }
+        else { Store.me().status = v; Store.touchProfile(); Store.emit('presence', Store.state.meta.onlineCount); window.AppShell?.refreshIdentity?.(); }
         panel.querySelectorAll('#prAvail button').forEach(x => x.classList.toggle('on', x === b));
-        window.AppShell?.refreshIdentity?.();
         UI.toast({ title: v === 'online' ? 'You’re online 🟢' : v === 'away' ? 'You’re away 🟡' : 'Appearing offline ⚫', body: v === 'offline' ? 'Others will see you as offline.' : '', type: 'ok', icon: v === 'online' ? 'check' : 'moon', duration: 2500 });
       }));
       panel.querySelector('#prSave').addEventListener('click', () => {

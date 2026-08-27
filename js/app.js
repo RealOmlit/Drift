@@ -135,7 +135,7 @@ window.AppShell = (() => {
       <div class="view-inner">
         <div class="home-hero">
           <div class="home-hello row" style="gap:1.05rem;">
-            <span class="me-orb">${U.avatar(u, { size: 54 })}</span>
+            <span class="me-orb">${U.avatar(u, { size: 54, presence: true })}</span>
             <div>
               <h1>${greet}, <span class="grad-text">${U.esc(u.displayName.split(' ')[0])}</span>
                 ${streak > 1 ? `<span class="streak">🔥 ${streak}-day streak</span>` : ''}
@@ -256,9 +256,9 @@ window.AppShell = (() => {
   function refreshIdentity() {
     const u = Store.me(); if (!u) return;
     const slot = U.$('#railAvatar');
-    if (slot) slot.innerHTML = U.avatar(u, { size: 36 });
+    if (slot) slot.innerHTML = U.avatar(u, { size: 36, presence: true });
     const mob = U.$('#mobAvatar');
-    if (mob) mob.innerHTML = U.avatar(u, { size: 32 });
+    if (mob) mob.innerHTML = U.avatar(u, { size: 32, presence: true });
   }
 
   function avatarMenu(anchor) {
