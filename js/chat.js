@@ -262,7 +262,7 @@ window.Chat = (() => {
   }
 
   /* ------------------------------ sending ------------------------------ */
-  function sendCurrent() {
+  async function sendCurrent() {
     const ta = U.$('#msgInput');
     const text = ta.value.trim();
     if (!text || !roomId) return;
@@ -277,16 +277,25 @@ window.Chat = (() => {
       }
     }
 
-    Store.composeMessage(roomId, 'me', text, { replyTo: replyTo?.id || null });
-    lastSendTs = Date.now();
-    me().stats.msgs++;
-    Store.questProgress('send');
-    Store.addXP(5, 'Message sent');
-    Store.touchProfile();
-
+    const replyId = replyTo?.id || null;
+    const snapshot = text;
     ta.value = ''; autosize(ta);
     setReply(null);
     atBottom = true; scrollToBottom(true);
+
+    try {
+      await Store.composeMessage(roomId, 'me', snapshot, { replyTo: replyId });
+      lastSendTs = Date.now();
+      me().stats.msgs++;
+      Store.questProgress('send');
+      Store.addXP(5, 'Message sent');
+      Store.touchProfile();
+    } catch (err) {
+      // Restore draft so user doesn't lose their message
+      ta.value = snapshot;
+      autosize(ta);
+      UI.toast({ title: 'Couldn’t send message', body: err.message || 'Check your connection and try again.', type: 'bad', icon: 'alert', duration: 5000 });
+    }
   }
 
   function setReply(target) {
@@ -610,9 +619,14 @@ window.Chat = (() => {
       const url = SB.client.storage.from('chat-images').getPublicUrl(path).data.publicUrl;
       await Store.composeMessage(roomId, 'me', '', { type: 'image', meta: { url } });
     } catch (err) {
-      UI.toast({ title: 'Couldn\u2019t send image', body: /bucket|not found|policy/i.test(err.message)
+      const msg = err.message || String(err);
+      const isBucket = /bucket|not found|policy/i.test(msg);
+      const isTypeCheck = /messages_type_check|check constraint|violates.*check/i.test(msg);
+      UI.toast({ title: 'Couldn\u2019t send image', body: isBucket
         ? 'Image storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).'
-        : err.message, type: 'bad', icon: 'alert', duration: 7000 });
+        : isTypeCheck
+          ? 'Image messages aren’t enabled on this database yet — re-run supabase-setup.sql + supabase-setup-images.sql in your Supabase SQL editor.'
+          : msg, type: 'bad', icon: 'alert', duration: 7000 });
     }
   }
 

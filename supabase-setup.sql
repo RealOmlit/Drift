@@ -52,7 +52,7 @@ create table if not exists public.messages (
   room_id    uuid not null references public.rooms(id) on delete cascade,
   user_id    uuid references public.profiles(id) on delete set null, -- null = system
   content    text not null default '',
-  type       text not null default 'text' check (type in ('text','system','activity','poll')),
+  type       text not null default 'text' check (type in ('text','system','activity','poll','image')),
   reply_to   uuid references public.messages(id) on delete set null,
   poll       jsonb,
   meta       jsonb,
@@ -62,6 +62,28 @@ create table if not exists public.messages (
   created_at timestamptz not null default now()
 );
 create index if not exists messages_room_created on public.messages (room_id, created_at desc);
+
+-- Patch existing installs (pre-v2.2.0 had no 'image' type) — idempotent
+do $$
+begin
+  if exists (
+    select 1 from pg_constraint
+    where conname = 'messages_type_check'
+      and conrelid = 'public.messages'::regclass
+  ) then
+    -- only recreate if the check doesn't already allow 'image'
+    if not exists (
+      select 1 from pg_constraint
+      where conname = 'messages_type_check'
+        and pg_get_constraintdef(oid) like '%''image''%'
+    ) then
+      alter table public.messages drop constraint messages_type_check;
+      alter table public.messages
+        add constraint messages_type_check check (type in ('text','system','activity','poll','image'));
+    end if;
+  end if;
+exception when undefined_table then null;
+end $$;
 
 create table if not exists public.reactions (
   message_id uuid not null references public.messages(id) on delete cascade,

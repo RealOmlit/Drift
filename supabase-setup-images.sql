@@ -9,6 +9,22 @@
 
 alter table public.profiles add column if not exists avatar_url text;
 
+-- ----------------------------------------------------------------- fix messages type for image support --
+-- Existing deployments created before v2.2.0 need this; new ones already have it.
+do $$
+begin
+  if exists (
+    select 1 from pg_constraint
+    where conname = 'messages_type_check'
+      and conrelid = 'public.messages'::regclass
+  ) then
+    alter table public.messages drop constraint messages_type_check;
+  end if;
+exception when undefined_table then null;
+end $$;
+alter table public.messages
+  add constraint messages_type_check check (type in ('text','system','activity','poll','image'));
+
 -- ----------------------------------------------------------------- buckets --
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

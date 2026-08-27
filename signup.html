@@ -181,9 +181,12 @@
           }
         } catch (err) {
           btn.disabled = false; btn.textContent = 'Create account 🚀';
+          const isRateLimit = /rate limit|too many/i.test(err.message);
           UI.toast({
-            title: err.exists ? 'Account already exists' : 'Sign-up failed',
-            body: err.message, type: 'bad', icon: 'alert'
+            title: err.exists ? 'Account already exists' : isRateLimit ? 'Email limit hit' : 'Sign-up failed',
+            body: isRateLimit
+              ? 'Supabase hit its hourly email limit — tell the site owner to disable “Confirm email” in Supabase Auth settings (see SETUP.md #2), then try again.'
+              : err.message, type: 'bad', icon: 'alert', duration: 7000
           });
           // Dormant account from a previous attempt → login can resend the link.
           if (err.exists) setTimeout(() => { location.href = './login.html'; }, 3000);

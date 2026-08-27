@@ -261,24 +261,35 @@ window.Store = (() => {
   }
 
   /* -------------------------------- rooms -------------------------------- */
-  const roomRowToRoom = (r, members) => ({
-    id: r.id,
-    name: r.name,
-    desc: r.description || '',
-    icon: r.icon || '💬',
-    category: r.category || 'general',
-    visibility: r.visibility || 'public',
-    ownerId: r.owner_id,
-    mods: r.mods || [],
-    privateCode: r.invite_code || null,       // only present when RLS exposes it
-    slowMode: r.slow_mode || 0,
-    tags: r.tags || [],
-    rules: r.rules || [],
-    members: ['me', ...(members || []).map(m => m.user_id)],
-    memberCount: (members ? members.length : 0) || 1,
-    createdAt: Date.parse(r.created_at) || Date.now(),
-    messages: []
-  });
+  const roomRowToRoom = (r, members) => {
+    const memberIds = (members || []).map(m => m.user_id);
+    const isMember = !!state.profile?.id && memberIds.includes(state.profile.id);
+    // Only include the 'me' sentinel when the current user is actually a member;
+    // otherwise isJoined() would falsely return true for every public room and
+    // the auto-join logic in Chat.mount would never fire, causing RLS insert
+    // failures that look like "chat doesn't work".
+    const membersOut = isMember
+      ? ['me', ...memberIds.filter(id => id !== state.profile.id)]
+      : memberIds;
+    return {
+      id: r.id,
+      name: r.name,
+      desc: r.description || '',
+      icon: r.icon || '💬',
+      category: r.category || 'general',
+      visibility: r.visibility || 'public',
+      ownerId: r.owner_id,
+      mods: r.mods || [],
+      privateCode: r.invite_code || null,       // only present when RLS exposes it
+      slowMode: r.slow_mode || 0,
+      tags: r.tags || [],
+      rules: r.rules || [],
+      members: membersOut,
+      memberCount: memberIds.length || 1,
+      createdAt: Date.parse(r.created_at) || Date.now(),
+      messages: []
+    };
+  };
 
   const msgRowToMsg = m => ({
     id: m.id,
@@ -394,16 +405,16 @@ window.Store = (() => {
     if (extra.poll) payload.poll = extra.poll;
     if (extra.meta) payload.meta = extra.meta;
 
-    // Optimistic echo — my own text messages appear instantly and get swapped
+    // Optimistic echo — my own messages appear instantly and get swapped
     // for the real database row as soon as it lands.
     let temp = null;
-    if (payload.type === 'text') {
+    if (payload.type === 'text' || payload.type === 'image' || payload.type === 'poll') {
       temp = {
         id: U.uid('tmp'), roomId, userId: 'me',
         text: payload.content, ts: Date.now(),
         edited: false, deleted: false, pinned: false,
-        type: 'text', replyTo: extra.replyTo || null,
-        poll: null, meta: null, reactions: {}, seen: false, pending: true
+        type: payload.type, replyTo: extra.replyTo || null,
+        poll: extra.poll || null, meta: extra.meta || null, reactions: {}, seen: false, pending: true
       };
       room.messages.push(temp);
       emit('msg:new', temp);

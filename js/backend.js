@@ -29,14 +29,18 @@ window.Backend = (() => {
       const ti = room.messages.findIndex(m =>
         m.pending && m.userId === 'me' &&
         m.text === (row.content || '') && m.type === (row.type || 'text'));
-      if (ti < 0) return;                    // nothing to reconcile — never double-append
-      const oldId = room.messages[ti].id;
-      room.messages.splice(ti, 1, rowToMsgShim(row));
-      Store.emit('msg:replace', { oldId, msg: room.messages[ti] });
-      return;
+      if (ti >= 0) {
+        const oldId = room.messages[ti].id;
+        room.messages.splice(ti, 1, rowToMsgShim(row));
+        Store.emit('msg:replace', { oldId, msg: room.messages[ti] });
+        return;
+      }
+      // No pending placeholder (e.g. image/poll sent without optimistic, or
+      // placeholder already reconciled via HTTP) — treat as fresh insert but
+      // avoid double-append (already handled by id check above).
     }
 
-    // Someone else's message — fresh insert.
+    // Someone else's message or own message without placeholder — fresh insert.
     room.messages.push(rowToMsgShim(row));
     trimAndEmit(row.room_id, row.id);
   }
