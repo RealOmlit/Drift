@@ -126,7 +126,8 @@ window.Store = (() => {
       badges: m.badges || ['early'],
       quest: m.quest || null,
       onboarded: !!m.onboarded,
-      recentEmoji: m.recentEmoji || []
+      recentEmoji: m.recentEmoji || [],
+      status: m.status || 'online'
     };
   }
 
@@ -136,13 +137,15 @@ window.Store = (() => {
       bio: p.bio,
       status_msg: p.statusMsg,
       avatar_emoji: p.avatarEmoji,
+      avatar_url: p.avatarUrl || null,
       hue: p.hue,
       xp: p.xp,
       reads: p.reads || {},
       meta: {
         following: p.following, followers: p.followers,
         stats: p.stats, badges: p.badges, quest: p.quest,
-        onboarded: !!p.onboarded, recentEmoji: p.recentEmoji || []
+        onboarded: !!p.onboarded, recentEmoji: p.recentEmoji || [],
+        status: p.status || 'online'
       }
     };
   }
@@ -226,9 +229,17 @@ window.Store = (() => {
   function getUser(id) {
     if (id === 'me') return state.profile;
     if (!id) return null;
-    if (profileCache.has(id)) return profileCache.get(id);
+    if (profileCache.has(id)) {
+      const cached = profileCache.get(id);
+      // If we have presence info, keep status in sync (e.g. away/offline)
+      if (window.Backend?.getStatus) {
+        const s = Backend.getStatus(id);
+        if (s && cached.status !== s) cached.status = s;
+      }
+      return cached;
+    }
     // Placeholder while the real row is in flight.
-    const stub = { id, username: '…', displayName: '…', bio: '', statusMsg: '', status: 'offline', avatarEmoji: '', hue: U.hueOf(id), xp: 0, badges: [] };
+    const stub = { id, username: '…', displayName: '…', bio: '', statusMsg: '', status: 'offline', avatarEmoji: '', avatarUrl: '', hue: U.hueOf(id), xp: 0, badges: [] };
     profileCache.set(id, stub);
     SB.unwrap(SB.client.from('profiles').select('*').eq('id', id).limit(1))
       .then(rows => {

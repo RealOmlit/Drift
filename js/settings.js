@@ -79,11 +79,26 @@ window.SettingsPage = (() => {
         <button class="btn btn-primary" id="prSave">Save profile</button>`;
 
       panel.querySelector('#prEmoji').addEventListener('click', e => {
-        UI.emojiPicker(e.currentTarget, em => { Store.me().avatarEmoji = em; Store.touchProfile(); e.currentTarget.textContent = `Avatar emoji: ${em} ✏️`; });
+        UI.emojiPicker(e.currentTarget, async em => {
+          const me = Store.me();
+          me.avatarEmoji = em;
+          me.avatarUrl = '';
+          Store.touchProfile();
+          try { await SB.client.from('profiles').update({ avatar_emoji: em, avatar_url: null }).eq('id', me.id); } catch (err) {}
+          draw();
+          window.AppShell?.refreshIdentity?.();
+          UI.toast({ title: `Avatar emoji set to ${em}`, type: 'ok', icon: 'check' });
+        });
       });
       panel.querySelectorAll('#prAvail button').forEach(b => b.addEventListener('click', () => {
-        Store.me().status = b.dataset.v; Store.save(); Store.emit('presence');
+        const v = b.dataset.v;
+        Store.me().status = v;
+        Store.touchProfile();
+        if (window.Backend?.updateStatus) Backend.updateStatus(v);
+        else { Store.save(); Store.emit('presence', Store.state.meta.onlineCount); }
         panel.querySelectorAll('#prAvail button').forEach(x => x.classList.toggle('on', x === b));
+        window.AppShell?.refreshIdentity?.();
+        UI.toast({ title: v === 'online' ? 'You’re online 🟢' : v === 'away' ? 'You’re away 🟡' : 'Appearing offline ⚫', body: v === 'offline' ? 'Others will see you as offline.' : '', type: 'ok', icon: v === 'online' ? 'check' : 'moon', duration: 2500 });
       }));
       panel.querySelector('#prSave').addEventListener('click', () => {
         const u = Store.me();

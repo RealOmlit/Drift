@@ -125,8 +125,24 @@ window.Backend = (() => {
   }
 
   function refreshPresenceCount() {
-    Store.state.meta.onlineCount = online.size;
-    Store.emit('presence', online.size);
+    // Count only users who are not appearing offline
+    let count = 0;
+    for (const [, info] of online) {
+      if (info.status !== 'offline') count++;
+    }
+    Store.state.meta.onlineCount = count;
+    Store.emit('presence', count);
+    // Update cached profiles' status from presence (so avatar dots reflect away/offline)
+    for (const [uid, info] of online) {
+      const p = Store.getUser(uid);
+      if (p && p.id === uid) {
+        p.status = info.status || 'online';
+        // For offline-appearing users, keep them in online Map but mark as offline
+        // so isOnline can return false
+      }
+    }
+    // For users not in presence, mark as offline if they were previously online
+    // (handled lazily via isOnline check)
   }
 
   function start() {
@@ -171,7 +187,7 @@ window.Backend = (() => {
         online.clear();
         Object.entries(channel.presenceState()).forEach(([key, metas]) => {
           const meta = Array.isArray(metas) ? metas[0] : metas;
-          if (meta?.user_id) online.set(meta.user_id, key);
+          if (meta?.user_id) online.set(meta.user_id, { key, status: meta.status || 'online', at: meta.at || Date.now() });
         });
         refreshPresenceCount();
       })
@@ -179,7 +195,7 @@ window.Backend = (() => {
         if (status !== 'SUBSCRIBED') return;
         const me = Store.me();
         if (me) {
-          await channel.track({ user_id: me.id, at: Date.now() });
+          await channel.track({ user_id: me.id, status: me.status || 'online', at: Date.now() });
           Store.touchStreak();
         }
       });
@@ -187,7 +203,7 @@ window.Backend = (() => {
     // Keep presence + last_seen fresh on long-lived tabs.
     heartbeat = setInterval(() => {
       const me = Store.me();
-      if (me && channel) channel.track({ user_id: me.id, at: Date.now() });
+      if (me && channel) channel.track({ user_id: me.id, status: me.status || 'online', at: Date.now() });
       Store.touchPresence();
     }, DriftConfig.PRESENCE_TICK_MS);
 
@@ -211,15 +227,35 @@ window.Backend = (() => {
     }).then(() => {}, () => {});
   }
 
-  const onlineUserIds = () => [...online.keys()];
+  const onlineUserIds = () => [...online.entries()].filter(([,info]) => info.status !== 'offline').map(([id]) => id);
 
   /** Presence check that treats the local 'me' sentinel and my real uuid as
-      one and the same person — prevents double-counting in member lists. */
+       one and the same person — prevents double-counting in member lists. */
   function isOnline(id) {
     if (!id) return false;
     if (id === 'me') id = Store.me()?.id;
-    return !!id && online.has(id);
+    const info = id && online.get(id);
+    return !!info && info.status !== 'offline';
   }
 
-  return { start, stop, sendTyping, onlineUserIds, isOnline };
+  function getStatus(id) {
+    if (!id) return 'offline';
+    if (id === 'me') id = Store.me()?.id;
+    const info = id && online.get(id);
+    if (info) return info.status || 'online';
+    // Not in presence → offline (or use DB status if available)
+    const p = Store.getUser(id);
+    return p?.status || 'offline';
+  }
+
+  function updateStatus(status) {
+    const me = Store.me();
+    if (!me || !channel) return;
+    me.status = status;
+    channel.track({ user_id: me.id, status, at: Date.now() }).then(()=>{},()=>{});
+    refreshPresenceCount();
+    Store.emit('presence', Store.state.meta.onlineCount);
+  }
+
+  return { start, stop, sendTyping, onlineUserIds, isOnline, getStatus, updateStatus };
 })();

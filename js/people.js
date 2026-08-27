@@ -121,16 +121,20 @@ window.People = (() => {
     const friend = isFriend(u.id);
     const following = isFollowing(u.id);
     const mutual = mutualRooms(u).length;
-    const online = isOnline(u.id);
+    const _status = (window.Backend?.getStatus ? Backend.getStatus(u.id) : (isOnline(u.id) ? (u.status || 'online') : 'offline'));
+    const online = _status !== 'offline';
+    const dotCls = _status === 'away' ? 'away' : _status === 'online' ? 'online' : 'offline';
+    // Ensure avatar dot reflects actual presence status
+    u.status = _status;
     return `
       <article class="card card-glow hoverable person-card" data-open-user="${u.id}">
-        ${U.avatar(u, { size: 62, presence: online, ring: true })}
+        ${U.avatar(u, { size: 62, presence: true, ring: true })}
         <div class="p-name">${U.esc(u.displayName)}
-          ${online ? '<span class="dot online"></span>' : ''}
+          ${online ? `<span class="dot ${dotCls}"></span>` : ''}
         </div>
         <div class="small faint">@${U.esc(u.username)}</div>
         <div class="p-status">${U.esc(u.statusMsg || '')}</div>
-        <div class="small faint">${online ? 'online now' : u.lastSeen ? 'last seen ' + U.fmtRel(u.lastSeen) : mutual + ' shared room' + (mutual === 1 ? '' : 's')}</div>
+        <div class="small faint">${_status === 'online' ? 'online now' : _status === 'away' ? 'away' : u.lastSeen ? 'last seen ' + U.fmtRel(u.lastSeen) : mutual + ' shared room' + (mutual === 1 ? '' : 's')}</div>
         <div class="p-actions">
           ${following
             ? `<button class="btn btn-glass btn-sm" data-act="unfollow" data-u="${u.id}">Following ✓</button>`
@@ -220,7 +224,9 @@ window.People = (() => {
     const u = self ? Store.me() : Store.getUser(userId);
     if (!u) return;
     const info = Store.lvlInfo(u.xp || 0);
-    const online = self || isOnline(userId);
+    const _status = self ? (u.status || 'online') : (window.Backend?.getStatus ? Backend.getStatus(userId) : (isOnline(userId) ? 'online' : 'offline'));
+    const online = _status !== 'offline';
+    u.status = _status;
 
     const m = UI.openModal({
       slim: true,
@@ -242,7 +248,7 @@ window.People = (() => {
           ${u.statusMsg ? `<div class="pc-bio">"${U.esc(u.statusMsg)}"</div>` : ''}
           ${u.bio ? `<div class="pc-bio">${U.esc(u.bio)}</div>` : ''}
           <div class="small faint" style="margin-top:.35rem;">
-            ${online ? 'Online now' : u.lastSeen ? 'Last seen ' + U.fmtRel(u.lastSeen) : 'Offline'}
+            ${_status === 'online' ? 'Online now' : _status === 'away' ? 'Away' : u.lastSeen ? 'Last seen ' + U.fmtRel(u.lastSeen) : 'Offline'}
           </div>
 
           <div class="pc-level">
@@ -315,7 +321,7 @@ window.People = (() => {
               <h2>${U.esc(u.displayName)}</h2>
               <div class="profile-handle">@${U.esc(u.username)} · joined ${new Date(u.joinedAt).toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
               <div class="badge-row">
-                <span class="chip"><span class="chip-dot"></span> Online</span>
+                <span class="chip"><span class="chip-dot" style="background:${u.status === 'away' ? 'var(--warn)' : u.status === 'offline' ? 'var(--txt3)' : 'var(--ok)'}"></span> ${u.status === 'away' ? 'Away' : u.status === 'offline' ? 'Offline' : 'Online'}</span>
                 ${u.statusMsg ? `<span class="chip">“${U.esc(u.statusMsg)}”</span>` : ''}
               </div>
             </div>
@@ -393,9 +399,12 @@ window.People = (() => {
           const up = await SB.client.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
           if (up.error) throw up.error;
           const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
-          await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url.split('?')[0] }).eq('id', Store.me().id));
+          await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url.split('?')[0], avatar_emoji: '' }).eq('id', Store.me().id));
           Store.me().avatarUrl = url;
+          Store.me().avatarEmoji = '';
           Store.state.profile.avatarUrl = url;
+          Store.state.profile.avatarEmoji = '';
+          Store.touchProfile();
           window.AppShell?.refreshIdentity?.();
           renderProfilePage(root);
           UI.toast({ title: 'Photo updated ✨', body: 'Your new look is live everywhere.', type: 'ok', icon: 'check' });

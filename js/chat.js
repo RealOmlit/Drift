@@ -764,7 +764,9 @@ window.Chat = (() => {
     UI.closeMenu();
     const bar = U.el('div', { class: 'pop-menu', style: 'flex-direction:row;padding:.35rem;gap:.15rem;' });
     [...QUICK_REACTIONS, '+'].forEach(em => {
-      const b = U.el('button', { style: 'width:36px;height:36px;justify-content:center;font-size:1.15rem;' }, em === '+' ? U.icon('plus', 15) : em);
+      const b = U.el('button', { style: 'width:36px;height:36px;justify-content:center;font-size:1.15rem;' });
+      if (em === '+') b.innerHTML = U.icon('plus', 15);
+      else b.textContent = em;
       b.addEventListener('click', () => {
         UI.closeMenu();
         if (em === '+') {
