@@ -213,6 +213,9 @@ window.Rooms = (() => {
     if (!room) return false;
     room.members = [...new Set([...room.members, 'me'])];
     room.memberCount += 1;
+    // Newly joined public rooms had no messages hydrated (refreshRooms skips non-members).
+    // Fetch them now so Chat.mount's second render shows history instead of empty.
+    try { await Store.hydrateMessages(room); } catch (e) { console.warn('[Drift] hydrate after join failed', e.message); }
     Store.emit('room:update', room);
     Notifs.push('system', { title: `Welcome to ${room.name}`, body: 'Say hi — first messages get the best seats.', roomId, silent: false });
     Store.addXP(10, 'Joined a new community');
