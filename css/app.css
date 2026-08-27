@@ -179,19 +179,22 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .notif-ic { width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid var(--brd-1);background:var(--glass-2); }
 .notif-main b{font-size:.9rem;display:block;} .notif-main p{font-size:.83rem;color:var(--txt2);} 
 .notif-time { font-size:.73rem;color:var(--txt3); white-space:nowrap; }
-.notif-dot { position:absolute; top:14px; right:34px; width:8px;height:8px;border-radius:50%;background:var(--ac1); box-shadow:0 0 8px var(--ac1); }
+.notif-dot { position:absolute; top:16px; right:44px; width:8px;height:8px;border-radius:50%;background:var(--ac1); box-shadow:0 0 8px var(--ac1); z-index:1; }
 .notif-x {
-  position: absolute; top: 4px; right: 4px; z-index: 2;
+  position: absolute; top: 6px; right: 6px; z-index: 3;
   width: 32px; height: 32px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 9px; cursor: pointer;
-  background: color-mix(in srgb, var(--bad) 13%, transparent);
-  border: 1px solid color-mix(in srgb, var(--bad) 38%, transparent);
-  color: var(--bad);
-  opacity: .95; transition: all .15s ease;
+  border-radius: 10px; cursor: pointer;
+  background: var(--bg1);
+  border: 1px solid var(--brd-1);
+  color: var(--txt3);
+  opacity: 1; transition: all .16s var(--ease);
+  box-shadow: var(--sh1);
 }
-.notif-card:hover .notif-x { opacity: 1; }
-.notif-x:hover { background: var(--bad); color: #fff; box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--bad) 55%, transparent); }
+.notif-card:hover .notif-x { border-color: color-mix(in srgb, var(--bad) 32%, var(--brd-1)); color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--bg1)); }
+.notif-x:hover { background: var(--bad)!important; color: #fff!important; border-color: var(--bad)!important; transform: scale(1.07); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--bad) 55%, transparent); }
+.notif-x:active { transform: scale(.96); }
+.notif-x svg { pointer-events:none; }
 .day-sep { font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin:1.2rem .2rem .5rem; }
 
 /* ================= Zephyr AI panel — premium ================= */
