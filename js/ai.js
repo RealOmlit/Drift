@@ -355,8 +355,8 @@ window.AI = (() => {
       return `<div class="ai-msg user"><div class="ai-bubble2">${fmtAI(U.esc(turn.text))}</div></div>`;
     }
     return `<div class="ai-msg">
-      <div class="ai-av">${IDENTITY.avatar}</div>
-      <div class="ai-bubble2"><div class="ai-tag">Zephyr</div>${mdLite(turn.text)}</div>
+      <div class="ai-av">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></div>
+      <div class="ai-bubble2"><div class="ai-tag z-tag-glow">Zephyr</div>${mdLite(turn.text)}</div>
     </div>`;
   }
 
@@ -386,9 +386,9 @@ window.AI = (() => {
         <textarea id="${id}" rows="1" placeholder="Ask Zephyr anything…"></textarea>
         <button class="ai-send" data-send aria-label="Send">${U.icon('send', 18)}</button>
       </div>
-      <div class="small faint" style="margin-top:.45rem;display:flex;gap:.35rem;align-items:center;">
+      <div class="small faint" style="margin-top:.5rem;display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;">
         ${U.icon('info', 13)} ${remoteConfigured()
-          ? `Live model: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · powered by ${U.esc(new URL(CFG.AI_BASE_URL).host)}`
+          ? `Live: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · ${U.esc(new URL(CFG.AI_BASE_URL).host)} <span style="display:inline-flex;align-items:center;gap:.28rem;margin-left:.35rem;padding:.12rem .45rem;border-radius:99px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.22);color:var(--ok);font-weight:700;font-size:.7rem;">● live</span>`
           : 'Offline rule engine · add your API key in <b>Settings → Zephyr AI</b> for full power'}
       </div>`;
   }
@@ -413,9 +413,9 @@ window.AI = (() => {
     pushTurn('user', val);
     appendTurn(container, bubbleHTML(thread()[thread().length - 1]));
     scrollBottom(scrollEl);
-    // typing indicator
-    const typing = U.el('div', { class: 'ai-msg' });
-    typing.innerHTML = `<div class="ai-av">${IDENTITY.avatar}</div><div class="ai-bubble2"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></div>`;
+    // premium thinking indicator — animated Zephyr avatar + orbital dots + wave
+    const typing = U.el('div', { class: 'ai-msg ai-thinking' });
+    typing.innerHTML = `<div class="ai-av z-think-av"><span class="z-orb-ring" aria-hidden="true"></span><span class="z-orb-core">${IDENTITY.avatar}</span></div><div class="ai-bubble2 z-think-bubble"><div class="z-thinking-head"><span class="ai-tag z-tag-glow">Zephyr</span><span class="z-think-label">thinking</span></div><div class="z-dots" aria-hidden="true"><span></span><span></span><span></span></div><div class="z-think-sub">weaving a reply…</div></div>`;
     container.appendChild(typing);
     scrollBottom(scrollEl);
 
@@ -433,18 +433,25 @@ window.AI = (() => {
 
   /* ------------------------------ Full page ------------------------------ */
   function renderPanel(root) {
+    const live = remoteConfigured();
     root.innerHTML = `
       <div class="view-inner" style="max-width:860px;">
         <div class="ai-wrap">
-          <div class="spread" style="padding-bottom:.9rem;border-bottom:1px solid var(--brd-1);">
-            <div class="row">
-              <div class="ai-av" style="width:44px;height:44px;border-radius:14px;font-size:1.25rem;">${IDENTITY.avatar}</div>
+          <div class="z-hero">
+            <div class="z-hero-left">
+              <div class="z-avatar-wrap">
+                <span class="z-avatar-ring" aria-hidden="true"></span>
+                <div class="z-avatar">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></div>
+                <span class="z-status-dot" title="${live ? 'Live — ready' : 'Offline engine'}"></span>
+              </div>
               <div>
-                <h1 style="font-size:1.3rem;">Zephyr</h1>
-                <div class="small muted">${IDENTITY.role} · persona: <b>${U.esc(Store.state.settings.aiPersona)}</b></div>
+                <h1><span class="z-name-grad">Zephyr</span> <span class="z-badge-live">${live ? 'Live' : 'Offline'}</span></h1>
+                <div class="z-meta">${IDENTITY.role} <span class="z-sep"></span> <b>${U.esc(Store.state.settings.aiPersona)}</b> persona <span class="z-sep"></span> <span style="display:inline-flex;align-items:center;gap:.3rem;">${U.icon('sparkles', 12)} ${live ? U.esc(CFG.AI_MODEL) : 'rule engine'}</span></div>
               </div>
             </div>
-            <button class="btn btn-glass btn-sm" id="zClear">${U.icon('refresh', 15)} New chat</button>
+            <div class="z-hero-actions">
+              <button class="btn btn-glass btn-sm" id="zClear">${U.icon('refresh', 14)} New chat</button>
+            </div>
           </div>
 
           <div class="ai-tools">
@@ -455,7 +462,7 @@ window.AI = (() => {
             ${thread().length ? thread().map(bubbleHTML).join('') : welcomeHTML()}
           </div>
 
-          <div>${composerHTML('zInput')}</div>
+          <div style="padding-top:.7rem;">${composerHTML('zInput')}</div>
         </div>
       </div>`;
 
@@ -484,37 +491,48 @@ window.AI = (() => {
   }
 
   function welcomeHTML() {
-    return `<div class="ai-msg">
-      <div class="ai-av">${IDENTITY.avatar}</div>
-      <div class="ai-bubble2">
-        <div class="ai-tag">Zephyr</div>
-        Hey ${U.esc(Store.me()?.displayName || 'drifter')} 👋 I'm <b>Zephyr</b>, woven into every corner of Drift.
-        I can recap busy rooms, break the ice, translate, rewrite drafts, debug code and more.
-        Try one of these:
-        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.7rem;">
-          <button class="chip" data-welcome-q="summarize this room">🧠 Summarize my favorite room</button>
-          <button class="chip" data-welcome-q="suggest topics">💡 Break the ice</button>
-          <button class="chip" data-welcome-q="who are you">👋 Who are you?</button>
-          <button class="chip" data-welcome-q="12*(34+8)">🧮 Quick math</button>
+    return `<div class="z-welcome">
+        <div style="display:flex;gap:.85rem;align-items:flex-start;">
+          <div class="z-avatar" style="width:42px;height:42px;border-radius:13px;font-size:1.2rem;flex:none;animation: z-breathe 3s ease-in-out infinite, z-glow 3s ease-in-out infinite;">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></div>
+          <div style="flex:1;min-width:0;">
+            <div class="ai-tag z-tag-glow" style="margin-bottom:.28rem;">Zephyr · ${IDENTITY.role}</div>
+            <div style="font-size:.94rem;line-height:1.6;">Hey ${U.esc(Store.me()?.displayName || 'drifter')} 👋 I'm <b>Zephyr</b>, woven into every corner of Drift. I recap busy rooms, break the ice, translate, rewrite drafts, debug code and more.</div>
+            <div class="z-welcome-actions">
+              <button class="chip" data-welcome-q="summarize this room">🧠 Summarize</button>
+              <button class="chip" data-welcome-q="suggest topics">💡 Icebreakers</button>
+              <button class="chip" data-welcome-q="who are you">👋 About me</button>
+              <button class="chip" data-welcome-q="12*(34+8)">🧮 Quick math</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>`;
+      <div class="small faint" style="display:flex;align-items:center;gap:.35rem;padding:.15rem .2rem;">${U.icon('info', 12)} Try “summarize this room” or “rewrite: thanks for the update”</div>`;
   }
 
   /* --------------------------- In-room drawer --------------------------- */
   function openDrawer(roomId) {
     const room = Store.getRoom(roomId);
+    const live = remoteConfigured();
     const drawer = UI.openModal({
       drawer: true,
-      title: `${IDENTITY.avatar} Zephyr <span class="badge badge-ai" style="margin-left:.4rem;">AI</span>`,
-      body: `<div id="zdThread" style="display:flex;flex-direction:column;gap:.8rem;">${
-        thread().length ? '' : `<div class="ai-bubble2" style="border-radius:16px;"><b>Context loaded:</b> #${U.esc(room.name)}. Ask me to <b>summarize</b>, <b>explain</b> the latest messages, suggest <b>topics</b>, or anything else.</div>`}</div>`,
+      title: `<span style="display:inline-flex;align-items:center;gap:.55rem;"><span style="width:28px;height:28px;border-radius:9px;display:inline-grid;place-items:center;background:var(--grad);color:#fff;font-size:.95rem;position:relative;overflow:hidden;box-shadow:0 4px 12px -4px var(--ring);">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></span> Zephyr <span class="z-badge-live" style="font-size:.6rem;padding:.14rem .4rem;">${live ? 'Live' : 'Offline'}</span></span>`,
+      body: `<div id="zdThread" style="display:flex;flex-direction:column;gap:.85rem;">${
+        thread().length ? '' : `<div class="z-welcome" style="padding:.85rem 1rem;"><div class="ai-tag z-tag-glow" style="margin-bottom:.3rem;">Context loaded · #${U.esc(room.name)}</div><div style="font-size:.88rem;line-height:1.5;">Ask me to <b>summarize</b>, <b>explain</b> the latest messages, suggest <b>topics</b>, or anything else.</div><div class="z-welcome-actions" style="margin-top:.6rem;"><button class="chip" data-welcome-q="summarize this room">🧠 Summarize</button><button class="chip" data-welcome-q="explain the latest messages">🔍 Explain</button><button class="chip" data-welcome-q="suggest topics">💡 Topics</button></div></div>`}</div>`,
     });
     const body = drawer.card.querySelector('#zdThread');
     thread().forEach(t => body.insertAdjacentHTML('beforeend', bubbleHTML(t)));
+    // welcome chips in drawer should also trigger
+    body.querySelectorAll('[data-welcome-q]').forEach(b => b.addEventListener('click', () => {
+      handleUserInput(b.dataset.welcomeQ, body, () => ({
+        roomId,
+        roomContext: { room: room.name, recent: recentMessages(roomId, 10).map(m => ({ user: Store.getUser(m.userId)?.username, text: m.text })) },
+        lastMessage: recentMessages(roomId, 10).slice(-1)[0]
+      }), body);
+    }));
 
     // Composer lives under the thread
     const compWrap = U.el('div');
+    compWrap.style.cssText = 'padding:1rem 1rem .9rem;border-top:1px solid var(--brd-1);background:color-mix(in srgb, var(--bg1) 92%, var(--glass));';
     compWrap.innerHTML = composerHTML('zdInput');
     drawer.card.appendChild(compWrap);
     bindComposer(compWrap, () => ({
