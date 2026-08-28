@@ -5,6 +5,7 @@
 
 window.Chat = (() => {
   'use strict';
+  alert('DEBUG: Chat IIFE executed');
 
   let roomId = null;
   let unsubs = [];
@@ -60,7 +61,9 @@ window.Chat = (() => {
   function mount(root, id) {
     unmount();
     roomId = id;
+    document.body.style.outline = '5px solid orange';
     const r = room();
+    document.body.style.outline = r ? '5px solid blue' : '5px solid red';
     if (!r) { Router.go('home'); return; }
 
     if (r.visibility === 'private' && !Rooms.isJoined(r)) {
@@ -68,7 +71,6 @@ window.Chat = (() => {
       return;
     }
     if (r.visibility === 'public' && !Rooms.isJoined(r)) {
-      // Messages are members-only (RLS) — joining is instant, so do it for real.
       Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
       return;
     }
@@ -263,9 +265,14 @@ window.Chat = (() => {
 
   /* ------------------------------ sending ------------------------------ */
   async function sendCurrent() {
+    console.log('[Chat] sendCurrent called');
     const ta = U.$('#msgInput');
     const text = ta.value.trim();
-    if (!text || !roomId) return;
+    console.log('[Chat] text:', text, 'roomId:', roomId);
+    if (!text || !roomId) {
+      console.log('[Chat] early return - no text or roomId');
+      return;
+    }
 
     // Slow mode gate
     const r = room();
@@ -283,18 +290,25 @@ window.Chat = (() => {
     setReply(null);
     atBottom = true; scrollToBottom(true);
 
+    // Add debug toast
+    UI.toast({ title: 'Debug: Sending...', body: 'Check console for logs', type: 'info', duration: 3000, icon: 'sparkles' });
+
     try {
+      console.log('[Chat] calling composeMessage...');
       await Store.composeMessage(roomId, 'me', snapshot, { replyTo: replyId });
+      console.log('[Chat] composeMessage succeeded');
       lastSendTs = Date.now();
       me().stats.msgs++;
       Store.questProgress('send');
       Store.addXP(5, 'Message sent');
       Store.touchProfile();
-    } catch (err) {
+} catch (err) {
+      console.error('[Chat] composeMessage error:', err);
       // Restore draft so user doesn't lose their message
       ta.value = snapshot;
       autosize(ta);
-      UI.toast({ title: 'Couldn’t send message', body: err.message || 'Check your connection and try again.', type: 'bad', icon: 'alert', duration: 5000 });
+      UI.toast({ title: 'Couldn\'t send message', body: err.message || 'Check your connection and try again.', type: 'bad', icon: 'alert', duration: 5000 });
+      UI.toast({ title: 'Debug: Error caught', body: err.message || 'No error message', type: 'bad', duration: 5000, icon: 'alert' });
     }
   }
 
@@ -374,8 +388,16 @@ window.Chat = (() => {
   const REACTION_EXTRA = ['🎉', '😮', '😢', '🙏', '👀', '💯', '⚡', '🏆', '😅', '🤔', '🙌', '💚', '⭐', '🚀', '💀', '🍕'];
 
   function renderAllMessages(initial) {
-    const listEl = U.$('#msgList'); if (!listEl) return;
+    const listEl = U.$('#msgList'); 
+    // Visual debug: change background if element not found
+    if (!listEl) {
+      document.body.style.border = '5px solid red';
+      return;
+    }
+    document.body.style.border = '5px solid green';
     const msgs = Store.roomMessages(roomId);
+    // Visual debug: show message count in title
+    document.title = `Drift - ${msgs.length} msgs`;
     let html = '', lastTs = 0, lastUser = null, lastDay = '';
     msgs.forEach(m => {
       const day = U.fmtDayDivider(m.ts);

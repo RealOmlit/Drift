@@ -62,7 +62,14 @@ window.Router = (() => {
       case 'room': {
         // Room views are instant (no skeleton) — chat should feel immediate
         AppShell.setRailActive('rooms');
-        Chat.mount(view, current.params[0]);
+        alert('DEBUG: Router case room hit, roomId=' + current.params[0]);
+        alert('DEBUG: Chat object = ' + (typeof window.Chat === 'undefined' ? 'UNDEFINED' : 'DEFINED'));
+        if (window.Chat && window.Chat.mount) {
+          alert('DEBUG: Calling Chat.mount');
+          window.Chat.mount(view, current.params[0]);
+        } else {
+          alert('DEBUG: Chat.mount missing!');
+        }
         return;
       }
       default:          return paint(view, root => AppShell.renderHome(root));
