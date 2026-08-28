@@ -90,7 +90,14 @@ window.Chat = (() => {
     
     root.innerHTML = layoutHTML(r);
     bindShell();
-    renderAllMessages(true);
+    
+    // Debug: check if renderAllMessages is called
+    debugEl.textContent += '\nCalling renderAllMessages...';
+    setTimeout(() => {
+      debugEl.textContent += '\nAfter timeout, calling renderAllMessages...';
+      renderAllMessages(true);
+    }, 100);
+    
     renderPinnedBar();
     updateTypingRow();
 
