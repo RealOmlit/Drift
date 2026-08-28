@@ -424,7 +424,7 @@ window.Chat = (() => {
       debugEl.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;padding:10px;background:#000;color:#0f0;font:12px monospace;border:2px solid #0f0;border-radius:8px;pointer-events:none;';
       document.body.appendChild(debugEl);
     }
-    debugEl.textContent = `roomId: ${roomId}\nmsgs: ${msgs.length}\ninitial: ${initial}`;
+    debugEl.textContent = `roomId: ${roomId}\nmsgs: ${msgs.length}\ninitial: ${initial}\nlistEl found: YES\nlistEl children: ${listEl.children.length}\nlistEl innerHTML length: ${listEl.innerHTML.length}`;
     
     let html = '', lastTs = 0, lastUser = null, lastDay = '';
     msgs.forEach(m => {
@@ -434,6 +434,9 @@ window.Chat = (() => {
       lastTs = m.ts; lastUser = m.userId;
     });
     listEl.innerHTML = html || emptyRoomHTML();
+    
+    // Update debug after render
+    debugEl.textContent += `\nAfter render: listEl children: ${listEl.children.length}\nlistEl innerHTML length: ${listEl.innerHTML.length}\nmsgScroll height: ${document.getElementById('msgScroll')?.scrollHeight || 'N/A'}\nmsgScroll clientHeight: ${document.getElementById('msgScroll')?.clientHeight || 'N/A'}\nmsgScroll scrollTop: ${document.getElementById('msgScroll')?.scrollTop || 'N/A'}`;
     scrollToBottom(!initial);
   }
 
