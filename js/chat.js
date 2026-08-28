@@ -62,30 +62,32 @@ window.Chat = (() => {
     unmount();
     roomId = id;
     document.body.style.outline = '5px solid orange';
-    console.log('[Chat] mount called, roomId=', id);
+    
+    // Visual debug
+    let debugEl = document.getElementById('chat-debug');
+    if (!debugEl) {
+      debugEl = document.createElement('div');
+      debugEl.id = 'chat-debug';
+      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;padding:10px;background:#000;color:#0f0;font:12px monospace;border:2px solid #0f0;border-radius:8px;pointer-events:none;';
+      document.body.appendChild(debugEl);
+    }
+    debugEl.textContent = `MOUNTING roomId: ${id}`;
+    
     const r = room();
     document.body.style.outline = r ? '5px solid blue' : '5px solid red';
-    console.log('[Chat] room found:', r ? r.name : 'NULL');
     if (!r) { Router.go('home'); return; }
 
     if (r.visibility === 'private' && !Rooms.isJoined(r)) {
-      console.log('[Chat] private room, not joined, calling joinRoom');
-      Rooms.joinRoom(id).then(ok => {
-        console.log('[Chat] joinRoom result:', ok);
-        ok ? mount(root, id) : Router.go('discover');
-      });
+      Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
       return;
     }
     if (r.visibility === 'public' && !Rooms.isJoined(r)) {
-      console.log('[Chat] public room, not joined, calling joinRoom');
-      Rooms.joinRoom(id).then(ok => {
-        console.log('[Chat] joinRoom result:', ok);
-        ok ? mount(root, id) : Router.go('discover');
-      });
+      Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
       return;
     }
 
-    console.log('[Chat] rendering layout');
+    debugEl.textContent += `\nRoom: ${r.name}\nmembers: ${r.members.length}\nvisibility: ${r.visibility}\njoined: ${Rooms.isJoined(r)}`;
+    
     root.innerHTML = layoutHTML(r);
     bindShell();
     renderAllMessages(true);
@@ -406,8 +408,17 @@ window.Chat = (() => {
     }
     document.body.style.border = '5px solid green';
     const msgs = Store.roomMessages(roomId);
-    document.title = `Drift - ${msgs.length} msgs`;
-    console.log('[Chat] renderAllMessages: roomId=', roomId, 'msgs=', msgs.length, msgs);
+    
+    // Visual debug: create a visible debug element
+    let debugEl = document.getElementById('chat-debug');
+    if (!debugEl) {
+      debugEl = document.createElement('div');
+      debugEl.id = 'chat-debug';
+      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;padding:10px;background:#000;color:#0f0;font:12px monospace;border:2px solid #0f0;border-radius:8px;pointer-events:none;';
+      document.body.appendChild(debugEl);
+    }
+    debugEl.textContent = `roomId: ${roomId}\nmsgs: ${msgs.length}\ninitial: ${initial}`;
+    
     let html = '', lastTs = 0, lastUser = null, lastDay = '';
     msgs.forEach(m => {
       const day = U.fmtDayDivider(m.ts);
