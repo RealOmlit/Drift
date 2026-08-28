@@ -62,19 +62,30 @@ window.Chat = (() => {
     unmount();
     roomId = id;
     document.body.style.outline = '5px solid orange';
+    console.log('[Chat] mount called, roomId=', id);
     const r = room();
     document.body.style.outline = r ? '5px solid blue' : '5px solid red';
+    console.log('[Chat] room found:', r ? r.name : 'NULL');
     if (!r) { Router.go('home'); return; }
 
     if (r.visibility === 'private' && !Rooms.isJoined(r)) {
-      Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
+      console.log('[Chat] private room, not joined, calling joinRoom');
+      Rooms.joinRoom(id).then(ok => {
+        console.log('[Chat] joinRoom result:', ok);
+        ok ? mount(root, id) : Router.go('discover');
+      });
       return;
     }
     if (r.visibility === 'public' && !Rooms.isJoined(r)) {
-      Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
+      console.log('[Chat] public room, not joined, calling joinRoom');
+      Rooms.joinRoom(id).then(ok => {
+        console.log('[Chat] joinRoom result:', ok);
+        ok ? mount(root, id) : Router.go('discover');
+      });
       return;
     }
 
+    console.log('[Chat] rendering layout');
     root.innerHTML = layoutHTML(r);
     bindShell();
     renderAllMessages(true);
@@ -389,15 +400,14 @@ window.Chat = (() => {
 
   function renderAllMessages(initial) {
     const listEl = U.$('#msgList'); 
-    // Visual debug: change background if element not found
     if (!listEl) {
       document.body.style.border = '5px solid red';
       return;
     }
     document.body.style.border = '5px solid green';
     const msgs = Store.roomMessages(roomId);
-    // Visual debug: show message count in title
     document.title = `Drift - ${msgs.length} msgs`;
+    console.log('[Chat] renderAllMessages: roomId=', roomId, 'msgs=', msgs.length, msgs);
     let html = '', lastTs = 0, lastUser = null, lastDay = '';
     msgs.forEach(m => {
       const day = U.fmtDayDivider(m.ts);
