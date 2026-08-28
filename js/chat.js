@@ -99,11 +99,13 @@ window.Chat = (() => {
     bindShell();
     
     // Debug: check if renderAllMessages is called
-    debugEl.textContent += '\nCalling renderAllMessages...';
-    setTimeout(() => {
-      debugEl.textContent += '\nAfter timeout, calling renderAllMessages...';
+    debugEl.textContent += '\nAbout to call renderAllMessages directly...';
+    try {
       renderAllMessages(true);
-    }, 100);
+      debugEl.textContent += '\nrenderAllMessages returned successfully';
+    } catch (e) {
+      debugEl.textContent += '\nrenderAllMessages ERROR: ' + e.message;
+    }
     
     renderPinnedBar();
     updateTypingRow();
