@@ -89,6 +89,13 @@ window.Chat = (() => {
     debugEl.textContent += `\nRoom: ${r.name}\nmembers: ${r.members.length}\nvisibility: ${r.visibility}\njoined: ${Rooms.isJoined(r)}`;
     
     root.innerHTML = layoutHTML(r);
+    
+    // Check if msgList exists after layout
+    setTimeout(() => {
+      const msgListCheck = document.getElementById('msgList');
+      debugEl.textContent += `\nAfter layout: msgList exists: ${!!msgListCheck}`;
+    }, 50);
+    
     bindShell();
     
     // Debug: check if renderAllMessages is called
