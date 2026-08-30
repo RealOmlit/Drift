@@ -230,24 +230,58 @@ window.SettingsPage = (() => {
       const live = AI.remoteConfigured?.();
       panel.innerHTML = `
         <h2>Zephyr AI</h2>
-        <p class="desc">Drift's built-in companion.</p>
+        <p class="desc">Drift's built-in companion — works with ANY OpenAI-compatible API.</p>
         <div class="card card-glow lit" style="margin-bottom:1rem;">
           <div class="row" style="gap:.7rem;">
             <div class="ai-av">✨</div>
             <div class="grow"><b>Zephyr status</b>
               <p class="small muted">${live
                 ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : U.esc(new URL(window.DriftConfig.AI_BASE_URL).host)}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
-                : '<b style="color:var(--warn)">Offline rule engine.</b> Paste an API key below for real intelligence.'}</p>
+                : '<b style="color:var(--warn)">Offline rule engine.</b> Add an API key below for real intelligence.'}</p>
             </div>
           </div>
         </div>
-        <div class="field"><label>AIML API key</label>
+        
+        <div class="section-label">${U.icon('key', 16)} API Configuration</div>
+        <div class="field"><label>API Base URL</label>
+          <input class="input" id="aiBaseUrl" placeholder="https://api.aimlapi.com/v1" value="${U.esc(window.DriftConfig.AI_BASE_URL)}">
+          <div class="input-hint">OpenAI-compatible base URL. Examples: <span class="mono">https://api.openai.com/v1</span>, <span class="mono">https://api.aimlapi.com/v1</span>, <span class="mono">https://api.together.xyz/v1</span>, <span class="mono">https://api.groq.com/openai/v1</span>, <span class="mono">http://localhost:11434/v1</span> (Ollama)</div>
+        </div>
+        <div class="field"><label>Model</label>
+          <input class="input" id="aiModel" placeholder="gpt-3.5-turbo" value="${U.esc(window.DriftConfig.AI_MODEL)}">
+          <div class="input-hint">Model name supported by your provider (e.g. <span class="mono">gpt-4o</span>, <span class="mono">meta-llama/Meta-Llama-3.1-8B-Instruct</span>, <span class="mono">llama3.1</span>)</div>
+        </div>
+        <div class="field"><label>API Key</label>
           <div class="row" style="gap:.55rem;">
-            <input class="input" id="aiKeyInput" type="password" placeholder="Paste your aimlapi.com key" autocomplete="off" value="${U.esc(AI.storedKey ? AI.storedKey() : '')}">
+            <input class="input" id="aiKeyInput" type="password" placeholder="sk-..." autocomplete="off" value="${U.esc(AI.storedKey ? AI.storedKey() : '')}">
             <button class="btn btn-glass btn-sm" id="aiKeySave">Save</button>
           </div>
-          <div class="input-hint">Enables live answers for custom questions. Stored only in this browser — never uploaded. Get a key at <span class="mono">aimlapi.com</span>.</div>
+          <div class="input-hint">Stored only in this browser — never uploaded. Get keys at <span class="mono">aimlapi.com</span>, <span class="mono">openai.com</span>, <span class="mono">groq.com</span>, etc.</div>
         </div>
+        <div class="field"><label>Request Format</label>
+          <div class="seg" id="aiFormat">
+            ${['openai', 'azure', 'custom'].map(f => `<button data-f="${f}" class="${(window.DriftConfig.AI_REQUEST_FORMAT || 'openai') === f ? 'on' : ''}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}
+          </div>
+          <div class="input-hint">OpenAI = standard /chat/completions. Azure = Azure OpenAI deployment format. Custom = use base URL as-is.</div>
+        </div>
+        <div class="field"><label>Temperature</label>
+          <input class="input" type="number" step="0.1" min="0" max="2" id="aiTemp" value="${window.DriftConfig.AI_TEMPERATURE}">
+          <div class="input-hint">Higher = more creative, lower = more focused. Default: 0.7</div>
+        </div>
+        <div class="field"><label>Max Tokens</label>
+          <input class="input" type="number" step="50" min="100" max="4000" id="aiMaxTokens" value="${window.DriftConfig.AI_MAX_TOKENS}">
+          <div class="input-hint">Maximum response length. Default: 600</div>
+        </div>
+        <div class="field"><label>Custom Headers (JSON)</label>
+          <textarea class="input" id="aiCustomHeaders" rows="3" placeholder='{"Authorization": "Bearer your-key"}' style="font-family:var(--mono);font-size:.75rem;">${U.esc(JSON.stringify(window.DriftConfig.AI_CUSTOM_HEADERS || {}, null, 2))}</textarea>
+          <div class="input-hint">Extra headers for custom APIs. Leave empty unless your provider requires them.</div>
+        </div>
+        <div class="field"><label>Keyless Mode</label>
+          ${toggle('aiKeyless', window.DriftConfig.AI_KEYLESS)}
+          <div class="input-hint">Enable for keyless providers like Pollinations. Disable for APIs requiring auth.</div>
+        </div>
+        
+        <div class="section-label">${U.icon('user', 16)} Personality</div>
         <div class="field"><label>Persona</label>
           <div class="seg" id="aiPersona">
             ${['friendly', 'concise', 'playful'].map(p => `<button data-p="${p}" class="${s.aiPersona === p ? 'on' : ''}">${p[0].toUpperCase() + p.slice(1)}</button>`).join('')}
@@ -255,6 +289,7 @@ window.SettingsPage = (() => {
           <div class="input-hint">Friendly warms things up · Concise trims the fluff · Playful adds sparkle.</div>
         </div>
         ${row('Share room context', 'Zephyr can read recent messages to summarize & explain.', toggle('aiCtx', s.aiContext))}
+        
         <div class="card set-row" style="border-style:dashed;">
           <div class="s-main"><b>Going to production? 🔐</b>
             <p>Move the key into a Supabase Edge Function and point <span class="mono">AI_PROXY_URL</span> at it — never ship API keys in front-end code.</p></div>
@@ -274,6 +309,21 @@ window.SettingsPage = (() => {
         });
         draw();
       });
+      // AI config handlers
+      panel.querySelector('#aiBaseUrl').addEventListener('change', e => { window.DriftConfig.AI_BASE_URL = e.target.value.trim(); draw(); });
+      panel.querySelector('#aiModel').addEventListener('change', e => { window.DriftConfig.AI_MODEL = e.target.value.trim(); draw(); });
+      panel.querySelector('#aiFormat').addEventListener('click', e => {
+        const b = e.target.closest('[data-f]'); if (!b) return;
+        window.DriftConfig.AI_REQUEST_FORMAT = b.dataset.f;
+        panel.querySelectorAll('#aiFormat button').forEach(x => x.classList.toggle('on', x === b));
+        draw();
+      });
+      panel.querySelector('#aiTemp').addEventListener('change', e => { window.DriftConfig.AI_TEMPERATURE = parseFloat(e.target.value) || 0.7; draw(); });
+      panel.querySelector('#aiMaxTokens').addEventListener('change', e => { window.DriftConfig.AI_MAX_TOKENS = parseInt(e.target.value, 10) || 600; draw(); });
+      panel.querySelector('#aiCustomHeaders').addEventListener('change', e => {
+        try { window.DriftConfig.AI_CUSTOM_HEADERS = JSON.parse(e.target.value); } catch (err) { UI.toast({ title: 'Invalid JSON', body: err.message, type: 'bad' }); }
+      });
+      panel.querySelector('#aiKeyless').addEventListener('change', e => { window.DriftConfig.AI_KEYLESS = e.target.checked; draw(); });
     }
 
     if (section === 'moderation') {

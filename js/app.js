@@ -62,13 +62,8 @@ window.Router = (() => {
       case 'room': {
         // Room views are instant (no skeleton) — chat should feel immediate
         AppShell.setRailActive('rooms');
-        alert('DEBUG: Router case room hit, roomId=' + current.params[0]);
-        alert('DEBUG: Chat object = ' + (typeof window.Chat === 'undefined' ? 'UNDEFINED' : 'DEFINED'));
         if (window.Chat && window.Chat.mount) {
-          alert('DEBUG: Calling Chat.mount');
           window.Chat.mount(view, current.params[0]);
-        } else {
-          alert('DEBUG: Chat.mount missing!');
         }
         return;
       }
@@ -404,14 +399,25 @@ window.AppShell = (() => {
 
   /* ------------------------------ Boot ------------------------------ */
   async function boot() {
-    Store.init();                            // local UI prefs
+    Store.init();
     U.$$('.app-version').forEach(el => { el.textContent = 'v' + DriftConfig.VERSION; });
-    if (!(await Auth.requireAuth())) return; // async — real session check
+    if (!(await Auth.requireAuth())) return;
     SettingsPage.applyTheme();
     Backend.start();
     injectChrome();
     wireShell();
     Router.boot();
+
+    if (SB.configured()) {
+      SB.client.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+          console.warn('[Drift] Auth state changed:', event, '-> redirecting to login');
+          Backend.stop();
+          Store.forgetSession();
+          location.href = './login.html?sessionExpired=1';
+        }
+      });
+    }
 
     // Welcome mat
     setTimeout(() => {

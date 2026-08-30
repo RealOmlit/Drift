@@ -68,6 +68,10 @@ window.SB = (() => {
       })
     : null;
 
+  let authErrorHandler = null;
+  let isHandlingAuthError = false;
+  function setAuthErrorHandler(fn) { authErrorHandler = fn; }
+
   /** Small helper: throw readable errors from PostgREST responses. */
   async function unwrap(promise) {
     const { data, error } = await promise;
@@ -75,12 +79,20 @@ window.SB = (() => {
       const msg = error.message || error.msg || String(error);
       const e = new Error(msg.replace(/^AuthApiError:\s*/i, ''));
       e.cause = error;
+      const isAuthError = error.code === 'PGRST301' || error.status === 401 || /JWT|unauthorized|auth/i.test(msg);
+      if (isAuthError) {
+        e.name = 'AuthError';
+        if (authErrorHandler && !isHandlingAuthError) {
+          isHandlingAuthError = true;
+          try { authErrorHandler(e); } finally { isHandlingAuthError = false; }
+        }
+      }
       throw e;
     }
     return data;
   }
 
-  return { client, guard, unwrap, configured: () => !!client };
+  return { client, guard, unwrap, configured: () => !!client, setAuthErrorHandler };
 })();
 
 // Light check on load — a corner note on the landing page, nothing more.

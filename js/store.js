@@ -232,9 +232,10 @@ window.Store = (() => {
     if (profileCache.has(id)) {
       const cached = profileCache.get(id);
       // If we have presence info, keep status in sync (e.g. away/offline)
-      if (window.Backend?.getStatus) {
-        const s = Backend.getStatus(id);
-        if (s && cached.status !== s) cached.status = s;
+      // Use Backend's online map directly to avoid circular call to Backend.getStatus -> Store.getUser
+      if (window.Backend && Backend.onlineUserIds) {
+        const onlineIds = Backend.onlineUserIds();
+        if (onlineIds.includes(id)) cached.status = 'online';
       }
       return cached;
     }
@@ -404,10 +405,10 @@ window.Store = (() => {
 
   /* ------------------------- message mutation API -------------------------- */
   async function composeMessage(roomId, userId, text, extra = {}) {
-    console.log('[Store] composeMessage called', { roomId, userId, text, extra });
     const room = getRoom(roomId);
-    console.log('[Store] room found:', !!room);
-    if (!room) return null;
+    if (!room) {
+      return null;
+    }
     const payload = {
       room_id: roomId,
       user_id: userId === 'sys' ? null : state.profile.id,
@@ -417,7 +418,6 @@ window.Store = (() => {
     if (extra.replyTo) payload.reply_to = extra.replyTo;
     if (extra.poll) payload.poll = extra.poll;
     if (extra.meta) payload.meta = extra.meta;
-    console.log('[Store] payload:', payload);
 
     // Optimistic echo — my own messages appear instantly and get swapped
     // for the real database row as soon as it lands.
@@ -435,15 +435,12 @@ window.Store = (() => {
     }
 
     try {
-      console.log('[Store] inserting message to Supabase...');
       const rows = await SB.unwrap(
         SB.client.from('messages').insert(payload).select('*')
       );
-      console.log('[Store] Supabase insert succeeded, rows:', rows);
       const msg = msgRowToMsg(rows[0]);
       const ti = temp ? room.messages.findIndex(x => x.id === temp.id) : -1;
       if (room.messages.some(x => x.id === msg.id)) {
-        // Realtime already delivered the real row — just drop the placeholder.
         if (ti >= 0) { room.messages.splice(ti, 1); emit('msg:remove', temp); }
         return msg;
       }
@@ -453,8 +450,6 @@ window.Store = (() => {
       emit('msg:replace', { oldId: temp ? temp.id : null, msg });
       return msg;
     } catch (e) {
-      console.error('[Store] composeMessage error:', e);
-      UI.toast({ title: 'Store Error', body: e.message || String(e), type: 'bad', duration: 5000, icon: 'alert' });
       if (temp) {
         const ti = room.messages.findIndex(x => x.id === temp.id);
         if (ti >= 0) room.messages.splice(ti, 1);

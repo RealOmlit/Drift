@@ -11,6 +11,13 @@
 window.Auth = (() => {
   'use strict';
 
+  if (SB.configured && SB.setAuthErrorHandler) {
+    SB.setAuthErrorHandler((err) => {
+      console.warn('[Drift] Global auth error handler triggered:', err.message);
+      signOut();
+    });
+  }
+
   const USERNAME_RE = /^[a-z0-9_]{3,20}$/i;
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -155,12 +162,17 @@ window.Auth = (() => {
   }
 
   /* ------------------------------- log out ------------------------------- */
+  let isSigningOut = false;
   async function signOut() {
+    if (isSigningOut) return;
+    isSigningOut = true;
     try { await SB.client.auth.signOut(); } catch (e) {}
     Backend.stop();
     Store.forgetSession();
     location.href = './login.html?loggedOut=1';
   }
+
+  
 
   /* --------------------------- account upkeep ---------------------------- */
   async function changePassword(_oldPw, newPw) {

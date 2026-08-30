@@ -243,9 +243,9 @@ window.Backend = (() => {
     if (id === 'me') id = Store.me()?.id;
     const info = id && online.get(id);
     if (info) return info.status || 'online';
-    // Not in presence → check DB status, otherwise offline
-    const p = Store.getUser(id);
-    if (p && p.status && p.status !== 'online') return p.status;
+    // Not in presence → check cached profile directly to avoid circular call
+    const cached = Store.getUser(id);
+    if (cached && cached.status && cached.status !== 'online') return cached.status;
     return 'offline';
   }
 

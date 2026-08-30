@@ -92,8 +92,6 @@ window.Notifs = (() => {
     let y = r.bottom + 8;
     if (y + m.offsetHeight > innerHeight - 10) y = Math.max(10, r.top - m.offsetHeight - 8);
     m.style.left = x + 'px'; m.style.top = y + 'px';
-    activeMenuRef(m);
-
     m.addEventListener('click', e => {
       const x = e.target.closest('[data-dismiss]');
       if (x) {

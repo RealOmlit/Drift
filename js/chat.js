@@ -5,7 +5,6 @@
 
 window.Chat = (() => {
   'use strict';
-  alert('DEBUG: Chat IIFE executed');
 
   let roomId = null;
   let unsubs = [];
@@ -58,23 +57,11 @@ window.Chat = (() => {
   /* =====================================================================
      Mount / unmount
   ===================================================================== */
-  function mount(root, id) {
+  async function mount(root, id) {
     unmount();
     roomId = id;
-    document.body.style.outline = '5px solid orange';
-    
-    // Visual debug
-    let debugEl = document.getElementById('chat-debug');
-    if (!debugEl) {
-      debugEl = document.createElement('div');
-      debugEl.id = 'chat-debug';
-      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;padding:10px;background:#000;color:#0f0;font:12px monospace;border:2px solid #0f0;border-radius:8px;pointer-events:none;';
-      document.body.appendChild(debugEl);
-    }
-    debugEl.textContent = `MOUNTING roomId: ${id}`;
     
     const r = room();
-    document.body.style.outline = r ? '5px solid blue' : '5px solid red';
     if (!r) { Router.go('home'); return; }
 
     if (r.visibility === 'private' && !Rooms.isJoined(r)) {
@@ -85,28 +72,42 @@ window.Chat = (() => {
       Rooms.joinRoom(id).then(ok => ok ? mount(root, id) : Router.go('discover'));
       return;
     }
-
-    debugEl.textContent += `\nRoom: ${r.name}\nmembers: ${r.members.length}\nvisibility: ${r.visibility}\njoined: ${Rooms.isJoined(r)}`;
     
-    root.innerHTML = layoutHTML(r);
-    
-    // Check if msgList exists after layout
-    setTimeout(() => {
-      const msgListCheck = document.getElementById('msgList');
-      debugEl.textContent += `\nAfter layout: msgList exists: ${!!msgListCheck}`;
-    }, 50);
-    
-    bindShell();
-    
-    // Debug: check if renderAllMessages is called
-    debugEl.textContent += '\nAbout to call renderAllMessages directly...';
-    try {
-      renderAllMessages(true);
-      debugEl.textContent += '\nrenderAllMessages returned successfully';
-    } catch (e) {
-      debugEl.textContent += '\nrenderAllMessages ERROR: ' + e.message;
+    // Ensure messages are hydrated before rendering — always try to refresh
+    // First verify we're actually a member in the database (RLS requires this)
+    if (SB.configured()) {
+      try {
+        const { data: membership } = await SB.client
+          .from('room_members')
+          .select('user_id')
+          .eq('room_id', roomId)
+          .eq('user_id', Store.me()?.id)
+          .single();
+        if (!membership) {
+          const joined = await Rooms.joinRoom(roomId);
+          if (!joined) {
+            UI.toast({ title: 'Not a member', body: 'You need to join this room first', type: 'warn', icon: 'lock' });
+            Router.go('rooms');
+            return;
+          }
+          // Re-get room after join
+          const r2 = room();
+          if (r2) Object.assign(r, r2);
+        }
+      } catch (e) {
+        // Ignore membership check errors, fallback to hydrate
+      }
     }
     
+    try {
+      await Store.hydrateMessages(r);
+    } catch (e) {
+      UI.toast({ title: 'Could not load messages', body: e.message || 'Check connection', type: 'bad', icon: 'alert', duration: 5000 });
+    }
+    
+    root.innerHTML = layoutHTML(r);
+    bindShell();
+    renderAllMessages(true);
     renderPinnedBar();
     updateTypingRow();
 
@@ -294,16 +295,10 @@ window.Chat = (() => {
 
   /* ------------------------------ sending ------------------------------ */
   async function sendCurrent() {
-    console.log('[Chat] sendCurrent called');
     const ta = U.$('#msgInput');
     const text = ta.value.trim();
-    console.log('[Chat] text:', text, 'roomId:', roomId);
-    if (!text || !roomId) {
-      console.log('[Chat] early return - no text or roomId');
-      return;
-    }
+    if (!text || !roomId) return;
 
-    // Slow mode gate
     const r = room();
     if (r.slowMode > 0 && !Rooms.isMod(r)) {
       const wait = r.slowMode * 1000 - (Date.now() - lastSendTs);
@@ -319,25 +314,18 @@ window.Chat = (() => {
     setReply(null);
     atBottom = true; scrollToBottom(true);
 
-    // Add debug toast
-    UI.toast({ title: 'Debug: Sending...', body: 'Check console for logs', type: 'info', duration: 3000, icon: 'sparkles' });
-
     try {
-      console.log('[Chat] calling composeMessage...');
       await Store.composeMessage(roomId, 'me', snapshot, { replyTo: replyId });
-      console.log('[Chat] composeMessage succeeded');
       lastSendTs = Date.now();
       me().stats.msgs++;
       Store.questProgress('send');
       Store.addXP(5, 'Message sent');
       Store.touchProfile();
-} catch (err) {
-      console.error('[Chat] composeMessage error:', err);
-      // Restore draft so user doesn't lose their message
+    } catch (err) {
+      if (err?.name === 'AuthError') return;
       ta.value = snapshot;
       autosize(ta);
       UI.toast({ title: 'Couldn\'t send message', body: err.message || 'Check your connection and try again.', type: 'bad', icon: 'alert', duration: 5000 });
-      UI.toast({ title: 'Debug: Error caught', body: err.message || 'No error message', type: 'bad', duration: 5000, icon: 'alert' });
     }
   }
 
@@ -419,21 +407,9 @@ window.Chat = (() => {
   function renderAllMessages(initial) {
     const listEl = U.$('#msgList'); 
     if (!listEl) {
-      document.body.style.border = '5px solid red';
       return;
     }
-    document.body.style.border = '5px solid green';
     const msgs = Store.roomMessages(roomId);
-    
-    // Visual debug: create a visible debug element
-    let debugEl = document.getElementById('chat-debug');
-    if (!debugEl) {
-      debugEl = document.createElement('div');
-      debugEl.id = 'chat-debug';
-      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;padding:10px;background:#000;color:#0f0;font:12px monospace;border:2px solid #0f0;border-radius:8px;pointer-events:none;';
-      document.body.appendChild(debugEl);
-    }
-    debugEl.textContent = `roomId: ${roomId}\nmsgs: ${msgs.length}\ninitial: ${initial}\nlistEl found: YES\nlistEl children: ${listEl.children.length}\nlistEl innerHTML length: ${listEl.innerHTML.length}`;
     
     let html = '', lastTs = 0, lastUser = null, lastDay = '';
     msgs.forEach(m => {
@@ -442,16 +418,14 @@ window.Chat = (() => {
       html += messageHTML(m, { grouped: lastUser === m.userId && m.ts - lastTs < 5 * 60e3 && m.type === 'text' });
       lastTs = m.ts; lastUser = m.userId;
     });
-    listEl.innerHTML = html || emptyRoomHTML();
-    
-    // Update debug after render
-    debugEl.textContent += `\nAfter render: listEl children: ${listEl.children.length}\nlistEl innerHTML length: ${listEl.innerHTML.length}\nmsgScroll height: ${document.getElementById('msgScroll')?.scrollHeight || 'N/A'}\nmsgScroll clientHeight: ${document.getElementById('msgScroll')?.clientHeight || 'N/A'}\nmsgScroll scrollTop: ${document.getElementById('msgScroll')?.scrollTop || 'N/A'}`;
+    listEl.innerHTML = html || emptyRoomHTML(msgs.length === 0);
     scrollToBottom(!initial);
   }
 
-  function emptyRoomHTML() {
+  function emptyRoomHTML(retry = false) {
+    const retryBtn = retry ? `<button class="btn btn-primary btn-sm" style="margin-top:.8rem;" onclick="window.Chat?.retryHydrate?.()">${U.icon('refresh', 14)} Retry loading messages</button>` : '';
     return `<div class="empty" style="margin-top:18vh;"><div class="e-icon">${U.icon('message', 26)}</div>
-      <h4>The floor is yours</h4><p>Nobody has said anything yet. Be the first to say hi 👋</p></div>`;
+      <h4>The floor is yours</h4><p>Nobody has said anything yet. Be the first to say hi 👋</p>${retryBtn}</div>`;
   }
 
   function authorOf(m) { return Store.getUser(m.userId); }
@@ -1159,5 +1133,18 @@ window.Chat = (() => {
     }).card.querySelector('[data-close2]').addEventListener('click', () => UI.closeModal());
   }
 
-  return { mount, unmount, rerender, get currentRoomId() { return roomId; } };
+  // Exposed for retry button in empty state
+  async function retryHydrate() {
+    const r = room();
+    if (!r) return;
+    try {
+      await Store.hydrateMessages(r);
+      renderAllMessages(false);
+      UI.toast({ title: 'Messages reloaded', type: 'ok', icon: 'check' });
+    } catch (e) {
+      UI.toast({ title: 'Retry failed', body: e.message, type: 'bad', icon: 'alert' });
+    }
+  }
+
+  return { mount, unmount, rerender, retryHydrate, get currentRoomId() { return roomId; } };
 })();

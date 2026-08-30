@@ -25,18 +25,23 @@ window.DriftConfig = {
   REAL_MODE: false, // recomputed below
 
   /**
-   * Zephyr AI assistant — powered by AIML API (OpenAI-compatible).
+   * Zephyr AI assistant — supports ANY OpenAI-compatible API.
    * 🔒 Paste YOUR key here locally before deploying; never commit it to the
    * public repo (this file ships to every visitor). Get one at
-   * aimlapi.com. For production, move the key into a server-side proxy
+   * aimlapi.com, openai.com, together.ai, groq.com, etc.
+   * For production, move the key into a server-side proxy
    * and point AI_PROXY_URL at it instead.
    */
   AI_ENABLED: true,
   AI_PROXY_URL: null,                                   // optional secure proxy
-  AI_BASE_URL: 'https://text.pollinations.ai/openai',   // keyless, CORS-friendly
-  AI_MODEL: 'openai',
-  AI_API_KEY: '',
-  AI_KEYLESS: true,                                     // provider needs no API key
+  AI_BASE_URL: 'https://api.aimlapi.com/v1',            // OpenAI-compatible base URL
+  AI_MODEL: 'gpt-3.5-turbo',                            // any model the provider supports
+  AI_API_KEY: '',                                       // set in Settings → Zephyr AI or here
+  AI_KEYLESS: false,                                    // true for keyless providers (pollinations)
+  AI_REQUEST_FORMAT: 'openai',                          // 'openai' | 'azure' | 'custom'
+  AI_CUSTOM_HEADERS: {},                                // extra headers for custom APIs
+  AI_TEMPERATURE: 0.7,
+  AI_MAX_TOKENS: 600,
 
   /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
   STORAGE_PREFIX: 'drift.v2.',

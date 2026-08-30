@@ -38,11 +38,13 @@ window.AI = (() => {
   }
   const effectiveKey = () => CFG.AI_API_KEY || storedKey();
 
-  /* =====================================================================
-      REMOTE INTEGRATION LAYER
-      a) AI_PROXY_URL set  → POST { messages, persona, context? } → { text }
-      b) AI_API_KEY set    → direct OpenAI-compatible /chat/completions
-   ====================================================================== */
+/* =====================================================================
+    REMOTE INTEGRATION LAYER
+    a) AI_PROXY_URL set    → POST { messages, persona, context? } → { text }
+    b) AI_API_KEY set      → direct OpenAI-compatible /chat/completions
+       Supports any OpenAI-compatible API: AIML API, OpenAI, Together.ai,
+       Groq, Ollama, LM Studio, LocalAI, etc.
+    ====================================================================== */
   const PERSONAS = {
     friendly: 'You are Zephyr, the friendly resident AI companion inside a chat app called Drift. Warm, upbeat and genuinely helpful. Use light markdown (**bold**, `code`, bullet lists) where it helps.',
     concise:  'You are Zephyr, an AI companion in a chat app. Answer in at most 2-3 short sentences unless asked for detail. Skip filler.',
@@ -69,28 +71,67 @@ window.AI = (() => {
 
   async function chatComplete(messages) {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 30000);
-    // Keyless providers (e.g. pollinations /openai) use their endpoint as-is.
-    const url = /\/openai\/?$/.test(CFG.AI_BASE_URL)
-      ? CFG.AI_BASE_URL
-      : CFG.AI_BASE_URL + '/chat/completions';
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    
+    // Build request based on format
+    let url = CFG.AI_BASE_URL;
     const headers = { 'Content-Type': 'application/json' };
-    if (effectiveKey()) headers.Authorization = 'Bearer ' + effectiveKey();
+    
+    // Add API key if available
+    const key = effectiveKey();
+    if (key) headers.Authorization = 'Bearer ' + key;
+    
+    // Add custom headers
+    if (CFG.AI_CUSTOM_HEADERS) {
+      Object.assign(headers, CFG.AI_CUSTOM_HEADERS);
+    }
+    
+    // Handle different API formats
+    let body;
+    if (CFG.AI_REQUEST_FORMAT === 'azure') {
+      // Azure OpenAI format: /openai/deployments/{model}/chat/completions?api-version=...
+      url = CFG.AI_BASE_URL.replace(/\/+$/, '') + '/openai/deployments/' + CFG.AI_MODEL + '/chat/completions?api-version=2024-02-15-preview';
+      body = JSON.stringify({ messages, max_tokens: CFG.AI_MAX_TOKENS, temperature: CFG.AI_TEMPERATURE });
+    } else if (CFG.AI_REQUEST_FORMAT === 'custom') {
+      // Custom format - use base URL as-is
+      body = JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: CFG.AI_MAX_TOKENS, temperature: CFG.AI_TEMPERATURE });
+    } else {
+      // Standard OpenAI format
+      const isKeyless = CFG.AI_KEYLESS && !key;
+      if (isKeyless && CFG.AI_BASE_URL.includes('pollinations.ai')) {
+        // Pollinations keyless endpoint
+        url = CFG.AI_BASE_URL;
+      } else {
+        url = CFG.AI_BASE_URL.replace(/\/+$/, '') + '/chat/completions';
+      }
+      body = JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: CFG.AI_MAX_TOKENS, temperature: CFG.AI_TEMPERATURE });
+    }
+    
     try {
       const resp = await fetch(url, {
         method: 'POST',
         signal: ctrl.signal,
         headers,
-        body: JSON.stringify({ model: CFG.AI_MODEL, messages, max_tokens: 600, temperature: 0.7 })
+        body
       });
       const data = await resp.json().catch(() => null);
       if (!resp.ok) {
-        // Surface AIML/OpenAI-style errors honestly (funds, rate limit, model…)
+        // Surface errors honestly (funds, rate limit, model…)
         const msg = data?.error?.message || data?.message ||
-          `API error ${resp.status}`;
+          `API error ${resp.status}: ${resp.statusText}`;
         throw new Error(msg);
       }
-      let out = data?.choices?.[0]?.message?.content?.trim() || null;
+      // Handle different response formats
+      let out = null;
+      if (data?.choices?.[0]?.message?.content) {
+        out = data.choices[0].message.content.trim();
+      } else if (data?.choices?.[0]?.text) {
+        // Some APIs return text directly
+        out = data.choices[0].text.trim();
+      } else if (data?.text) {
+        // Proxy format
+        out = data.text.trim();
+      }
       // Qwen-family models sometimes leak hidden reasoning — strip it.
       if (out) out = out.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
       return out || null;

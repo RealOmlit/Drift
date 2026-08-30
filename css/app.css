@@ -353,7 +353,7 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .room-view.no-right { grid-template-columns:1fr; }
 .room-view.no-right .room-right { display:none; }
 
-.room-main { display:flex; flex-direction:column; min-width:0; height:100%; position:relative; }
+.room-main { display:flex; flex-direction:column; min-width:0; min-height:0; height:100%; position:relative; }
 
 .room-head {
   display:flex; align-items:center; gap:.8rem; padding:.75rem 1.1rem; flex:none;
