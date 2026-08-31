@@ -100,7 +100,10 @@ window.Chat = (() => {
     }
     
     try {
-      await Store.hydrateMessages(r);
+      await Promise.all([
+        Store.hydrateMessages(r),
+        Store.allProfiles?.()
+      ]);
     } catch (e) {
       UI.toast({ title: 'Could not load messages', body: e.message || 'Check connection', type: 'bad', icon: 'alert', duration: 5000 });
     }
