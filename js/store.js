@@ -128,7 +128,10 @@ window.Store = (() => {
       quest: m.quest || null,
       onboarded: !!m.onboarded,
       recentEmoji: m.recentEmoji || [],
-      status: m.status || 'online'
+      status: m.status || 'online',
+      bannerColor: m.bannerColor || '',
+      nameFont: m.nameFont || '',
+      nameGlow: m.nameGlow || ''
     };
   }
 
@@ -146,7 +149,10 @@ window.Store = (() => {
         following: p.following, followers: p.followers,
         stats: p.stats, badges: p.badges, quest: p.quest,
         onboarded: !!p.onboarded, recentEmoji: p.recentEmoji || [],
-        status: p.status || 'online'
+        status: p.status || 'online',
+        bannerColor: p.bannerColor || '',
+        nameFont: p.nameFont || '',
+        nameGlow: p.nameGlow || ''
       }
     };
   }

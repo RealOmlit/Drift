@@ -58,6 +58,7 @@ window.Router = (() => {
       case 'zephyr':    return paint(view, root => DriftConfig.AI_ENABLED ? AI.renderPanel(root) : renderAIDisabled(root));
       case 'profile':   return paint(view, root => People.renderProfilePage(root));
       case 'search':    return paint(view, root => Finder.renderSearchPage(root));
+      case 'leaderboard': return paint(view, root => Leaderboard.renderPage(root));
       case 'settings':  return paint(view, root => SettingsPage.render(root, current.sub));
       case 'room': {
         // Room views are instant (no skeleton) — chat should feel immediate
@@ -106,7 +107,7 @@ window.Router = (() => {
   };
 })();
 
-const VIEWS_OK = new Set(['home', 'discover', 'rooms', 'people', 'notifs', 'zephyr', 'profile', 'search', 'settings', 'room']);
+const VIEWS_OK = new Set(['home', 'discover', 'rooms', 'people', 'notifs', 'zephyr', 'profile', 'search', 'settings', 'room', 'leaderboard']);
 
 /* ====================================================================== */
 window.AppShell = (() => {
@@ -158,6 +159,7 @@ window.AppShell = (() => {
           ${statCard('layers', `<b>${Store.state.rooms.filter(r => r.members.includes('me')).length}</b><span>your rooms</span>`)}
           ${statCard('zap', `<b>${U.fmtCount(u.xp)}</b><span>community XP</span>`)}
           ${statCard('flame', `<b>${U.fmtCount(u.stats.msgs)}</b><span>messages sent</span>`)}
+          ${statCard('trophy', `<b>${U.fmtCount((u.followers || []).length)}</b><span>followers</span>`)}
         </div>
 
         <div class="section-label">${U.icon('clock', 17)} Continue chatting</div>
@@ -224,7 +226,7 @@ window.AppShell = (() => {
   /* --------------------------- Shell & wiring --------------------------- */
   /** Fill the static shell buttons (in HTML) with icons & labels. */
   function injectChrome() {
-    const ICON_MAP = { home: 'home', discover: 'compass', rooms: 'layers', people: 'users', zephyr: 'sparkles' };
+    const ICON_MAP = { home: 'home', discover: 'compass', rooms: 'layers', people: 'users', leaderboard: 'trophy', zephyr: 'sparkles' };
     // Rail
     U.$$('#railNav [data-view]').forEach(b =>
       b.insertAdjacentHTML('afterbegin', U.icon(ICON_MAP[b.dataset.view], 22)));
@@ -233,7 +235,7 @@ window.AppShell = (() => {
     // Bottom nav (icon + tiny label)
     U.$$('#bottomNav .bn-item').forEach(b => {
       const ic = ICON_MAP[b.dataset.view];
-      const label = { home: 'Home', discover: 'Discover', rooms: 'Rooms', people: 'People', zephyr: 'Zephyr' }[b.dataset.view];
+      const label = { home: 'Home', discover: 'Discover', rooms: 'Rooms', people: 'People', leaderboard: 'Ranks', zephyr: 'Zephyr' }[b.dataset.view];
       b.insertAdjacentHTML('afterbegin', `${U.icon(ic, 21)}<span>${label}</span>`);
     });
     // Mobile top bar
@@ -433,6 +435,8 @@ window.AppShell = (() => {
       if (Store.state.settings.desktopNotifs && 'Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
+      // Check leaderboard badges
+      Store.allProfiles?.().then(profiles => Leaderboard?.checkBadges?.(profiles)).catch(() => {});
     }, 1200);
   }
 

@@ -61,7 +61,7 @@ window.SettingsPage = (() => {
         <div class="card" style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem;">
           <span class="level-ring" style="--lvl-pct:${Store.lvlInfo(u.xp).pct};border-radius:50%;">${U.avatar(u, { size: 74, presence: true })}</span>
           <div class="grow">
-            <b style="font-family:var(--font-d);font-size:1.1rem;">${U.esc(u.displayName)}</b>
+            <b style="font-family:var(--font-d);font-size:1.1rem;" class="${U.nameClasses(u)}">${U.esc(u.displayName)}</b>
             <div class="small faint">@${U.esc(u.username)} · Level ${Store.lvlInfo(u.xp).level}</div>
             <button class="chip" style="margin-top:.5rem;" id="prEmoji">Avatar emoji: ${u.avatarEmoji || 'none'} ✏️</button>
           </div>
@@ -74,6 +74,27 @@ window.SettingsPage = (() => {
           <div class="seg" id="prAvail">
             ${[['online', '🟢 Online'], ['away', '🟡 Away'], ['offline', '⚫ Appear offline']].map(([v, l]) =>
               `<button data-v="${v}" class="${u.status === v ? 'on' : ''}">${l}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Banner color</label>
+          <div class="swatches" id="prBannerSwatches">
+            ${['', '#7c5cff', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#ec4899', '#8b5cf6'].map(c => {
+              const active = (u.bannerColor || '') === c;
+              return `<button class="swatch ${active ? 'on' : ''}" data-bc="${c}" style="${c ? `--sw-c:${c};background:${c};` : 'background:linear-gradient(135deg,hsl(260,72%,55%),hsl(308,78%,44%));'}" title="${c || 'Default'}"></button>`;
+            }).join('')}
+          </div>
+          <div class="input-hint">Your profile cover and avatar background gradient.</div>
+        </div>
+        <div class="field"><label>Name style</label>
+          <div class="chip-row" id="prFontRow" style="flex-wrap:wrap;">
+            ${[['', 'Default'], ['serif', 'Serif'], ['mono', 'Mono'], ['cursive', 'Cursive'], ['rainbow', 'Rainbow']].map(([k, l]) =>
+              `<button class="chip ${(u.nameFont || '') === k ? 'on' : ''}" data-nf="${k}">${l}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Name glow</label>
+          <div class="chip-row" id="prGlowRow" style="flex-wrap:wrap;">
+            ${[['', 'None'], ['soft', 'Soft'], ['neon', 'Neon'], ['fire', 'Fire'], ['ice', 'Ice']].map(([k, l]) =>
+              `<button class="chip ${(u.nameGlow || '') === k ? 'on' : ''}" data-ng="${k}">${l}</button>`).join('')}
           </div>
         </div>
         <button class="btn btn-primary" id="prSave">Save profile</button>`;
@@ -107,6 +128,25 @@ window.SettingsPage = (() => {
         UI.toast({ title: 'Profile saved ✨', type: 'ok', icon: 'check' });
         window.AppShell?.refreshIdentity();
       });
+      panel.querySelectorAll('#prBannerSwatches .swatch').forEach(b => b.addEventListener('click', () => {
+        const me = Store.me();
+        me.bannerColor = b.dataset.bc;
+        panel.querySelectorAll('#prBannerSwatches .swatch').forEach(x => x.classList.toggle('on', x === b));
+        Store.touchProfile();
+        window.AppShell?.refreshIdentity?.();
+      }));
+      panel.querySelectorAll('#prFontRow .chip').forEach(b => b.addEventListener('click', () => {
+        const me = Store.me();
+        me.nameFont = b.dataset.nf;
+        panel.querySelectorAll('#prFontRow .chip').forEach(x => x.classList.toggle('on', x === b));
+        Store.touchProfile();
+      }));
+      panel.querySelectorAll('#prGlowRow .chip').forEach(b => b.addEventListener('click', () => {
+        const me = Store.me();
+        me.nameGlow = b.dataset.ng;
+        panel.querySelectorAll('#prGlowRow .chip').forEach(x => x.classList.toggle('on', x === b));
+        Store.touchProfile();
+      }));
     }
 
     if (section === 'appearance') {

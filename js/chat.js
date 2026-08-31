@@ -1097,7 +1097,7 @@ window.Chat = (() => {
     return `<button class="member-row" data-user-card="${u.id}" data-n="${U.esc((u.displayName + ' ' + u.username).toLowerCase())}">
       ${U.avatar(u, { size: 34, presence: true })}
       <span class="mr-info">
-        <span class="mr-n">${U.esc(u.displayName)} ${u.id === 'me' ? '<span class="role-tag you">you</span>' : ''}
+        <span class="mr-n${U.nameClasses(u)}">${U.esc(u.displayName)} ${u.id === 'me' ? '<span class="role-tag you">you</span>' : ''}
         ${role === 'owner' ? '<span class="role-tag owner">owner</span>' : role === 'mod' ? '<span class="role-tag mod">mod</span>' : ''}</span>
         <span class="mr-s">${u.status === 'online' ? '🟢 online' : u.status === 'away' ? '🟡 away' : '· ' + (u.statusMsg || 'offline')}</span>
       </span>

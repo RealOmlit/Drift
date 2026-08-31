@@ -91,8 +91,17 @@ window.U = (() => {
      Avatars — deterministic gradient + initials/emoji
   ------------------------------------------------------------------ */
   function avatarBg(u) {
+    if (u.bannerColor) return `linear-gradient(135deg, ${u.bannerColor}, ${u.bannerColor}cc)`;
     const h = u.hue ?? hueOf(u.username || u.id || 'x');
     return `linear-gradient(135deg, hsl(${h} 72% 55%), hsl(${(h + 48) % 360} 78% 44%))`;
+  }
+
+  /** Return CSS classes for a user's name font/glow customization. */
+  function nameClasses(u) {
+    const cls = [];
+    if (u?.nameFont) cls.push('name-font-' + u.nameFont);
+    if (u?.nameGlow) cls.push('name-glow-' + u.nameGlow);
+    return cls.length ? ' ' + cls.join(' ') : '';
   }
 
   /**
@@ -148,6 +157,8 @@ window.U = (() => {
     zap: '<path d="M13.2 3 5.4 13.4h5.8L10.8 21l7.8-10.4h-5.8Z"/>',
     flame: '<path d="M12 3.2s1.1 2.8 3.6 5.3c1.9 2 3.2 4 3.2 6.4a6.8 6.8 0 0 1-13.6 0c0-1.9.7-3.6 1.9-5.1.5 1.1 1.2 1.9 2.3 2.5C9.6 9.6 10.6 6 12 3.2Z"/>',
     trophy: '<path d="M8 4.2h8v5.6a4 4 0 0 1-8 0Z"/><path d="M8 5.4H4.6a3.4 3.4 0 0 0 3.6 3.9M16 5.4h3.4a3.4 3.4 0 0 1-3.6 3.9"/><path d="M12 13.8v3.4M8.6 20.4h6.8M10 17.2h4l.6 3.2H9.4Z"/>',
+    phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/>',
+    'phone-off': '<path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91"/><line x1="23" y1="1" x2="1" y2="23"/>',
     gamepad: '<rect x="2.6" y="8.2" width="18.8" height="9.4" rx="4.6"/><path d="M8.2 11v3.6M6.4 12.8H10"/><circle cx="15.3" cy="11.7" r="1.15" fill="currentColor" stroke="none"/><circle cx="17.6" cy="13.9" r="1.15" fill="currentColor" stroke="none"/>',
     chart: '<path d="M5 20V12.5M12 20V4.5M19 20v-4.8"/>',
     shield: '<path d="M12 3.2 5 5.9v5.3c0 4.6 3 7.7 7 9.4 4-1.7 7-4.8 7-9.4V5.9Z"/><path d="m9 11.8 2.2 2.2 3.8-4"/>',
@@ -229,6 +240,6 @@ window.U = (() => {
   return {
     $, $$, esc, el, uid, randInt, rand, chance, clamp, shuffle, hashCode, hueOf,
     fmtCount, fmtTime, fmtRel, fmtDayDivider, initials, debounce, throttle,
-    avatar, avatarBg, icon, logoHtml: logoHTML, logoSvg
+    avatar, avatarBg, nameClasses, icon, logoHtml: logoHTML, logoSvg
   };
 })();

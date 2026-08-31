@@ -129,7 +129,7 @@ window.People = (() => {
     return `
       <article class="card card-glow hoverable person-card" data-open-user="${u.id}">
         ${U.avatar(u, { size: 62, presence: true, ring: true })}
-        <div class="p-name">${U.esc(u.displayName)}
+        <div class="p-name${U.nameClasses(u)}">${U.esc(u.displayName)}
           ${online ? `<span class="dot ${dotCls}"></span>` : ''}
         </div>
         <div class="small faint">@${U.esc(u.username)}</div>
@@ -241,7 +241,7 @@ window.People = (() => {
             <span class="level-ring">${U.avatar(u, { size: 84, presence: online })}</span>
             ${self ? '<button class="btn btn-glass btn-sm" data-edit>Edit</button>' : ''}
           </div>
-          <div class="pc-name">${U.esc(u.displayName)}
+          <div class="pc-name${U.nameClasses(u)}">${U.esc(u.displayName)}
             ${badgeList(u).map(b => `<span title="${b.label}">${b.icon}</span>`).join('')}
           </div>
           <div class="pc-handle">@${U.esc(u.username)} · Level ${info.level}</div>
@@ -294,7 +294,15 @@ window.People = (() => {
     if ((u.stats?.msgs || 0) >= 10) b.push({ icon: '💬', label: 'Conversation Starter' });
     if ((u.stats?.reactionsGiven || 0) >= 10) b.push({ icon: '⚡', label: 'Reaction Giver' });
     if (Store.lvlInfo(u.xp || 0).level >= 3) b.push({ icon: '🏆', label: 'Rising Star' });
-    return b.slice(0, 4);
+    // Leaderboard badges
+    if (u.badges) {
+      for (const bg of u.badges) {
+        if (bg.includes('Top 1')) b.push({ icon: '🥇', label: bg });
+        else if (bg.includes('Top 2')) b.push({ icon: '🥈', label: bg });
+        else if (bg.includes('Top 3')) b.push({ icon: '🥉', label: bg });
+      }
+    }
+    return b.slice(0, 6);
   }
 
   /* --------------------------- Own profile page --------------------------- */
@@ -318,7 +326,7 @@ window.People = (() => {
               <input type="file" id="pfPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
             </span>
             <div class="grow">
-              <h2>${U.esc(u.displayName)}</h2>
+              <h2 class="${U.nameClasses(u)}">${U.esc(u.displayName)}</h2>
               <div class="profile-handle">@${U.esc(u.username)} · joined ${new Date(u.joinedAt).toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
               <div class="badge-row">
                 <span class="chip"><span class="chip-dot" style="background:${u.status === 'away' ? 'var(--warn)' : u.status === 'offline' ? 'var(--txt3)' : 'var(--ok)'}"></span> ${u.status === 'away' ? 'Away' : u.status === 'offline' ? 'Offline' : 'Online'}</span>
@@ -347,7 +355,10 @@ window.People = (() => {
                  ['📊', 'Poll Master', stats.pollsVoted >= 3, stats.pollsVoted + '/3 polls'],
                  ['🎮', 'Player One', stats.gamesPlayed >= 1, stats.gamesPlayed + '/1 activities'],
                  ['🔥', 'Week Warrior', streak >= 7, streak + '/7 day streak'],
-                 ['🤝', 'Social Butterfly', u.following.length >= 3, u.following.length + '/3 follows']]
+                 ['🤝', 'Social Butterfly', u.following.length >= 3, u.following.length + '/3 follows'],
+                 ['🏅', 'Top Veteran', (u.badges || []).some(b => b.includes('Top 1') && b.includes('Veteran')), (u.badges || []).find(b => b.includes('Veteran') && b.includes('Top')) || 'Reach #1 XP'],
+                 ['🏅', 'Top Messager', (u.badges || []).some(b => b.includes('Top 1') && b.includes('Messager')), (u.badges || []).find(b => b.includes('Messager') && b.includes('Top')) || 'Reach #1 Messages'],
+                 ['🏅', 'Top Popular', (u.badges || []).some(b => b.includes('Top 1') && b.includes('Popular')), (u.badges || []).find(b => b.includes('Popular') && b.includes('Top')) || 'Reach #1 Followers']]
                 .map(([ic, name, got, prog]) => `
                 <div class="card achv ${got ? 'got' : ''}">
                   <div class="a-ic">${ic}</div>
@@ -409,9 +420,16 @@ window.People = (() => {
           renderProfilePage(root);
           UI.toast({ title: 'Photo updated ✨', body: 'Your new look is live everywhere.', type: 'ok', icon: 'check' });
         } catch (err) {
-          UI.toast({ title: 'Couldn\u2019t update photo', body: /bucket|not found|policy|row-level/i.test(err.message || '')
-            ? 'Photo storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).'
-            : err.message, type: 'bad', icon: 'alert', duration: 7000 });
+          const msg = (err.message || '').toLowerCase();
+          let hint = err.message;
+          if (msg.includes('bucket') || msg.includes('not found') || msg.includes('policy') || msg.includes('row-level') || msg.includes('storage')) {
+            hint = 'Photo storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).';
+          } else if (msg.includes('file too large') || msg.includes('2') || msg.includes('limit')) {
+            hint = 'Photo is too large. Try a smaller image (under 5 MB).';
+          } else if (msg.includes('invalid') || msg.includes('type') || msg.includes('format')) {
+            hint = 'Unsupported image format. Use JPEG, PNG, or WebP.';
+          }
+          UI.toast({ title: 'Couldn\u2019t update photo', body: hint, type: 'bad', icon: 'alert', duration: 7000 });
         } finally {
           photoBtn.disabled = false;
         }
