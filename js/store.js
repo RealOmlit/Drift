@@ -240,7 +240,8 @@ window.Store = (() => {
       return cached;
     }
     // Placeholder while the real row is in flight.
-    const stub = { id, username: '…', displayName: '…', bio: '', statusMsg: '', status: 'offline', avatarEmoji: '', avatarUrl: '', hue: U.hueOf(id), xp: 0, badges: [] };
+    const short = id ? id.slice(0, 8) : '…';
+    const stub = { id, username: short, displayName: short, bio: '', statusMsg: '', status: 'offline', avatarEmoji: '', avatarUrl: '', hue: U.hueOf(id), xp: 0, badges: [] };
     profileCache.set(id, stub);
     SB.unwrap(SB.client.from('profiles').select('*').eq('id', id).limit(1))
       .then(rows => {
