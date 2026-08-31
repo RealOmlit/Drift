@@ -45,6 +45,7 @@ window.Store = (() => {
       aiPersona: 'friendly',
       aiContext: true,
       sounds: false,
+      desktopNotifs: false,
       notifs: { mention: true, message: false, friend: true, invite: true, room_activity: true, achievement: true, ai: false, system: true }
     };
   }
@@ -293,6 +294,7 @@ window.Store = (() => {
       ownerId: r.owner_id,
       mods: r.mods || [],
       privateCode: r.invite_code || null,       // only present when RLS exposes it
+      password: r.password || null,              // optional password for private rooms
       slowMode: r.slow_mode || 0,
       tags: r.tags || [],
       rules: r.rules || [],
@@ -520,7 +522,8 @@ window.Store = (() => {
   }
   async function setFollow(targetId, on) {
     if (on) {
-      await SB.unwrap(SB.client.from('follows').insert({ follower: state.profile.id, followed: targetId }));
+      // Use upsert to avoid duplicate key errors if already following
+      await SB.unwrap(SB.client.from('follows').upsert({ follower: state.profile.id, followed: targetId }, { onConflict: 'follower,followed', ignoreDuplicates: true }));
     } else {
       await SB.unwrap(SB.client.from('follows').delete().match({ follower: state.profile.id, followed: targetId }));
     }

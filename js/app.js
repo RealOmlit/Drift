@@ -429,6 +429,10 @@ window.AppShell = (() => {
         icon: 'sparkles', type: 'info', duration: 6000,
         onTap: () => Notifs.refreshBadges()
       });
+      // Ensure desktop notification permission if setting is on
+      if (Store.state.settings.desktopNotifs && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
     }, 1200);
   }
 

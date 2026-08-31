@@ -53,6 +53,13 @@ window.Backend = (() => {
     // Someone else's message or own message without placeholder — fresh insert.
     room.messages.push(rowToMsgShim(row));
     trimAndEmit(row.room_id, row.id);
+    // Desktop notification for incoming messages when tab is not focused
+    if (row.user_id !== Store.me()?.id && !document.hasFocus()) {
+      const author = Store.getUser(row.user_id);
+      const name = author?.displayName || author?.username || 'Someone';
+      const preview = (row.content || '').slice(0, 80);
+      Notifs?.fireDesktop?.(`${name} in ${room.name}`, preview);
+    }
   }
 
   function rowToMsgShim(row) {
@@ -132,6 +139,7 @@ window.Backend = (() => {
     };
     Store.state.notifications.unshift(mapped);
     Store.emit('notif:new', mapped);
+    Notifs?.fireDesktop?.(n.title, n.body);
   }
 
   function routeProfileUpdate(payload) {

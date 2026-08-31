@@ -204,6 +204,20 @@ window.Rooms = (() => {
         UI.toast({ title: 'Couldn\u2019t join', body: e.message, type: 'bad', icon: 'lock' });
         return false;
       }
+      // After joining via invite code, check if room has a password
+      if (room && room.password) {
+        const pass = await UI.prompt({
+          title: `🔑 Password required`,
+          label: `"${room.name}" is password-protected`,
+          placeholder: 'Enter room password',
+          okLabel: 'Join'
+        });
+        if (pass == null) return false;
+        if (pass !== room.password) {
+          UI.toast({ title: 'Wrong password', body: 'The password you entered is incorrect.', type: 'bad', icon: 'lock' });
+          return false;
+        }
+      }
     } else {
       try { await Store.joinRoomDb(roomId); } catch (e) {
         UI.toast({ title: 'Couldn\u2019t join', body: e.message, type: 'bad', icon: 'alert' });
@@ -276,13 +290,18 @@ window.Rooms = (() => {
           </div>
           <div class="input-hint">Private rooms need an invite code to join.</div>
         </div>
+        <div class="field" id="crPassField" style="display:none;"><label>Room password (optional)</label>
+          <input class="input" id="crPass" maxlength="40" placeholder="Set a password to lock the room">
+          <div class="input-hint">Members will need this password to join.</div>
+        </div>
         <div class="card" id="crPreview" style="margin-top:.4rem;"></div>`,
       footer: `<button class="btn btn-glass" data-close2>Cancel</button>
                <button class="btn btn-primary" id="crGo">${U.icon('rocket', 16)} Launch room</button>`
     });
 
-    const form = { name: '', desc: '', icon: '🚀', category: 'general', visibility: 'public' };
+    const form = { name: '', desc: '', icon: '🚀', category: 'general', visibility: 'public', password: '' };
     const $n = m.card.querySelector('#crName'), $d = m.card.querySelector('#crDesc');
+    const $pf = m.card.querySelector('#crPassField'), $pw = m.card.querySelector('#crPass');
 
     function preview() {
       m.card.querySelector('#crPreview').innerHTML =
@@ -300,12 +319,14 @@ window.Rooms = (() => {
     m.card.querySelectorAll('#crVis button').forEach(b => b.addEventListener('click', () => {
       form.visibility = b.dataset.v;
       m.card.querySelectorAll('#crVis button').forEach(x => x.classList.toggle('on', x === b));
+      $pf.style.display = form.visibility === 'private' ? '' : 'none';
       preview();
     }));
     const crIconBtn = m.card.querySelector('#crIcon');
     crIconBtn.addEventListener('click', () => {
       UI.emojiPicker(crIconBtn, em => { form.icon = em; crIconBtn.textContent = em; preview(); });
     });
+    $pw?.addEventListener('input', () => { form.password = $pw.value; });
     m.card.querySelector('#crAI')?.addEventListener('click', () => {
       const btn = m.card.querySelector('#crAI');
       btn.textContent = '✨ Thinking…';
@@ -329,6 +350,7 @@ window.Rooms = (() => {
             invite_code: form.visibility === 'private'
               ? 'DRIFT-' + Math.random().toString(36).slice(2, 6).toUpperCase()
               : null,
+            password: form.visibility === 'private' && form.password.trim() ? form.password.trim() : null,
             owner_id: Store.me().id,
             mods: [Store.me().id],
             rules: ['Be kind. Keep it relevant. Mods have final say.']

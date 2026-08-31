@@ -31,6 +31,7 @@ create table if not exists public.rooms (
   category    text not null default 'general',
   visibility  text not null default 'public' check (visibility in ('public','private')),
   invite_code text unique,                    -- private rooms: join via code
+  password    text,                            -- optional password for private rooms
   owner_id    uuid not null references public.profiles(id) on delete cascade,
   mods        uuid[] not null default '{}',
   slow_mode   int not null default 0,         -- seconds between messages
@@ -363,3 +364,9 @@ begin
     end;
   end loop;
 end $$;
+
+-- =========================================================== MIGRATIONS =============================================================
+-- Patch existing installs: add password column to rooms
+do $$ begin
+  alter table public.rooms add column password text;
+exception when duplicate_column then null; end $$;

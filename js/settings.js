@@ -178,12 +178,26 @@ window.SettingsPage = (() => {
           ${row('Zephyr replies', 'AI responses when you\u2019re away.', toggle('nAI', n.ai))}
           ${row('System notices', 'Product updates & security.', toggle('nSystem', n.system))}
           ${row('Sound effects', 'Subtle blips for toasts.', toggle('nSounds', s.sounds))}
+          ${row('Desktop notifications', 'Get browser notifications when messages arrive.', toggle('nDesktop', s.desktopNotifs))}
         </div>`;
       [['nMention', 'mention'], ['nFriend', 'friend'], ['nInvite', 'invite'], ['nActivity', 'room_activity'],
        ['nAchievement', 'achievement'], ['nMessage', 'message'], ['nAI', 'ai'], ['nSystem', 'system']].forEach(([id, key]) => {
         panel.querySelector('#' + id).addEventListener('change', e => { s.notifs[key] = e.target.checked; Store.save(); });
       });
       panel.querySelector('#nSounds').addEventListener('change', e => { s.sounds = e.target.checked; Store.save(); });
+      panel.querySelector('#nDesktop').addEventListener('change', async e => {
+        s.desktopNotifs = e.target.checked;
+        if (e.target.checked && 'Notification' in window) {
+          if (Notification.permission === 'default') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') { s.desktopNotifs = false; e.target.checked = false; }
+          } else if (Notification.permission === 'denied') {
+            s.desktopNotifs = false; e.target.checked = false;
+            UI.toast({ title: 'Notifications blocked', body: 'Enable them in your browser settings.', type: 'warn' });
+          }
+        }
+        Store.save();
+      });
     }
 
     if (section === 'privacy') {

@@ -165,6 +165,7 @@ window.Chat = (() => {
             </div>
           </div>
           <div class="rh-actions">
+            <button class="icon-btn hide-m" id="btnCall" data-tip="Voice call">${U.icon('phone', 18)}</button>
             <button class="icon-btn hide-m" id="btnSearchInRoom" data-tip="Search in room">${U.icon('search', 18)}</button>
             <button class="icon-btn hide-m" id="btnFocus" data-tip="Focus mode">${U.icon('zap', 18)}</button>
             ${DriftConfig.AI_ENABLED ? '<button class="ai-ask-btn hide-m" id="btnAIDrawer">✨ Ask Zephyr</button>' : ''}
@@ -206,6 +207,39 @@ window.Chat = (() => {
     </div>`;
   }
 
+  /* ============================ Voice call ============================ */
+  function startCall() {
+    const r = room();
+    const members = r.members.filter(m => m !== 'me');
+    const caller = Store.me();
+    const m = UI.openModal({
+      slim: true,
+      title: 'Voice call',
+      body: `
+        <div style="text-align:center;padding:1.2rem 0;">
+          <div style="font-size:3rem;margin-bottom:.6rem;">📞</div>
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:.3rem;">${U.esc(r.name)}</div>
+          <div class="small faint" style="margin-bottom:1.2rem;">${members.length} member${members.length !== 1 ? 's' : ''} in this room</div>
+          <div id="callStatus" style="font-size:.85rem;color:var(--txt2);">Calling…</div>
+          <div style="display:flex;gap:.7rem;justify-content:center;margin-top:1.2rem;">
+            <button class="icon-btn" id="callMute" title="Mute">${U.icon('mic', 18)}</button>
+            <button class="btn btn-danger btn-sm" id="callEnd" style="border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;">${U.icon('phone-off', 20)}</button>
+            <button class="icon-btn" id="callSpeaker" title="Speaker">${U.icon('volume', 18)}</button>
+          </div>
+        </div>`
+    });
+    let ended = false;
+    const end = () => { if (ended) return; ended = true; m.close(); UI.toast({ title: 'Call ended', type: 'info', icon: 'phone-off' }); };
+    m.card.querySelector('#callEnd')?.addEventListener('click', end);
+    // Simulate connection after 1.5s
+    setTimeout(() => {
+      if (ended) return;
+      const st = m.card.querySelector('#callStatus');
+      if (st) st.textContent = 'Connected — say hello!';
+      UI.toast({ title: 'Voice call started', body: `${r.name} — ${members.length} others in room`, type: 'ok', icon: 'phone' });
+    }, 1500);
+  }
+
   /* =====================================================================
      Shell events (header, composer, tabs)
   ===================================================================== */
@@ -213,6 +247,7 @@ window.Chat = (() => {
     const $ = sel => U.$(sel);
 
     $('#btnBack')?.addEventListener('click', () => history.back());
+    $('#btnCall')?.addEventListener('click', () => startCall());
     $('#btnSearchInRoom')?.addEventListener('click', toggleRoomSearch);
     $('#btnFocus')?.addEventListener('click', e => {
       document.body.classList.toggle('focus-mode');

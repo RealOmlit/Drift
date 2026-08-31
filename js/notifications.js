@@ -36,7 +36,16 @@ window.Notifs = (() => {
         onTap: () => open(n)
       });
     }
+    fireDesktop(title, body);
     return n;
+  }
+
+  /** Fire a browser desktop notification if enabled and tab is not focused. */
+  function fireDesktop(title, body) {
+    if (!Store.state.settings.desktopNotifs) return;
+    if (document.hasFocus()) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try { new Notification(title, { body: body || undefined, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💬</text></svg>' }); } catch (_) {}
   }
 
   /** Route a notification click to the right place. */
@@ -191,5 +200,5 @@ window.Notifs = (() => {
     });
   }
 
-  return { push, open, markAllRead, markRead, dismiss, unreadCount, renderPage, renderDropdown, refreshBadges, TYPE_META };
+  return { push, open, markAllRead, markRead, dismiss, unreadCount, renderPage, renderDropdown, refreshBadges, fireDesktop, TYPE_META };
 })();
