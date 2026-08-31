@@ -538,6 +538,13 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .trend-rank { font-family:var(--font-d); font-weight:800; color:var(--txt3); width:20px; text-align:center; font-size:.9rem; }
 .trend-main {flex:1;min-width:0;} .trend-main b{font-size:.84rem;display:block;} .trend-main span{font-size:.71rem;color:var(--txt3);}
 
+/* Leaderboard */
+.lb-row { background:var(--bg2) !important; border:1px solid var(--brd-1) !important; color:var(--txt1) !important; cursor:pointer; transition:transform .15s, border-color .15s; }
+.lb-row:hover { border-color:var(--brd-2) !important; transform:translateY(-2px); }
+.lb-row.lb-top { background:var(--bg2) !important; border-color:var(--ac1) !important; }
+.lb-row .small.faint { color:var(--txt3) !important; }
+.lb-row .trend-rank { color:var(--txt1) !important; }
+
 /* AI drawer inside room */
 .zdrawer-thread { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
 

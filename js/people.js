@@ -409,7 +409,7 @@ window.People = (() => {
           const path = `${Store.me().id}/pfp.jpg`;
           const up = await SB.client.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
           if (up.error) throw up.error;
-          const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+          const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now();
           await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url, avatar_emoji: '' }).eq('id', Store.me().id));
           Store.me().avatarUrl = url;
           Store.me().avatarEmoji = '';
@@ -424,7 +424,7 @@ window.People = (() => {
           let hint = err.message;
           if (msg.includes('bucket') || msg.includes('not found') || msg.includes('policy') || msg.includes('row-level') || msg.includes('storage')) {
             hint = 'Photo storage isn\u2019t set up yet — run supabase-setup-images.sql in your Supabase SQL editor (see SETUP.md).';
-          } else if (msg.includes('file too large') || msg.includes('2') || msg.includes('limit')) {
+          } else if (msg.includes('file too large') || msg.includes('exceeds') || msg.includes('size')) {
             hint = 'Photo is too large. Try a smaller image (under 5 MB).';
           } else if (msg.includes('invalid') || msg.includes('type') || msg.includes('format')) {
             hint = 'Unsupported image format. Use JPEG, PNG, or WebP.';

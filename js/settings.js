@@ -106,6 +106,7 @@ window.SettingsPage = (() => {
           me.avatarUrl = '';
           Store.touchProfile();
           try { await SB.client.from('profiles').update({ avatar_emoji: em, avatar_url: null }).eq('id', me.id); } catch (err) {}
+          me.avatarUrl = '';
           draw();
           window.AppShell?.refreshIdentity?.();
           UI.toast({ title: `Avatar emoji set to ${em}`, type: 'ok', icon: 'check' });
