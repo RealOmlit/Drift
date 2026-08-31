@@ -398,8 +398,8 @@ window.People = (() => {
           const path = `${Store.me().id}/pfp.jpg`;
           const up = await SB.client.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
           if (up.error) throw up.error;
-          const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
-          await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url.split('?')[0], avatar_emoji: '' }).eq('id', Store.me().id));
+          const url = SB.client.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+          await SB.unwrap(SB.client.from('profiles').update({ avatar_url: url, avatar_emoji: '' }).eq('id', Store.me().id));
           Store.me().avatarUrl = url;
           Store.me().avatarEmoji = '';
           Store.state.profile.avatarUrl = url;

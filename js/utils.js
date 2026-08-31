@@ -213,6 +213,19 @@ window.U = (() => {
 
   const logoHTML = (s = 30) => `<span class="logo">${logoSvg(s)}<span class="logo-name">Dri<b>ft</b></span></span>`;
 
+  /* ------------------------------------------------------------------
+     Avatar image error fallback — broken <img> falls back to initials
+  ------------------------------------------------------------------ */
+  window.__driftInitials = initials;
+  document.addEventListener('error', function(e) {
+    const img = e.target;
+    if (!img || !img.classList || !img.classList.contains('av-img')) return;
+    const span = img.closest('.avatar');
+    if (!span) return;
+    const name = span.getAttribute('title') || '?';
+    img.replaceWith(document.createTextNode(window.__driftInitials(name)));
+  }, true);
+
   return {
     $, $$, esc, el, uid, randInt, rand, chance, clamp, shuffle, hashCode, hueOf,
     fmtCount, fmtTime, fmtRel, fmtDayDivider, initials, debounce, throttle,

@@ -120,7 +120,8 @@ window.Chat = (() => {
       Store.on('typing', onTyping),
       Store.on('typing-stop', onTypingStop),
       Store.on('room:update', onRoomUpdate),
-      Store.on('presence', updateOnlineSub)
+      Store.on('presence', updateOnlineSub),
+      Store.on('profile:loaded', onProfileLoaded)
     );
 
     // Mark read after paint so unread logic sees the visit
@@ -592,6 +593,9 @@ window.Chat = (() => {
   /* ------------------------- live updates ------------------------- */
   function onMsgNew(msg) {
     if (msg.roomId !== roomId || !U.$('#msgList')) return;
+    // Safety: skip if this message already has a DOM node (dedup against
+    // duplicate events from optimistic echo + Realtime).
+    if (msg.id && U.$(`#msgList [data-mid="${msg.id}"]`)) return;
     U.$('#msgList').querySelector('.empty')?.remove();
     const prev = Store.roomMessages(roomId);
     const idx = prev.indexOf(msg);
@@ -632,6 +636,17 @@ window.Chat = (() => {
     if (msg.roomId !== roomId) return;
     refreshOne(msg.id);
     renderPinnedBar();
+  }
+
+  /** When a lazy profile fetch completes, re-render any messages from that
+      user so the author name updates from '…' to the real display name. */
+  function onProfileLoaded(p) {
+    if (!U.$('#msgList')) return;
+    const msgs = Store.roomMessages(roomId);
+    for (const m of msgs) {
+      if (m.userId === p.id) refreshOne(m.id);
+    }
+    updateTypingRow();
   }
 
   /** Verify → compress → upload → post an image message. */

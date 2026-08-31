@@ -440,7 +440,9 @@ window.Store = (() => {
       );
       const msg = msgRowToMsg(rows[0]);
       const ti = temp ? room.messages.findIndex(x => x.id === temp.id) : -1;
+      // Realtime may have already landed this message — dedup by ID.
       if (room.messages.some(x => x.id === msg.id)) {
+        // Remove the stale temp placeholder if it still exists.
         if (ti >= 0) { room.messages.splice(ti, 1); emit('msg:remove', temp); }
         return msg;
       }

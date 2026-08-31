@@ -35,6 +35,16 @@ window.Backend = (() => {
         Store.emit('msg:replace', { oldId, msg: room.messages[ti] });
         return;
       }
+      // Fallback: match any pending placeholder from the same user (handles
+      // edge cases where text/type don't match exactly due to formatting).
+      const tiFallback = room.messages.findIndex(m =>
+        m.pending && m.userId === 'me');
+      if (tiFallback >= 0) {
+        const oldId = room.messages[tiFallback].id;
+        room.messages.splice(tiFallback, 1, rowToMsgShim(row));
+        Store.emit('msg:replace', { oldId, msg: room.messages[tiFallback] });
+        return;
+      }
       // No pending placeholder (e.g. image/poll sent without optimistic, or
       // placeholder already reconciled via HTTP) — treat as fresh insert but
       // avoid double-append (already handled by id check above).
@@ -124,6 +134,25 @@ window.Backend = (() => {
     Store.emit('notif:new', mapped);
   }
 
+  function routeProfileUpdate(payload) {
+    const row = payload.new;
+    if (!row) return;
+    // Update the profile cache so views reflect the new name/avatar.
+    const cached = Store.getUser(row.id);
+    if (cached && cached.id === row.id) {
+      const mapped = {
+        displayName: row.display_name || row.username || cached.displayName,
+        avatarEmoji: row.avatar_emoji || '',
+        avatarUrl: row.avatar_url || '',
+        hue: row.hue ?? cached.hue,
+        bio: row.bio || cached.bio,
+        statusMsg: row.status_msg || cached.statusMsg
+      };
+      Object.assign(cached, mapped);
+      Store.emit('profile:loaded', cached);
+    }
+  }
+
   function refreshPresenceCount() {
     // Count only users who are not appearing offline
     let count = 0;
@@ -174,6 +203,9 @@ window.Backend = (() => {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'room_members' },
         () => Store.refreshRooms().then(() => Store.emit('rooms:changed')).catch(() => {}))
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        routeProfileUpdate)
 
     // --- typing broadcasts --------------------------------------------------
       .on('broadcast', { event: 'typing' }, ({ payload }) => {
