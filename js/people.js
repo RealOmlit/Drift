@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · people.js — real people directory, follows and profile cards.
+   Zeek · people.js — real people directory, follows and profile cards.
    Data comes from public.profiles / follows / presence. No demo users.
    ========================================================================== */
 
@@ -290,7 +290,7 @@ window.People = (() => {
   function badgeList(u) {
     const b = [];
     const days = Math.round((Date.now() - u.joinedAt) / 864e5);
-    if (days < 14) b.push({ icon: '🌱', label: 'New Drifter' });
+    if (days < 14) b.push({ icon: '🌱', label: 'New Zeeker' });
     if ((u.stats?.msgs || 0) >= 10) b.push({ icon: '💬', label: 'Conversation Starter' });
     if ((u.stats?.reactionsGiven || 0) >= 10) b.push({ icon: '⚡', label: 'Reaction Giver' });
     if (Store.lvlInfo(u.xp || 0).level >= 3) b.push({ icon: '🏆', label: 'Rising Star' });
@@ -318,7 +318,7 @@ window.People = (() => {
           <div class="profile-cover" style="--pc-grad:${U.avatarBg(u)}"></div>
           <div class="profile-head">
             <span style="position:relative;">
-              ${U.avatar(u, { size: 92, presence: true, ring: true })}
+              ${U.avatar(u, { size: 96, presence: true, ring: true })}
               <button class="icon-btn sm" id="pfPhoto" title="Change profile photo"
                 style="position:absolute;bottom:-4px;right:-4px;background:var(--grad);color:#fff;border:2px solid var(--bg1);">
                 ${U.icon('image', 14)}
@@ -326,12 +326,16 @@ window.People = (() => {
               <input type="file" id="pfPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
             </span>
             <div class="grow">
-              <h2 class="${U.nameClasses(u)}">${U.esc(u.displayName)}</h2>
+              <h2 class="${U.nameClasses(u)}" style="text-shadow:0 0 8px var(--ac2),0 0 20px color-mix(in srgb,var(--ac2) 30%,transparent);">${U.esc(u.displayName)}</h2>
               <div class="profile-handle">@${U.esc(u.username)} · joined ${new Date(u.joinedAt).toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
               <div class="badge-row">
                 <span class="chip"><span class="chip-dot" style="background:${u.status === 'away' ? 'var(--warn)' : u.status === 'offline' ? 'var(--txt3)' : 'var(--ok)'}"></span> ${u.status === 'away' ? 'Away' : u.status === 'offline' ? 'Offline' : 'Online'}</span>
-                ${u.statusMsg ? `<span class="chip">“${U.esc(u.statusMsg)}”</span>` : ''}
+                ${u.statusMsg ? `<span class="chip">"${U.esc(u.statusMsg)}"</span>` : ''}
               </div>
+            </div>
+            <button class="btn btn-primary" id="pfEdit">${U.icon('edit', 15)} Edit profile</button>
+          </div>
+        </div>
             </div>
             <button class="btn btn-primary" id="pfEdit">${U.icon('edit', 15)} Edit profile</button>
           </div>
@@ -341,7 +345,7 @@ window.People = (() => {
           <div class="page-grid">
             <div class="card xp-card">
               <div class="spread"><div><div class="xp-num grad-text">${U.fmtCount(u.xp)} XP</div>
-                <div class="small muted">Level ${info.level} Drifter</div></div>
+                <div class="small muted">Level ${info.level} Zeeker</div></div>
                 ${streak > 1 ? `<div class="streak">🔥 <span>${streak}-day streak</span></div>` : ''}
               </div>
               <div class="bar-track" style="margin-top:.7rem;"><div class="bar-fill" style="width:${info.pct}%"></div></div>
@@ -360,10 +364,10 @@ window.People = (() => {
                  ['🏅', 'Top Messager', (u.badges || []).some(b => b.includes('Top 1') && b.includes('Messager')), (u.badges || []).find(b => b.includes('Messager') && b.includes('Top')) || 'Reach #1 Messages'],
                  ['🏅', 'Top Popular', (u.badges || []).some(b => b.includes('Top 1') && b.includes('Popular')), (u.badges || []).find(b => b.includes('Popular') && b.includes('Top')) || 'Reach #1 Followers']]
                 .map(([ic, name, got, prog]) => `
-                <div class="card achv ${got ? 'got' : ''}">
+                <div class="achv ${got ? 'got' : ''}">
                   <div class="a-ic">${ic}</div>
-                  <div><b style="font-size:.9rem;">${name}</b>
-                  <div class="small faint">${got ? 'Unlocked' : prog}</div></div>
+                  <div class="a-label">${name}</div>
+                  <div class="a-prog">${got ? 'Unlocked!' : prog}</div>
                 </div>`).join('')}
             </div>
           </div>

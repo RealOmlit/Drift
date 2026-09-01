@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · leaderboard.js — XP, messages, and followers leaderboards
+   Zeek · leaderboard.js — XP, messages, and followers leaderboards
    with top-3 badges.
    ========================================================================== */
 
@@ -19,7 +19,7 @@ window.Leaderboard = (() => {
       <div class="view-inner" style="max-width:640px;">
         <div class="view-head">
           <h1>Leaderboard</h1>
-          <p class="sub">Top contributors across Drift</p>
+          <p class="sub">Top contributors across Zeek</p>
         </div>
         <div class="seg" id="lbTabs" style="margin-bottom:1rem;">
           ${TABS.map(t => `<button data-t="${t.key}" class="${activeTab === t.key ? 'on' : ''}">${U.icon(t.icon, 15)} ${t.label}</button>`).join('')}

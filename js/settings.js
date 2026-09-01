@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · settings.js — profile, appearance, notifications, privacy,
+   Zeek · settings.js — profile, appearance, notifications, privacy,
    chat, accessibility, AI, account and moderation panels.
    ========================================================================== */
 
@@ -12,7 +12,7 @@ window.SettingsPage = (() => {
     ['notifications', 'Notifications', 'bell'],
     ['privacy',    'Privacy',        'lock'],
     ['chat',       'Chat',           'message'],
-    ['ai',         'AI (Zephyr)',    'sparkles'],
+    ['ai',         'AI (Zeek AI)',    'sparkles'],
     ['moderation', 'Moderation',     'shield'],
     ['account',    'Account',        'gear']
   ];
@@ -23,7 +23,7 @@ window.SettingsPage = (() => {
     if (initial) section = initial;
     root.innerHTML = `
       <div class="view-inner">
-        <div class="view-head"><h1>Settings</h1><p class="sub">Make Drift feel like yours.</p></div>
+        <div class="view-head"><h1>Settings</h1><p class="sub">Make Zeek feel like yours.</p></div>
         <div class="settings-layout">
           <nav class="set-nav" id="setNav">
             ${SECTIONS.map(([k, label, ic]) => `
@@ -216,7 +216,7 @@ window.SettingsPage = (() => {
           ${row('Room activity', 'Trending rooms & new members.', toggle('nActivity', n.room_activity))}
           ${row('Achievements', 'Badges, streaks & quests.', toggle('nAchievement', n.achievement))}
           ${row('New messages', 'All messages in joined rooms (noisy!).', toggle('nMessage', n.message))}
-          ${row('Zephyr replies', 'AI responses when you\u2019re away.', toggle('nAI', n.ai))}
+          ${row('Zeek AI replies', 'AI responses when you\u2019re away.', toggle('nAI', n.ai))}
           ${row('System notices', 'Product updates & security.', toggle('nSystem', n.system))}
           ${row('Sound effects', 'Subtle blips for toasts.', toggle('nSounds', s.sounds))}
           ${row('Desktop notifications', 'Get browser notifications when messages arrive.', toggle('nDesktop', s.desktopNotifs))}
@@ -271,7 +271,7 @@ window.SettingsPage = (() => {
           ${row('Link previews', 'Generate preview cards for links.', toggle('chLinks', s.linkPreviews))}
           ${row('24-hour timestamps', '14:30 instead of 2:30 PM.', toggle('ch24h', s.showTimestamps24h))}
         </div>
-        <div class="card set-row"><div class="s-main"><b>Keyboard shortcuts</b><p>Power through Drift.</p></div></div>
+        <div class="card set-row"><div class="s-main"><b>Keyboard shortcuts</b><p>Power through Zeek.</p></div></div>
         <div class="page-grid">
           ${[['⌘/Ctrl + K', 'Global search palette'], ['/', 'Quick search'], ['Esc', 'Close overlays'], ['Shift + Enter', 'New line']].map(([k, d]) =>
             row(`<kbd class="kbd">${k}</kbd>`, d, '')).join('')}
@@ -284,14 +284,14 @@ window.SettingsPage = (() => {
     if (section === 'ai') {
       const live = AI.remoteConfigured?.();
       panel.innerHTML = `
-        <h2>Zephyr AI</h2>
-        <p class="desc">Drift's built-in companion — works with ANY OpenAI-compatible API.</p>
+        <h2>Zeek AI AI</h2>
+        <p class="desc">Zeek's built-in companion — works with ANY OpenAI-compatible API.</p>
         <div class="card card-glow lit" style="margin-bottom:1rem;">
           <div class="row" style="gap:.7rem;">
             <div class="ai-av">✨</div>
-            <div class="grow"><b>Zephyr status</b>
+            <div class="grow"><b>Zeek AI status</b>
               <p class="small muted">${live
-                ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.DriftConfig.AI_MODEL)}</span> via ${window.DriftConfig.AI_PROXY_URL ? 'your secure proxy' : U.esc(new URL(window.DriftConfig.AI_BASE_URL).host)}${window.DriftConfig.AI_API_KEY && !window.DriftConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
+                ? `<b style="color:var(--ok)">Live.</b> Model <span class="mono">${U.esc(window.ZeekConfig.AI_MODEL)}</span> via ${window.ZeekConfig.AI_PROXY_URL ? 'your secure proxy' : U.esc(new URL(window.ZeekConfig.AI_BASE_URL).host)}${window.ZeekConfig.AI_API_KEY && !window.ZeekConfig.AI_PROXY_URL ? ' — ⚠️ key is public in front-end code; rotate it if abused' : ''}.`
                 : '<b style="color:var(--warn)">Offline rule engine.</b> Add an API key below for real intelligence.'}</p>
             </div>
           </div>
@@ -299,11 +299,11 @@ window.SettingsPage = (() => {
         
         <div class="section-label">${U.icon('key', 16)} API Configuration</div>
         <div class="field"><label>API Base URL</label>
-          <input class="input" id="aiBaseUrl" placeholder="https://api.aimlapi.com/v1" value="${U.esc(window.DriftConfig.AI_BASE_URL)}">
+          <input class="input" id="aiBaseUrl" placeholder="https://api.aimlapi.com/v1" value="${U.esc(window.ZeekConfig.AI_BASE_URL)}">
           <div class="input-hint">OpenAI-compatible base URL. Examples: <span class="mono">https://api.openai.com/v1</span>, <span class="mono">https://api.aimlapi.com/v1</span>, <span class="mono">https://api.together.xyz/v1</span>, <span class="mono">https://api.groq.com/openai/v1</span>, <span class="mono">http://localhost:11434/v1</span> (Ollama)</div>
         </div>
         <div class="field"><label>Model</label>
-          <input class="input" id="aiModel" placeholder="gpt-3.5-turbo" value="${U.esc(window.DriftConfig.AI_MODEL)}">
+          <input class="input" id="aiModel" placeholder="gpt-3.5-turbo" value="${U.esc(window.ZeekConfig.AI_MODEL)}">
           <div class="input-hint">Model name supported by your provider (e.g. <span class="mono">gpt-4o</span>, <span class="mono">meta-llama/Meta-Llama-3.1-8B-Instruct</span>, <span class="mono">llama3.1</span>)</div>
         </div>
         <div class="field"><label>API Key</label>
@@ -315,24 +315,24 @@ window.SettingsPage = (() => {
         </div>
         <div class="field"><label>Request Format</label>
           <div class="seg" id="aiFormat">
-            ${['openai', 'azure', 'custom'].map(f => `<button data-f="${f}" class="${(window.DriftConfig.AI_REQUEST_FORMAT || 'openai') === f ? 'on' : ''}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}
+            ${['openai', 'azure', 'custom'].map(f => `<button data-f="${f}" class="${(window.ZeekConfig.AI_REQUEST_FORMAT || 'openai') === f ? 'on' : ''}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}
           </div>
           <div class="input-hint">OpenAI = standard /chat/completions. Azure = Azure OpenAI deployment format. Custom = use base URL as-is.</div>
         </div>
         <div class="field"><label>Temperature</label>
-          <input class="input" type="number" step="0.1" min="0" max="2" id="aiTemp" value="${window.DriftConfig.AI_TEMPERATURE}">
+          <input class="input" type="number" step="0.1" min="0" max="2" id="aiTemp" value="${window.ZeekConfig.AI_TEMPERATURE}">
           <div class="input-hint">Higher = more creative, lower = more focused. Default: 0.7</div>
         </div>
         <div class="field"><label>Max Tokens</label>
-          <input class="input" type="number" step="50" min="100" max="4000" id="aiMaxTokens" value="${window.DriftConfig.AI_MAX_TOKENS}">
+          <input class="input" type="number" step="50" min="100" max="4000" id="aiMaxTokens" value="${window.ZeekConfig.AI_MAX_TOKENS}">
           <div class="input-hint">Maximum response length. Default: 600</div>
         </div>
         <div class="field"><label>Custom Headers (JSON)</label>
-          <textarea class="input" id="aiCustomHeaders" rows="3" placeholder='{"Authorization": "Bearer your-key"}' style="font-family:var(--mono);font-size:.75rem;">${U.esc(JSON.stringify(window.DriftConfig.AI_CUSTOM_HEADERS || {}, null, 2))}</textarea>
+          <textarea class="input" id="aiCustomHeaders" rows="3" placeholder='{"Authorization": "Bearer your-key"}' style="font-family:var(--mono);font-size:.75rem;">${U.esc(JSON.stringify(window.ZeekConfig.AI_CUSTOM_HEADERS || {}, null, 2))}</textarea>
           <div class="input-hint">Extra headers for custom APIs. Leave empty unless your provider requires them.</div>
         </div>
         <div class="field"><label>Keyless Mode</label>
-          ${toggle('aiKeyless', window.DriftConfig.AI_KEYLESS)}
+          ${toggle('aiKeyless', window.ZeekConfig.AI_KEYLESS)}
           <div class="input-hint">Enable for keyless providers like Pollinations. Disable for APIs requiring auth.</div>
         </div>
         
@@ -343,7 +343,7 @@ window.SettingsPage = (() => {
           </div>
           <div class="input-hint">Friendly warms things up · Concise trims the fluff · Playful adds sparkle.</div>
         </div>
-        ${row('Share room context', 'Zephyr can read recent messages to summarize & explain.', toggle('aiCtx', s.aiContext))}
+        ${row('Share room context', 'Zeek AI can read recent messages to summarize & explain.', toggle('aiCtx', s.aiContext))}
         
         <div class="card set-row" style="border-style:dashed;">
           <div class="s-main"><b>Going to production? 🔐</b>
@@ -359,32 +359,32 @@ window.SettingsPage = (() => {
         AI.setStoredKey(inp.value.trim());
         UI.toast({
           title: AI.storedKey() ? 'API key saved' : 'API key removed',
-          body: AI.storedKey() ? 'Zephyr now answers with the live model.' : 'Zephyr falls back to the offline rule engine.',
+          body: AI.storedKey() ? 'Zeek AI now answers with the live model.' : 'Zeek AI falls back to the offline rule engine.',
           type: 'ok'
         });
         draw();
       });
       // AI config handlers
-      panel.querySelector('#aiBaseUrl').addEventListener('change', e => { window.DriftConfig.AI_BASE_URL = e.target.value.trim(); draw(); });
-      panel.querySelector('#aiModel').addEventListener('change', e => { window.DriftConfig.AI_MODEL = e.target.value.trim(); draw(); });
+      panel.querySelector('#aiBaseUrl').addEventListener('change', e => { window.ZeekConfig.AI_BASE_URL = e.target.value.trim(); draw(); });
+      panel.querySelector('#aiModel').addEventListener('change', e => { window.ZeekConfig.AI_MODEL = e.target.value.trim(); draw(); });
       panel.querySelector('#aiFormat').addEventListener('click', e => {
         const b = e.target.closest('[data-f]'); if (!b) return;
-        window.DriftConfig.AI_REQUEST_FORMAT = b.dataset.f;
+        window.ZeekConfig.AI_REQUEST_FORMAT = b.dataset.f;
         panel.querySelectorAll('#aiFormat button').forEach(x => x.classList.toggle('on', x === b));
         draw();
       });
-      panel.querySelector('#aiTemp').addEventListener('change', e => { window.DriftConfig.AI_TEMPERATURE = parseFloat(e.target.value) || 0.7; draw(); });
-      panel.querySelector('#aiMaxTokens').addEventListener('change', e => { window.DriftConfig.AI_MAX_TOKENS = parseInt(e.target.value, 10) || 600; draw(); });
+      panel.querySelector('#aiTemp').addEventListener('change', e => { window.ZeekConfig.AI_TEMPERATURE = parseFloat(e.target.value) || 0.7; draw(); });
+      panel.querySelector('#aiMaxTokens').addEventListener('change', e => { window.ZeekConfig.AI_MAX_TOKENS = parseInt(e.target.value, 10) || 600; draw(); });
       panel.querySelector('#aiCustomHeaders').addEventListener('change', e => {
-        try { window.DriftConfig.AI_CUSTOM_HEADERS = JSON.parse(e.target.value); } catch (err) { UI.toast({ title: 'Invalid JSON', body: err.message, type: 'bad' }); }
+        try { window.ZeekConfig.AI_CUSTOM_HEADERS = JSON.parse(e.target.value); } catch (err) { UI.toast({ title: 'Invalid JSON', body: err.message, type: 'bad' }); }
       });
-      panel.querySelector('#aiKeyless').addEventListener('change', e => { window.DriftConfig.AI_KEYLESS = e.target.checked; draw(); });
+      panel.querySelector('#aiKeyless').addEventListener('change', e => { window.ZeekConfig.AI_KEYLESS = e.target.checked; draw(); });
     }
 
     if (section === 'moderation') {
       panel.innerHTML = `
         <h2>Moderation</h2>
-        <p class="desc">Reports you filed. Visible to whoever operates this Drift project.</p>
+        <p class="desc">Reports you filed. Visible to whoever operates this Zeek project.</p>
         <div class="set-group" style="margin-bottom:1.1rem;">
           ${row('Safe mode 🛡️', 'Blur out swearing everywhere in chat. Click a blurred word to reveal it.', toggle('setSafe', s.safeMode))}
         </div>
@@ -408,7 +408,7 @@ window.SettingsPage = (() => {
           ${row('Password', '••••••••', '<button class="btn btn-glass btn-sm" id="acPass">Change</button>')}
           ${row('Export my data', 'Download your profile, rooms & messages as JSON.', '<button class="btn btn-glass btn-sm" id="acExport">' + U.icon('download', 14) + ' Export</button>')}
         </div>
-        <button class="btn btn-danger btn-block" id="acLogout" style="max-width:320px;">${U.icon('logout', 16)} Log out of Drift</button>`;
+        <button class="btn btn-danger btn-block" id="acLogout" style="max-width:320px;">${U.icon('logout', 16)} Log out of Zeek</button>`;
 
       panel.querySelector('#acUser').addEventListener('click', async () => {
         try {

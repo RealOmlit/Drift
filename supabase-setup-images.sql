@@ -1,5 +1,5 @@
 -- ============================================================================
--- Drift · image support (run AFTER supabase-setup.sql, once)
+-- Zeek · image support (run AFTER supabase-setup.sql, once)
 --   1) avatar_url column on profiles
 --   2) public Storage buckets: 'avatars' + 'chat-images'
 --   3) policies: signed-in users upload only into their own folder

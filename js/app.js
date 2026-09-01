@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · app.js — application shell: rail, mobile chrome, router,
+   Zeek · app.js — application shell: rail, mobile chrome, router,
    shortcuts, onboarding tour, global event wiring. Bootstrap happens at
    the bottom (DOMContentLoaded).
    ========================================================================== */
@@ -55,7 +55,7 @@ window.Router = (() => {
       case 'rooms':     return paint(view, root => Rooms.renderMyRoomsPage(root));
       case 'people':    return paint(view, root => People.renderPage(root));
       case 'notifs':    return paint(view, root => Notifs.renderPage(root), () => Notifs.refreshBadges());
-      case 'zephyr':    return paint(view, root => DriftConfig.AI_ENABLED ? AI.renderPanel(root) : renderAIDisabled(root));
+      case 'zephyr':    return paint(view, root => ZeekConfig.AI_ENABLED ? AI.renderPanel(root) : renderAIDisabled(root));
       case 'profile':   return paint(view, root => People.renderProfilePage(root));
       case 'search':    return paint(view, root => Finder.renderSearchPage(root));
       case 'leaderboard': return paint(view, root => Leaderboard.renderPage(root));
@@ -88,7 +88,7 @@ window.Router = (() => {
     root.innerHTML = `
       <div class="view-inner" style="max-width:560px;">
         <div class="empty"><div class="e-icon">✨</div>
-          <h4>Zephyr is offline</h4>
+          <h4>Zeek AI is offline</h4>
           <p>The AI companion needs a real model endpoint — no fake responses here.
              See SETUP.md to connect one.</p>
         </div>`;
@@ -146,7 +146,7 @@ window.AppShell = (() => {
               <p class="sub muted">${quest.progress >= quest.goal && !quest.claimed ? 'Your daily quest is complete — claim it below!' : quest.label} · Level ${info.level}</p>
             </div>
           </div>
-          ${DriftConfig.AI_ENABLED ? '<button class="btn btn-primary" data-go="zephyr">✨ Ask Zephyr</button>' : ''}
+          ${ZeekConfig.AI_ENABLED ? '<button class="btn btn-primary" data-go="zephyr">✨ Ask Zeek AI</button>' : ''}
         </div>
 
         <!-- Active rooms ticker -->
@@ -235,15 +235,15 @@ window.AppShell = (() => {
     // Bottom nav (icon + tiny label)
     U.$$('#bottomNav .bn-item').forEach(b => {
       const ic = ICON_MAP[b.dataset.view];
-      const label = { home: 'Home', discover: 'Discover', rooms: 'Rooms', people: 'People', leaderboard: 'Ranks', zephyr: 'Zephyr' }[b.dataset.view];
+      const label = { home: 'Home', discover: 'Discover', rooms: 'Rooms', people: 'People', leaderboard: 'Ranks', zephyr: 'Zeek AI' }[b.dataset.view];
       b.insertAdjacentHTML('afterbegin', `${U.icon(ic, 21)}<span>${label}</span>`);
     });
     // Mobile top bar
     U.$('#mobSearchBtn')?.insertAdjacentHTML('afterbegin', U.icon('search', 19));
     U.$('#mobBell')?.insertAdjacentHTML('afterbegin', U.icon('bell', 19));
 
-    // No AI endpoint configured → hide Zephyr entry points entirely.
-    if (!DriftConfig.AI_ENABLED) {
+    // No AI endpoint configured → hide Zeek AI entry points entirely.
+    if (!ZeekConfig.AI_ENABLED) {
       U.$$('[data-view="zephyr"]').forEach(b => b.remove());
       U.$('#btnAIDrawer')?.remove();
     }
@@ -360,7 +360,7 @@ window.AppShell = (() => {
   function startTour() {
     const steps = [
       { sel: innerWidth > 900 ? '[data-view="discover"]' : '#bottomNav [data-view="discover"]', title: '🔎 Discover rooms', text: 'Browse communities by vibe — gaming, coding, study and more. Or create your own in seconds.' },
-      ...(DriftConfig.AI_ENABLED ? [{ sel: innerWidth > 900 ? '[data-view="zephyr"]' : '#bottomNav [data-view="zephyr"]', title: '✨ Meet Zephyr', text: 'Your built-in AI companion. Summaries, icebreakers, translations — right inside Drift.' }] : []),
+      ...(ZeekConfig.AI_ENABLED ? [{ sel: innerWidth > 900 ? '[data-view="zephyr"]' : '#bottomNav [data-view="zephyr"]', title: '✨ Meet Zeek AI', text: 'Your built-in AI companion. Summaries, icebreakers, translations — right inside Zeek.' }] : []),
       { sel: innerWidth > 900 ? '#bellBtn' : '#mobBell', title: '🔔 Notifications live here', text: 'Mentions, new followers and room activity land here — with toasts so you never miss a beat.' },
       { sel: null, title: "That's the spirit ✨", text: 'Join a public room or create your own, then say hi. Everything you see is real people in real time!' }
     ];
@@ -402,7 +402,7 @@ window.AppShell = (() => {
   /* ------------------------------ Boot ------------------------------ */
   async function boot() {
     Store.init();
-    U.$$('.app-version').forEach(el => { el.textContent = 'v' + DriftConfig.VERSION; });
+    U.$$('.app-version').forEach(el => { el.textContent = 'v' + ZeekConfig.VERSION; });
     if (!(await Auth.requireAuth())) return;
     SettingsPage.applyTheme();
     Backend.start();
@@ -413,7 +413,7 @@ window.AppShell = (() => {
     if (SB.configured()) {
       SB.client.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-          console.warn('[Drift] Auth state changed:', event, '-> redirecting to login');
+          console.warn('[Zeek] Auth state changed:', event, '-> redirecting to login');
           Backend.stop();
           Store.forgetSession();
           location.href = './login.html?sessionExpired=1';

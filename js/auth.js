@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · auth.js — REAL authentication backed by Supabase Auth.
+   Zeek · auth.js — REAL authentication backed by Supabase Auth.
    Sessions, emails and passwords are handled server-side by Supabase;
    profile rows live in public.profiles (created by an SQL trigger on signup).
 
@@ -13,7 +13,7 @@ window.Auth = (() => {
 
   if (SB.configured && SB.setAuthErrorHandler) {
     SB.setAuthErrorHandler((err) => {
-      console.warn('[Drift] Global auth error handler triggered:', err.message);
+      console.warn('[Zeek] Global auth error handler triggered:', err.message);
       signOut();
     });
   }
@@ -210,7 +210,7 @@ window.Auth = (() => {
     // Hydrate rooms/messages/notifications — needed on every reload, not
     // just right after sign-in.
     try { await Store.afterLogin(); }
-    catch (e) { console.warn('[Drift] data hydration failed:', e.message); }
+    catch (e) { console.warn('[Zeek] data hydration failed:', e.message); }
     return true;
   }
 

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Drift · supabase-setup.sql
+-- Zeek · supabase-setup.sql
 -- Run this ONCE in Supabase Studio → SQL Editor (New query → paste → Run).
 -- Creates the full schema for the real (non-demo) app:
 --   profiles, rooms, room_members, messages, reactions, follows,

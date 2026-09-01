@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · activities.js — mini activities launched inside rooms.
+   Zeek · activities.js — mini activities launched inside rooms.
    Results are posted into the chat as special activity messages.
    ========================================================================== */
 

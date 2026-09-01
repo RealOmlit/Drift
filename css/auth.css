@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · Auth pages (login / signup)
+   Zeek · Auth pages (login / signup)
    ========================================================================== */
 
 .auth-body { display: grid; place-items: center; min-height: 100vh; padding: 1.4rem; }

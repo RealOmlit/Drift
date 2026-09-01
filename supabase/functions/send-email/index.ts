@@ -1,5 +1,5 @@
 // ==========================================================================
-// Drift · send-email Edge Function
+// Zeek · send-email Edge Function
 //
 // Sends real email through Gmail SMTP using an App Password. The browser
 // never sees Gmail credentials — it invokes this function with the caller's
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
   try {
     const user = await verifyUser(req);
-    if (!user) return json({ error: 'Unauthorized — sign in to Drift first.' }, 401);
+    if (!user) return json({ error: 'Unauthorized — sign in to Zeek first.' }, 401);
 
     const body = await req.json().catch(() => null);
     const to = String(body?.to ?? '').trim().toLowerCase();
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     });
 
     const info = await transporter.sendMail({
-      from: `Drift <${GMAIL_USER}>`,
+      from: `Zeek <${GMAIL_USER}>`,
       to,
       subject: subject.slice(0, 200),
       text,

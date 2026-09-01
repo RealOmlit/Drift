@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Drift · App shell & views — rail, home, discover, rooms, people,
-   notifications, Zephyr AI, profile, settings, and the room (chat) view
+   Zeek · App shell & views — rail, home, discover, rooms, people,
+   notifications, Zeek AI AI, profile, settings, and the room (chat) view
    ========================================================================== */
 
 .app-body { overflow: hidden; height: 100vh; height: 100dvh; }
@@ -197,12 +197,12 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .notif-x svg { pointer-events:none; }
 .day-sep { font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);margin:1.2rem .2rem .5rem; }
 
-/* ================= Zephyr AI panel — premium ================= */
+/* ================= Zeek AI AI panel — premium ================= */
 .ai-wrap { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; height:calc(100dvh - 4rem); max-height:900px; gap:0; position:relative; background: linear-gradient(180deg, color-mix(in srgb, var(--bg1) 94%, transparent), transparent 40%); border-radius:22px; }
 .ai-wrap::before { content:''; position:absolute; inset:-24px -18px auto; height:340px; background: radial-gradient(62% 78% at 16% 12%, color-mix(in srgb, var(--ac1) 22%, transparent), transparent 72%), radial-gradient(56% 68% at 88% -4%, color-mix(in srgb, var(--ac2) 18%, transparent), transparent 74%), radial-gradient(46% 58% at 52% 38%, color-mix(in srgb, var(--ac3) 12%, transparent), transparent 72%); filter:blur(32px); pointer-events:none; opacity:.85; z-index:0; }
 .ai-wrap > * { position:relative; z-index:1; }
 
-/* —— Zephyr profile / hero header — V2 DRAMATIC —— */
+/* —— Zeek AI profile / hero header — V2 DRAMATIC —— */
 .z-hero { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.15rem 1.25rem; border-radius:22px; background: var(--grad); color:#fff; position:relative; overflow:hidden; box-shadow: 0 18px 40px -14px var(--ring), 0 0 0 1px rgba(255,255,255,.14) inset, 0 1px 0 rgba(255,255,255,.22) inset; isolation:isolate; }
 .z-hero::before { content:''; position:absolute; inset:0; background: radial-gradient(75% 95% at 18% 0%, rgba(255,255,255,.24), transparent 62%), radial-gradient(65% 85% at 92% 100%, rgba(255,255,255,.16), transparent 68%), radial-gradient(90% 70% at 50% 50%, rgba(255,255,255,.06), transparent 70%); pointer-events:none; z-index:0; }
 .z-hero::after { content:''; position:absolute; inset:0; background: linear-gradient(106deg, transparent 28%, rgba(255,255,255,.18) 48%, transparent 62%); translate:-66% 0; animation: quest-sheen 5s ease-in-out infinite; pointer-events:none; z-index:0; }
@@ -305,17 +305,24 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 }
 
 /* ================= Profile view ================= */
-.profile-cover { height:130px; border-radius:24px 24px 0 0; background:var(--pc-grad,var(--grad)); position:relative; overflow:hidden; }
+.profile-cover { height:150px; border-radius:24px 24px 0 0; background:var(--pc-grad,var(--grad)); position:relative; overflow:hidden; }
 .profile-cover::after { content:'';position:absolute;inset:0;background:radial-gradient(120% 100% at 80% -20%, rgba(255,255,255,.3), transparent 55%); }
-.profile-head { padding:0 1.6rem 1.4rem; margin-top:-52px; position:relative; display:flex; gap:1.2rem; align-items:flex-end; flex-wrap:wrap; }
-.profile-head h2 { font-size:1.5rem; }
+.profile-head { padding:0 1.6rem 1.4rem; margin-top:-60px; position:relative; display:flex; gap:1.2rem; align-items:flex-end; flex-wrap:wrap; }
+.profile-head h2 { font-size:1.6rem; }
+.profile-head h2 { text-shadow: 0 0 8px var(--ac2), 0 0 20px color-mix(in srgb, var(--ac2) 30%, transparent); }
 .profile-handle { color:var(--txt3); font-size:.9rem; }
 .badge-row { display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem; }
 .xp-card .xp-num {font-family:var(--font-d);font-size:1.5rem;}
-.achv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:.8rem; }
-.achv { display:flex; gap:.8rem; align-items:center; opacity:.45; filter:grayscale(.8); transition:all .3s; }
-.achv.got { opacity:1; filter:none; }
-.achv .a-ic { width:42px;height:42px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--glass-2);border:1px solid var(--brd-1);color:var(--warn); }
+.achv-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:.6rem; }
+.achv { display:flex; flex-direction:column; gap:.5rem; align-items:center; text-align:center; opacity:.4; filter:grayscale(.8); transition:all .3s; padding:1rem .6rem; border-radius:16px; background:var(--glass); border:1px solid var(--brd-1); }
+.achv:hover { opacity:.7; transform:translateY(-2px); }
+.achv.got { opacity:1; filter:none; background:color-mix(in srgb, var(--ac2) 8%, var(--glass)); border-color:color-mix(in srgb, var(--ac2) 25%, var(--brd-1)); box-shadow: 0 0 12px color-mix(in srgb, var(--ac2) 15%, transparent); }
+.achv.got:hover { transform:translateY(-4px) scale(1.03); box-shadow: 0 4px 20px color-mix(in srgb, var(--ac2) 25%, transparent); }
+.achv .a-ic { width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--glass-2);border:1px solid var(--brd-1);color:var(--warn);font-size:1.3rem; }
+.achv.got .a-ic { background:color-mix(in srgb, var(--ac2) 15%, var(--glass-2)); border-color:color-mix(in srgb, var(--ac2) 30%, var(--brd-1)); animation: typing-glow 3s ease-in-out infinite; }
+.achv .a-label { font-size:.82rem; font-weight:600; }
+.achv .a-prog { font-size:.72rem; color:var(--txt3); }
+.achv.got .a-prog { color:var(--ac2); }
 
 /* ================= Settings ================= */
 .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:1.4rem; align-items:start; }
@@ -462,9 +469,12 @@ body.rail-min .rail:hover > * { opacity: 1; pointer-events: auto; }
 .sysmsg span { display:inline-flex; align-items:center; gap:.45rem; font-size:.76rem; color:var(--txt3); background:var(--glass); border:1px solid var(--brd-1); padding:.28rem .85rem; border-radius:99px; }
 
 /* Typing indicator */
-.typing-row { display:flex; align-items:center; gap:.55rem; padding:.15rem 1.3rem .45rem; color:var(--txt3); font-size:.78rem; min-height:28px; flex:none; }
+.typing-row { display:flex; align-items:center; gap:.65rem; padding:.3rem 1.3rem .5rem; color:var(--txt3); font-size:.8rem; min-height:32px; flex:none; }
 .typing-row .t-avatars { display:flex; }
-.typing-row .t-avatars .avatar { width:20px;height:20px;font-size:.5rem;border:2px solid var(--bg0); margin-right:-7px; }
+.typing-row .t-avatars .avatar { width:22px;height:22px;font-size:.55rem;border:2px solid var(--bg0); margin-right:-7px; transition:transform .2s; }
+.typing-row .t-avatars .avatar:last-child { margin-right:0; }
+.typing-row .t-name { font-weight:600; color:var(--ac2); animation: typing-bounce 1.5s ease-in-out infinite; }
+.typing-row .t-dots { display:inline-flex; gap:4px; padding:3px 8px; border-radius:12px; background:color-mix(in srgb, var(--ac2) 10%, transparent); animation: typing-glow 2s ease-in-out infinite; margin-left:2px; }
 
 /* Read receipt ticks */
 .read-tick { color:var(--txt3); } .read-tick.seen { color:var(--ac2); }
@@ -686,13 +696,13 @@ body.focus-mode .shell .rail:hover { opacity:1; }
 
 /* ================= v2.2.1 · composer/scroll overlap hardening ================= */
 /* The typing indicator row must never be painted over by scroll content. */
-.typing-row { position: relative; z-index: 5; background: color-mix(in srgb, var(--bg1) 80%, transparent); }
+.typing-row { position: relative; z-index: 5; background: color-mix(in srgb, var(--bg1) 85%, transparent); backdrop-filter: blur(8px); }
 /* Tall photos must never stretch the scroll geometry — cap their box. */
 .msg-img { max-height: 340px; width: auto; object-fit: cover; }
 /* Pills float above everything inside the room column */
 .new-msgs-pill, .scroll-down-pill { z-index: 8; }
 
-/* ================= v2.2.2 · Zephyr panel overlap fix (PC/Chrome) ================= */
+/* ================= v2.2.2 · Zeek AI panel overlap fix (PC/Chrome) ================= */
 /* The grid row above now uses minmax(0,1fr) + min-height:0 so long answers
    scroll instead of spilling over the composer. Belt-and-braces stacking: */
 .ai-composer, .ai-wrap > div:last-child { position: relative; z-index: 6; }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · chat.js — the room view: messages, composer, reactions, replies,
+   Zeek · chat.js — the room view: messages, composer, reactions, replies,
    pins, polls, mentions, typing indicators, in-room search, right panel.
    ========================================================================== */
 
@@ -12,6 +12,7 @@ window.Chat = (() => {
   let editingId = null;
   let lastSendTs = 0;
   let typingSet = new Map();   // userId → auto-clear timeout
+  let lastTypingUsers = '';    // track user list to avoid unnecessary DOM rebuilds
   let atBottom = true;
   let newCount = 0;
 
@@ -135,7 +136,7 @@ window.Chat = (() => {
   function unmount() {
     unsubs.forEach(fn => fn()); unsubs = [];
     roomId = null; replyTo = null; editingId = null;
-    typingSet.clear(); document.body.classList.remove('focus-mode');
+    typingSet.clear(); lastTypingUsers = ''; document.body.classList.remove('focus-mode');
   }
 
   function rerender() {
@@ -168,7 +169,7 @@ window.Chat = (() => {
             <button class="icon-btn hide-m" id="btnCall" data-tip="Voice call">${U.icon('phone', 18)}</button>
             <button class="icon-btn hide-m" id="btnSearchInRoom" data-tip="Search in room">${U.icon('search', 18)}</button>
             <button class="icon-btn hide-m" id="btnFocus" data-tip="Focus mode">${U.icon('zap', 18)}</button>
-            ${DriftConfig.AI_ENABLED ? '<button class="ai-ask-btn hide-m" id="btnAIDrawer">✨ Ask Zephyr</button>' : ''}
+            ${ZeekConfig.AI_ENABLED ? '<button class="ai-ask-btn hide-m" id="btnAIDrawer">✨ Ask Zeek AI</button>' : ''}
             <button class="icon-btn" id="btnRightPanel" title="Info panel">${U.icon('info', 18)}</button>
             <button class="icon-btn" id="btnRoomMenu">${U.icon('dots', 18)}</button>
           </div>
@@ -267,7 +268,7 @@ window.Chat = (() => {
       const r = room();
       UI.menu(e.currentTarget, [
         { header: true, label: r.name },
-        ...(DriftConfig.AI_ENABLED ? [{ label: '✨ Zephyr tools', icon: 'sparkles', onClick: () => switchTab('tools') }] : []),
+        ...(ZeekConfig.AI_ENABLED ? [{ label: '✨ Zeek AI tools', icon: 'sparkles', onClick: () => switchTab('tools') }] : []),
         { label: 'Room rules', icon: 'shield', onClick: showRules },
         { label: 'Copy invite link', icon: 'copy', onClick: async () => {
             await UI.copyText(`${location.origin}${location.pathname}#/room/${r.id}`);
@@ -552,7 +553,7 @@ window.Chat = (() => {
     const tick = mine && Store.state.settings.readReceipts
       ? `<span class="read-tick ${m.seen ? 'seen' : ''}" data-tick>${U.icon(m.seen ? 'checks' : 'check', 13)}</span>` : '';
     return `<div class="m-head">
-      <span class="m-author" data-user-card="${m.userId}">${U.esc(u?.displayName || 'Drift')}</span>
+      <span class="m-author" data-user-card="${m.userId}">${U.esc(u?.displayName || 'Zeek')}</span>
       <span class="m-time">${U.fmtTime(m.ts)} ${tick}</span>
     </div>`;
   }
@@ -970,13 +971,16 @@ window.Chat = (() => {
   function updateTypingRow() {
     const row = U.$('#typingRow'); if (!row) return;
     const users = [...typingSet.keys()].map(Store.getUser).filter(Boolean);
-    if (!users.length) { row.innerHTML = ''; return; }
-    const names = users.map(u => u.displayName);
-    const label = names.length === 1 ? `<b>${U.esc(names[0])}</b> is typing`
-      : names.length === 2 ? `<b>${U.esc(names[0])}</b> and <b>${U.esc(names[1])}</b> are typing`
-      : 'Several people are typing';
-    row.innerHTML = `<span class="t-avatars">${users.map(u => U.avatar(u, { size: 20 })).join('')}</span>
-      <span>${label}</span><span style="display:inline-flex;gap:3px;color:var(--ac2);"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></span>`;
+    if (!users.length) { row.innerHTML = ''; lastTypingUsers = ''; return; }
+    const key = users.map(u => u.id).join(',');
+    if (key === lastTypingUsers) return; // skip rebuild — animation stays smooth
+    lastTypingUsers = key;
+    const names = users.map(u => `<span class="t-name">${U.esc(u.displayName)}</span>`);
+    const label = users.length === 1 ? `${names[0]} is typing`
+      : users.length === 2 ? `${names[0]} and ${names[1]} are typing`
+      : `${names[0]} and ${users.length - 1} others are typing`;
+    row.innerHTML = `<span class="t-avatars">${users.map(u => U.avatar(u, { size: 22 })).join('')}</span>
+      <span>${label}</span><span class="t-dots"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></span>`;
   }
 
   /* ------------------------------ right panel ------------------------------ */
@@ -1064,8 +1068,8 @@ window.Chat = (() => {
     }
     if (tab === 'tools') {
       body.innerHTML = `
-        ${DriftConfig.AI_ENABLED ? `
-        <div class="rr-section-title" style="margin-top:0;">Zephyr quick actions</div>
+        ${ZeekConfig.AI_ENABLED ? `
+        <div class="rr-section-title" style="margin-top:0;">Zeek AI quick actions</div>
         ${[['Summarize recent chat', 'summarize this room', 'list'],
            ['Explain latest messages', 'explain the latest messages', 'info'],
            ['Suggest conversation topics', 'suggest topics', 'bulb'],

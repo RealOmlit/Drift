@@ -1,4 +1,4 @@
-# Making Drift real — Supabase in 5 minutes
+# Making Zeek real — Supabase in 5 minutes
 
 The app is now a **real chat product**: real accounts, real messages persisted in
 Postgres, realtime sync between actual users, and a genuine online counter
@@ -64,7 +64,7 @@ live and the online counter reflect reality.
 
 ## 5. Real emails via Gmail (Edge Function)
 
-Drift sends mail through a Supabase **Edge Function** (`supabase/functions/send-email`),
+Zeek sends mail through a Supabase **Edge Function** (`supabase/functions/send-email`),
 so your Gmail password never touches the browser. The function verifies the
 caller's Supabase session and rate-limits to 5 emails/hour/user.
 
@@ -84,10 +84,10 @@ page can send via `Email.send({ to, subject, html })` from [`js/email.js`](./js/
 
 ## Notes & limits
 
-- **Zephyr AI** is wired to [AIML API](https://aimlapi.com) (OpenAI-compatible)
+- **Zeek AI AI** is wired to [AIML API](https://aimlapi.com) (OpenAI-compatible)
   via `AI_API_KEY` / `AI_MODEL` / `AI_BASE_URL` in `js/config.js`. ⚠️ A key in
   front-end code is public — expect strangers to see it. For production, move
-  it into a Supabase Edge Function and set `AI_PROXY_URL` instead. If Zephyr
+  it into a Supabase Edge Function and set `AI_PROXY_URL` instead. If Zeek AI
   answers with an "out of funds" notice, top up at
   <https://aimlapi.com/app/billing>.
 - **XP / streaks / daily quests** are per-user gamification stored in your own

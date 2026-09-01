@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · moderation.js — reports, mutes, blocks and the report dashboard.
+   Zeek · moderation.js — reports, mutes, blocks and the report dashboard.
    Reports are stored in the reports table (visible to the project operator);
    mutes/blocks are enforced locally in your browser.
    ========================================================================== */

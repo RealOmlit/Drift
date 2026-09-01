@@ -1,10 +1,10 @@
-# Drift ✦ Conversations in motion
+# Zeek ✦ Chat. Vibe. Repeat.
 
 <p align="center">
-  <img src="./assets/favicon.svg" width="72" alt="Drift logo">
+  <img src="./assets/favicon.svg" width="72" alt="Zeek logo">
 </p>
 
-**Drift** is a real-time chat platform built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. Rooms, live presence, an AI companion named **Zephyr**, community XP, polls, mini-games, smart notifications and a fully responsive UI.
+**Zeek** is a real-time chat platform built with **pure HTML, CSS and JavaScript** — no frameworks, no build step. Rooms, live presence, an AI companion named **Zeek AI**, community XP, polls, mini-games, smart notifications and a fully responsive UI.
 
 > ✅ **Real backend included.** Accounts, messages and presence run on [Supabase](https://supabase.com) (Postgres + Auth + Realtime). No demo bots, no fake counters. Setup takes five minutes — see **[SETUP.md](./SETUP.md)**.
 
@@ -16,7 +16,7 @@
 |---|---|
 | 🔐 **Auth** | Real Supabase Auth: sign-up with username/email/password, strength meter, login by username *or* email, password/email/username changes, server-side sessions |
 | 💬 **Rooms** | Create / join / leave / delete, public + private (invite codes via RPC), 10 categories, tags, rules, slow mode, moderators, live room settings |
-| 🧠 **Zephyr AI** | Real LLM responses via [AIML API](https://aimlapi.com) (OpenAI-compatible): summaries, icebreakers, explanations, rewrite, translate, code help, math — with persona settings and thread memory |
+| 🧠 **Zeek AI** | Real LLM responses via [AIML API](https://aimlapi.com) (OpenAI-compatible): summaries, icebreakers, explanations, rewrite, translate, code help, math — with persona settings and thread memory |
 | 👥 **People** | Real profile directory from Postgres, follow system, live presence dots, profile cards with XP rings & earned badges, mute / block / report |
 | 💬 **Messages** | Persisted in Postgres + realtime delivery, replies, mentions w/ autocomplete, emoji picker, custom reaction set, editing, deletion, pins + pin bar, read tracking, typing indicators, link previews, in-room search |
 | 🗳️ **Polls** | One-tap poll builder; votes persist through an RPC (`cast_vote`) and update on every client live |
@@ -83,7 +83,7 @@ drift/
     ├── backend.js        Realtime subscriptions: messages, presence, typing
     ├── ui.js             Toasts, modals, menus, emoji picker, confetti
     ├── auth.js           Supabase Auth wrapper
-    ├── ai.js             Zephyr: AIML/OpenAI-compatible engine + UI
+    ├── ai.js             Zeek AI: AIML/OpenAI-compatible engine + UI
     ├── notifications.js  Notification center + badges
     ├── rooms.js          Discovery, creation, membership, settings
     ├── chat.js           The room view engine (largest module)
@@ -100,11 +100,11 @@ drift/
 
 - **One event bus.** Everything flows through `Store.on/emit` (`msg:new`, `presence`, `typing`, `xp`, …), so views never talk to the network directly.
 - **Security is enforced by row-level security** in `supabase-setup.sql`, not by hiding keys — the anon key is public by design.
-- **Honest failures.** If the AI backend errors (out of funds, bad model), Zephyr says so instead of falling back to canned replies.
+- **Honest failures.** If the AI backend errors (out of funds, bad model), Zeek AI says so instead of falling back to canned replies.
 
 ---
 
-## 🤖 Zephyr AI configuration
+## 🤖 Zeek AI configuration
 
 Works out of the box with [AIML API](https://aimlapi.com):
 
@@ -125,7 +125,7 @@ AI_API_KEY: '…',
 - Threads / side-conversations branching from any message
 - Voice rooms & screen-share previews (WebRTC)
 - End-to-end encryption for private rooms
-- i18n + full translation pipeline for Zephyr
+- i18n + full translation pipeline for Zeek AI
 - PWA install support with offline caching
 - Rich embeds (YouTube, Spotify, Figma) via oEmbed proxy
 - Moderation ML auto-flagging through the same AI proxy

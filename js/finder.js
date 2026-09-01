@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · finder.js — global search: command palette (Ctrl/⌘+K) and the
+   Zeek · finder.js — global search: command palette (Ctrl/⌘+K) and the
    full search page across rooms, people and messages.
    ========================================================================== */
 
@@ -81,7 +81,7 @@ window.Finder = (() => {
           ${FILTERS.map(f => `<button class="chip ${f === 'all' ? 'on' : ''}" data-f="${f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}
         </div>
         <div class="palette-results" id="palResults"></div>
-        <div class="pal-foot"><span><kbd class="kbd">↑↓</kbd> navigate</span><span><kbd class="kbd">↵</kbd> open</span><span>Powered by Drift Search</span></div>
+        <div class="pal-foot"><span><kbd class="kbd">↑↓</kbd> navigate</span><span><kbd class="kbd">↵</kbd> open</span><span>Powered by Zeek Search</span></div>
       </div>`;
     document.body.appendChild(paletteEl);
     requestAnimationFrame(() => paletteEl.classList.add('open'));
@@ -199,7 +199,7 @@ window.Finder = (() => {
       <div class="view-inner" style="max-width:820px;">
         <div class="view-head">
           <h1>Search</h1>
-          <p class="sub">Everything across Drift — rooms, people, messages and trending topics.</p>
+          <p class="sub">Everything across Zeek — rooms, people, messages and trending topics.</p>
         </div>
         <div class="input-wrap" style="margin-bottom:1rem;">
           ${U.icon('search', 17, 'lead')}

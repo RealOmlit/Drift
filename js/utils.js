@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · utils.js — DOM helpers, formatting, avatars and the icon library
+   Zeek · utils.js — DOM helpers, formatting, avatars and the icon library
    Exposed globally as `U`.
    ========================================================================== */
 

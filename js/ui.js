@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · ui.js — toasts, modals, menus, emoji picker, sounds, confetti,
+   Zeek · ui.js — toasts, modals, menus, emoji picker, sounds, confetti,
    skeletons and small shared UI behaviors. Exposed as `UI`.
    ========================================================================== */
 

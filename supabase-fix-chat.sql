@@ -1,5 +1,5 @@
 -- ============================================================================
--- Drift · hotfix for chat broken by missing 'image' type (run once)
+-- Zeek · hotfix for chat broken by missing 'image' type (run once)
 -- If chat shows "Couldn’t send message" or image sends always fail with
 -- check-constraint errors, run this in Supabase → SQL Editor → Run.
 -- Afterwards, also run supabase-setup-images.sql if you never did (for buckets).

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · imageguard.js — client-side image verification.
+   Zeek · imageguard.js — client-side image verification.
 
    Every image posted to chat (and every custom profile photo) runs through
    NSFW.js — a TensorFlow model that classifies images locally in the
@@ -67,7 +67,7 @@ window.ImageGuard = (() => {
       return { ok, scores };
     } catch (e) {
       // Model unavailable (offline CDN etc.) → fail open, but flag it.
-      console.warn('[Drift] image check skipped:', e.message);
+      console.warn('[Zeek] image check skipped:', e.message);
       return { ok: true, error: true };
     } finally {
       if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);

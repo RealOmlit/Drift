@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · backend.js — REAL realtime layer on Supabase.
+   Zeek · backend.js — REAL realtime layer on Supabase.
 
    · postgres_changes → live messages, reactions, rooms, notifications
    · a presence channel → genuine "drifters online" count + per-user status
@@ -82,8 +82,8 @@ window.Backend = (() => {
   function trimAndEmit(roomId, id) {
     const room = Store.getRoom(roomId);
     if (!room) return;
-    if (room.messages.length > DriftConfig.MESSAGE_WINDOW * 2)
-      room.messages.splice(0, room.messages.length - DriftConfig.MESSAGE_WINDOW * 2);
+    if (room.messages.length > ZeekConfig.MESSAGE_WINDOW * 2)
+      room.messages.splice(0, room.messages.length - ZeekConfig.MESSAGE_WINDOW * 2);
     const m = room.messages.find(x => x.id === id);
     if (m) Store.emit('msg:new', m);
   }
@@ -245,7 +245,7 @@ window.Backend = (() => {
       const me = Store.me();
       if (me && channel) channel.track({ user_id: me.id, status: me.status || 'online', at: Date.now() });
       Store.touchPresence();
-    }, DriftConfig.PRESENCE_TICK_MS);
+    }, ZeekConfig.PRESENCE_TICK_MS);
 
     window.addEventListener('beforeunload', () => { try { channel?.untrack(); } catch (e) {} });
   }

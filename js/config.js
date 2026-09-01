@@ -1,13 +1,13 @@
 /* ==========================================================================
-   Drift · config.js
+   Zeek · config.js
    Central configuration. Everything a deployer may want to touch lives here.
    No secrets belong in this file — the anon key below is public by design;
    access control is enforced by row-level security in supabase-setup.sql.
    ========================================================================== */
 
-window.DriftConfig = {
-  APP_NAME: 'Drift',
-  TAGLINE: 'Conversations in motion.',
+window.ZeekConfig = {
+  APP_NAME: 'Zeek',
+  TAGLINE: 'Chat. Vibe. Repeat.',
   VERSION: '2.3.3',
 
   /* ------------------------------------------------------------------
@@ -25,7 +25,7 @@ window.DriftConfig = {
   REAL_MODE: false, // recomputed below
 
   /**
-   * Zephyr AI assistant — supports ANY OpenAI-compatible API.
+   * Zeek AI assistant — supports ANY OpenAI-compatible API.
    * 🔒 Paste YOUR key here locally before deploying; never commit it to the
    * public repo (this file ships to every visitor). Get one at
    * aimlapi.com, openai.com, together.ai, groq.com, etc.
@@ -36,7 +36,7 @@ window.DriftConfig = {
   AI_PROXY_URL: null,                                   // optional secure proxy
   AI_BASE_URL: 'https://api.aimlapi.com/v1',            // OpenAI-compatible base URL
   AI_MODEL: 'gpt-3.5-turbo',                            // any model the provider supports
-  AI_API_KEY: '',                                       // set in Settings → Zephyr AI or here
+  AI_API_KEY: '',                                       // set in Settings → Zeek AI or here
   AI_KEYLESS: false,                                    // true for keyless providers (pollinations)
   AI_REQUEST_FORMAT: 'openai',                          // 'openai' | 'azure' | 'custom'
   AI_CUSTOM_HEADERS: {},                                // extra headers for custom APIs
@@ -44,7 +44,7 @@ window.DriftConfig = {
   AI_MAX_TOKENS: 600,
 
   /** localStorage namespace — UI prefs only (theme, sounds, muted users…). */
-  STORAGE_PREFIX: 'drift.v2.',
+  STORAGE_PREFIX: 'zeek.v2.',
 
   /** How many recent messages are loaded per room. */
   MESSAGE_WINDOW: 60,
@@ -54,9 +54,9 @@ window.DriftConfig = {
 };
 
 // Real mode is on only when both credentials look filled in.
-window.DriftConfig.REAL_MODE = Boolean(
-  window.DriftConfig.SUPABASE_URL &&
-  /^https:\/\/.+/.test(window.DriftConfig.SUPABASE_URL) &&
-  window.DriftConfig.SUPABASE_ANON_KEY &&
-  window.DriftConfig.SUPABASE_ANON_KEY.length > 20
+window.ZeekConfig.REAL_MODE = Boolean(
+  window.ZeekConfig.SUPABASE_URL &&
+  /^https:\/\/.+/.test(window.ZeekConfig.SUPABASE_URL) &&
+  window.ZeekConfig.SUPABASE_ANON_KEY &&
+  window.ZeekConfig.SUPABASE_ANON_KEY.length > 20
 );

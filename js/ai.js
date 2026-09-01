@@ -1,30 +1,30 @@
 /* ==========================================================================
-   Drift · ai.js — "Zephyr", Drift's built-in AI companion.
+   Zeek · ai.js — "Zeek AI", Zeek's built-in AI companion.
    ───────────────────────────────────────────────────────────────────────────
    Two layers:
    1) RemoteAI  → OpenAI-compatible chat completions (AIML API by default).
-                  Configure via DriftConfig.AI_BASE_URL / AI_MODEL /
+                  Configure via ZeekConfig.AI_BASE_URL / AI_MODEL /
                   AI_API_KEY, or point AI_PROXY_URL at your own secure proxy
                   ({ messages, persona } → { text }).
    2) LocalEngine → keyword-rules fallback used only when no key is set.
-   When a remote call FAILS (out of funds, bad model…), Zephyr says so
+   When a remote call FAILS (out of funds, bad model…), Zeek AI says so
    honestly instead of pretending.
    ========================================================================== */
 
 window.AI = (() => {
   'use strict';
-  const CFG = window.DriftConfig;
+  const CFG = window.ZeekConfig;
 
   const IDENTITY = {
-    name: 'Zephyr',
-    role: 'Drift\'s resident AI companion',
+    name: 'Zeek AI',
+    role: 'Zeek\'s resident AI companion',
     avatar: '✨'
   };
 
   const remoteConfigured = () =>
     !!(CFG.AI_ENABLED && (CFG.AI_KEYLESS || effectiveKey() || CFG.AI_PROXY_URL));
 
-  /* Personal API key — pasted in Settings → Zephyr AI, kept in this browser
+  /* Personal API key — pasted in Settings → Zeek AI AI, kept in this browser
      only. config.js AI_API_KEY (if ever set) takes precedence for everyone. */
   const KEY_LS = () => CFG.STORAGE_PREFIX + 'aiKey';
   function storedKey() {
@@ -46,9 +46,9 @@ window.AI = (() => {
        Groq, Ollama, LM Studio, LocalAI, etc.
     ====================================================================== */
   const PERSONAS = {
-    friendly: 'You are Zephyr, the friendly resident AI companion inside a chat app called Drift. Warm, upbeat and genuinely helpful. Use light markdown (**bold**, `code`, bullet lists) where it helps.',
-    concise:  'You are Zephyr, an AI companion in a chat app. Answer in at most 2-3 short sentences unless asked for detail. Skip filler.',
-    playful:  'You are Zephyr, a witty AI companion in a chat app. Playful, emoji-friendly, but still useful first.'
+    friendly: 'You are Zeek AI, the friendly resident AI companion inside a chat app called Zeek. Warm, upbeat and genuinely helpful. Use light markdown (**bold**, `code`, bullet lists) where it helps.',
+    concise:  'You are Zeek AI, an AI companion in a chat app. Answer in at most 2-3 short sentences unless asked for detail. Skip filler.',
+    playful:  'You are Zeek AI, a witty AI companion in a chat app. Playful, emoji-friendly, but still useful first.'
   };
 
   function buildMessages(input, ctx = {}) {
@@ -259,7 +259,7 @@ window.AI = (() => {
 
   function roomDescription(name, category) {
     const T = {
-      general: [`A warm corner of Drift for ${name} — pull up a chair and make yourself at home.`, `Where the ${name} crowd gathers: good chats, zero pressure.`],
+      general: [`A warm corner of Zeek for ${name} — pull up a chair and make yourself at home.`, `Where the ${name} crowd gathers: good chats, zero pressure.`],
       gaming: [`Squad finder and victory-lap zone for ${name} fans. Salt levels moderated.`, `${name} mains unite — clips, strats and LFG threads daily.`],
       coding: [`${name}: ship talk, stack debates and rubber-duck sessions for builders.`, `Debug together, deploy happy. ${name} is our craft corner.`],
       study: [`${name} — quiet focus, loud wins. Timers on, phones down.`, `Body-doubling central: ${name} edition.`],
@@ -269,12 +269,12 @@ window.AI = (() => {
       technology: [`${name}: tomorrow's news, discussed today.`, `Signals over noise — ${name} tracks what's actually next.`],
       design: [`${name} — pixels, type and honest critique.`, `Craft club for ${name}: process over polish.`],
       random: [`${name}: exactly what it says on the tin.`, `No theme. No rules* (*two rules). Welcome to ${name}.`]
-    }[category] || [`A space for ${name} on Drift.`];
+    }[category] || [`A space for ${name} on Zeek.`];
     return U.rand(T);
   }
 
   function moderationHelp() {
-    return '**Moderation toolkit:**\n• **Prevent:** clear pinned rules + slow mode during spikes\n• **Detect:** watch report queue; repeated offenders get muted before bans\n• **De-escalate:** address behavior, not identity; take it private when heated\n• **Document:** reports keep context for future mods\nIn Drift: room settings → Moderators & safety. I can draft rule text too — just ask!';
+    return '**Moderation toolkit:**\n• **Prevent:** clear pinned rules + slow mode during spikes\n• **Detect:** watch report queue; repeated offenders get muted before bans\n• **De-escalate:** address behavior, not identity; take it private when heated\n• **Document:** reports keep context for future mods\nIn Zeek: room settings → Moderators & safety. I can draft rule text too — just ask!';
   }
 
   /** Safe arithmetic evaluator (no eval). Supports + - * / ( ) % decimals. */
@@ -327,7 +327,7 @@ window.AI = (() => {
     }
     if (/code|bug|javascript|python|css|function|error|api/.test(ql)) return codeHelp(q);
     if (/moderat|rules|guideline|moderation/.test(ql)) return moderationHelp();
-    if (/who are you|what are you|about you/.test(ql)) return `I'm **Zephyr** — ${IDENTITY.role}. I live inside Drift: summaries, translations, icebreakers, math emergencies (` + '`12*(34+8)`' + '), code saves and vibe checks. Ask away!';
+    if (/who are you|what are you|about you/.test(ql)) return `I'm **Zeek AI** — ${IDENTITY.role}. I live inside Zeek: summaries, translations, icebreakers, math emergencies (` + '`12*(34+8)`' + '), code saves and vibe checks. Ask away!';
     if (/help|what can you do/.test(ql)) return '**Things I\'m good at:**\n• `summarize this room` — instant recap\n• `suggest topics` — kill the silence\n• `translate <text>` — ES/FR\n• `rewrite: <message>` — polish any draft\n• `generate a room description`\n• code help, moderation advice, quick math\n\nAdd an API key in `js/config.js` and I get full conversational powers on top of these.';
     if (/^(hi|hey|hello|yo|sup)\b/.test(ql)) return U.rand([`Hey ${Store.me()?.displayName || 'there'}! 👋 What are we building, solving or debating today?`, `Hello hello ✨ Need a recap, an idea, or a translation?`]);
 
@@ -374,7 +374,7 @@ window.AI = (() => {
       const hint = /funds|insufficient|billing|Payment Required|402/i.test(msg)
         ? ' The AI endpoint is rate-limiting or out of credits — try again in a minute.'
         : '';
-      return `⚠️ **Zephyr can't reach its AI backend right now.**\n${msg}.${hint}`;
+      return `⚠️ **Zeek AI can't reach its AI backend right now.**\n${msg}.${hint}`;
     }
     await new Promise(r => setTimeout(r, U.randInt(650, 1400))); // human-ish latency
     return persona(localRespond(input, ctx));
@@ -397,7 +397,7 @@ window.AI = (() => {
     }
     return `<div class="ai-msg">
       <div class="ai-av">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></div>
-      <div class="ai-bubble2"><div class="ai-tag z-tag-glow">Zephyr</div>${mdLite(turn.text)}</div>
+      <div class="ai-bubble2"><div class="ai-tag z-tag-glow">Zeek AI</div>${mdLite(turn.text)}</div>
     </div>`;
   }
 
@@ -424,13 +424,13 @@ window.AI = (() => {
   function composerHTML(id) {
     return `
       <div class="ai-composer">
-        <textarea id="${id}" rows="1" placeholder="Ask Zephyr anything…"></textarea>
+        <textarea id="${id}" rows="1" placeholder="Ask Zeek AI anything…"></textarea>
         <button class="ai-send" data-send aria-label="Send">${U.icon('send', 18)}</button>
       </div>
       <div class="small faint" style="margin-top:.5rem;display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;">
         ${U.icon('info', 13)} ${remoteConfigured()
           ? `Live: <b class="mono">${U.esc(CFG.AI_MODEL)}</b> · ${U.esc(new URL(CFG.AI_BASE_URL).host)} <span style="display:inline-flex;align-items:center;gap:.28rem;margin-left:.35rem;padding:.12rem .45rem;border-radius:99px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.22);color:var(--ok);font-weight:700;font-size:.7rem;">● live</span>`
-          : 'Offline rule engine · add your API key in <b>Settings → Zephyr AI</b> for full power'}
+          : 'Offline rule engine · add your API key in <b>Settings → Zeek AI AI</b> for full power'}
       </div>`;
   }
 
@@ -454,9 +454,9 @@ window.AI = (() => {
     pushTurn('user', val);
     appendTurn(container, bubbleHTML(thread()[thread().length - 1]));
     scrollBottom(scrollEl);
-    // premium thinking indicator — animated Zephyr avatar + orbital dots + wave
+    // premium thinking indicator — animated Zeek AI avatar + orbital dots + wave
     const typing = U.el('div', { class: 'ai-msg ai-thinking' });
-    typing.innerHTML = `<div class="ai-av z-think-av"><span class="z-orb-ring" aria-hidden="true"></span><span class="z-orb-core">${IDENTITY.avatar}</span></div><div class="ai-bubble2 z-think-bubble"><div class="z-thinking-head"><span class="ai-tag z-tag-glow">Zephyr</span><span class="z-think-label">thinking</span></div><div class="z-dots" aria-hidden="true"><span></span><span></span><span></span></div><div class="z-think-sub">weaving a reply…</div></div>`;
+    typing.innerHTML = `<div class="ai-av z-think-av"><span class="z-orb-ring" aria-hidden="true"></span><span class="z-orb-core">${IDENTITY.avatar}</span></div><div class="ai-bubble2 z-think-bubble"><div class="z-thinking-head"><span class="ai-tag z-tag-glow">Zeek AI</span><span class="z-think-label">thinking</span></div><div class="z-dots" aria-hidden="true"><span></span><span></span><span></span></div><div class="z-think-sub">weaving a reply…</div></div>`;
     container.appendChild(typing);
     scrollBottom(scrollEl);
 
@@ -486,7 +486,7 @@ window.AI = (() => {
                 <span class="z-status-dot" title="${live ? 'Live — ready' : 'Offline engine'}"></span>
               </div>
               <div>
-                <h1><span class="z-name-grad">Zephyr</span> <span class="z-badge-live">${live ? 'Live' : 'Offline'}</span></h1>
+                <h1><span class="z-name-grad">Zeek AI</span> <span class="z-badge-live">${live ? 'Live' : 'Offline'}</span></h1>
                 <div class="z-meta">${IDENTITY.role} <span class="z-sep"></span> <b>${U.esc(Store.state.settings.aiPersona)}</b> persona <span class="z-sep"></span> <span style="display:inline-flex;align-items:center;gap:.3rem;">${U.icon('sparkles', 12)} ${live ? U.esc(CFG.AI_MODEL) : 'rule engine'}</span></div>
               </div>
             </div>
@@ -517,7 +517,7 @@ window.AI = (() => {
     }));
 
     root.querySelector('#zClear').addEventListener('click', async () => {
-      if (await UI.confirm({ title: 'Start fresh?', body: 'This clears your conversation with Zephyr.', okLabel: 'Clear', danger: true })) {
+      if (await UI.confirm({ title: 'Start fresh?', body: 'This clears your conversation with Zeek AI.', okLabel: 'Clear', danger: true })) {
         Store.state.meta.zephyrThread = [];
         Store.save();
         renderPanel(root);
@@ -536,8 +536,8 @@ window.AI = (() => {
         <div style="display:flex;gap:.85rem;align-items:flex-start;">
           <div class="z-avatar" style="width:42px;height:42px;border-radius:13px;font-size:1.2rem;flex:none;animation: z-breathe 3s ease-in-out infinite, z-glow 3s ease-in-out infinite;">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></div>
           <div style="flex:1;min-width:0;">
-            <div class="ai-tag z-tag-glow" style="margin-bottom:.28rem;">Zephyr · ${IDENTITY.role}</div>
-            <div style="font-size:.94rem;line-height:1.6;">Hey ${U.esc(Store.me()?.displayName || 'drifter')} 👋 I'm <b>Zephyr</b>, woven into every corner of Drift. I recap busy rooms, break the ice, translate, rewrite drafts, debug code and more.</div>
+            <div class="ai-tag z-tag-glow" style="margin-bottom:.28rem;">Zeek AI · ${IDENTITY.role}</div>
+            <div style="font-size:.94rem;line-height:1.6;">Hey ${U.esc(Store.me()?.displayName || 'drifter')} 👋 I'm <b>Zeek AI</b>, woven into every corner of Zeek. I recap busy rooms, break the ice, translate, rewrite drafts, debug code and more.</div>
             <div class="z-welcome-actions">
               <button class="chip" data-welcome-q="summarize this room">🧠 Summarize</button>
               <button class="chip" data-welcome-q="suggest topics">💡 Icebreakers</button>
@@ -556,7 +556,7 @@ window.AI = (() => {
     const live = remoteConfigured();
     const drawer = UI.openModal({
       drawer: true,
-      title: `<span style="display:inline-flex;align-items:center;gap:.55rem;"><span style="width:28px;height:28px;border-radius:9px;display:inline-grid;place-items:center;background:var(--grad);color:#fff;font-size:.95rem;position:relative;overflow:hidden;box-shadow:0 4px 12px -4px var(--ring);">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></span> Zephyr <span class="z-badge-live" style="font-size:.6rem;padding:.14rem .4rem;">${live ? 'Live' : 'Offline'}</span></span>`,
+      title: `<span style="display:inline-flex;align-items:center;gap:.55rem;"><span style="width:28px;height:28px;border-radius:9px;display:inline-grid;place-items:center;background:var(--grad);color:#fff;font-size:.95rem;position:relative;overflow:hidden;box-shadow:0 4px 12px -4px var(--ring);">${IDENTITY.avatar}<span class="z-shimmer" aria-hidden="true"></span></span> Zeek AI <span class="z-badge-live" style="font-size:.6rem;padding:.14rem .4rem;">${live ? 'Live' : 'Offline'}</span></span>`,
       body: `<div id="zdThread" style="display:flex;flex-direction:column;gap:.85rem;">${
         thread().length ? '' : `<div class="z-welcome" style="padding:.85rem 1rem;"><div class="ai-tag z-tag-glow" style="margin-bottom:.3rem;">Context loaded · #${U.esc(room.name)}</div><div style="font-size:.88rem;line-height:1.5;">Ask me to <b>summarize</b>, <b>explain</b> the latest messages, suggest <b>topics</b>, or anything else.</div><div class="z-welcome-actions" style="margin-top:.6rem;"><button class="chip" data-welcome-q="summarize this room">🧠 Summarize</button><button class="chip" data-welcome-q="explain the latest messages">🔍 Explain</button><button class="chip" data-welcome-q="suggest topics">💡 Topics</button></div></div>`}</div>`,
     });

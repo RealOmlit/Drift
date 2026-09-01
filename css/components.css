@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · Components — buttons, inputs, cards, modals, toasts, menus,
+   Zeek · Components — buttons, inputs, cards, modals, toasts, menus,
    avatars, chips, tabs, switches, skeletons, palette, profile cards…
    ========================================================================== */
 
@@ -104,7 +104,7 @@ select.input { appearance: none; cursor: pointer; }
 .card.hoverable:hover { transform: translateY(-3px); border-color: var(--brd-2); box-shadow: var(--sh2); }
 .card-title { font-family: var(--font-d); font-size: 1.02rem; font-weight: 700; }
 
-/* Gradient hairline card (signature Drift style) */
+/* Gradient hairline card (signature Zeek style) */
 .card-glow { position: relative; overflow: hidden; }
 .card-glow::before {
   content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;

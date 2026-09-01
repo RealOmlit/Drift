@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · landing.js — hero preview animation, reveals, counters.
+   Zeek · landing.js — hero preview animation, reveals, counters.
    ========================================================================== */
 
 window.Landing = (() => {
@@ -10,7 +10,7 @@ window.Landing = (() => {
     { side: 'left', name: 'Kai', color: 'hsl(262 70% 60%)', text: 'just shipped the new build 🚀 zero downtime this time' },
     { side: 'right', name: 'You', color: '', text: 'insane. did the edge functions hold up?' },
     { side: 'left', name: 'Mia', color: 'hsl(190 75% 45%)', text: 'like a dream. p95 down 40% 👀' },
-    { side: 'left', name: 'Zephyr ✨', color: '', text: 'Summary: v2.1 shipped clean — latency improved 40%.', ai: true },
+    { side: 'left', name: 'Zeek AI ✨', color: '', text: 'Summary: v2.1 shipped clean — latency improved 40%.', ai: true },
     { side: 'right', name: 'You', color: '', text: 'poll: game night friday or saturday?' },
     { side: 'left', name: 'Kai', color: 'hsl(262 70% 60%)', text: 'friday. obviously. we ship fast here 😤' }
   ];
@@ -43,7 +43,7 @@ window.Landing = (() => {
 
   function init() {
     // Version chip(s)
-    U.$$('[data-app-version]').forEach(el => { el.textContent = 'v' + window.DriftConfig.VERSION; });
+    U.$$('[data-app-version]').forEach(el => { el.textContent = 'v' + window.ZeekConfig.VERSION; });
 
     // Spinning 3D ring of communities
     buildRing();

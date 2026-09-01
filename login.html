@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Log in · Drift</title>
-  <meta name="description" content="Log in to Drift — conversations in motion.">
+  <title>Log in · Zeek</title>
+  <meta name="description" content="Log in to Zeek — Chat. Vibe. Repeat.">
   <meta name="theme-color" content="#05060c">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
@@ -27,12 +27,12 @@
     <aside class="auth-side">
       <div class="auth-orbit"></div>
       <span class="logo">
-        <svg width="32" height="32" viewBox="0 0 48 48"><defs><linearGradient id="lga" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#F472B6"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lga)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 19c4-9 9-9 13 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
-        <span class="logo-name">Dri<b>ft</b></span>
+        <svg width="32" height="32" viewBox="0 0 48 48"><defs><linearGradient id="lga" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00ff88"/><stop offset=".55" stop-color="#00cc66"/><stop offset="1" stop-color="#009944"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lga)"/><path d="M9 29c5-13 11-13 15-1 3 9 8 9 14-2" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/><path d="M12 19c4-9 9-9 13 0" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+        <span class="logo-name">Zee<b>k</b></span>
       </span>
       <div class="auth-quote">
         <h2>Welcome back to the current.</h2>
-        <p>Your rooms are exactly as you left them. Zephyr saved you a recap. The memes, tragically, cannot be unread.</p>
+        <p>Your rooms are exactly as you left them. Zeek AI saved you a recap. The memes, tragically, cannot be unread.</p>
       </div>
       <div class="auth-mini-stats">
         <div><b data-count-online>—</b><span>online now</span></div>
@@ -51,7 +51,7 @@
           <label for="loginId">Username or email</label>
           <div class="input-wrap">
             <svg class="lead" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
-            <input class="input" id="loginId" placeholder="nova or nova@drift.chat" autocomplete="username">
+            <input class="input" id="loginId" placeholder="nova or nova@zeek.chat" autocomplete="username">
           </div>
           <span class="input-error">Enter your username or email.</span>
         </div>
@@ -145,7 +145,7 @@
           try {
             await Auth.resendConfirmation(err.email || identifier);
             rb.textContent = 'Link sent ✓ check your inbox (and spam)';
-            UI.toast({ title: 'Verification sent', body: 'Open the newest email and tap Confirm — Drift opens right after.', type: 'ok', duration: 9000 });
+            UI.toast({ title: 'Verification sent', body: 'Open the newest email and tap Confirm — Zeek opens right after.', type: 'ok', duration: 9000 });
           } catch (e2) {
             rb.disabled = false; rb.textContent = 'Resend verification link';
             UI.toast({ title: 'Couldn\u2019t send', body: e2.message, type: 'bad', icon: 'alert' });

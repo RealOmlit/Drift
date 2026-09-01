@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · store.js — REAL data layer backed by Supabase (Postgres + Realtime).
+   Zeek · store.js — REAL data layer backed by Supabase (Postgres + Realtime).
 
    · Accounts/sessions/messages/profiles live in the database (see
      supabase-setup.sql). localStorage now holds only UI preferences
@@ -11,7 +11,7 @@
 
 window.Store = (() => {
   'use strict';
-  const CFG = window.DriftConfig;
+  const CFG = window.ZeekConfig;
   const KEY = k => CFG.STORAGE_PREFIX + k;
 
   /** Level thresholds for Community XP. */
@@ -57,7 +57,7 @@ window.Store = (() => {
   function persistNow() {
     try {
       PREF_KEYS.forEach(k => localStorage.setItem(KEY(k), JSON.stringify(state[k])));
-    } catch (e) { console.warn('[Drift] storage unavailable', e); }
+    } catch (e) { console.warn('[Zeek] storage unavailable', e); }
     if (profileDirty && state.profile) {
       clearTimeout(profileTimer);
       pushProfile();
@@ -164,7 +164,7 @@ window.Store = (() => {
     const p = state.profile;
     if (!p) return;
     SB.unwrap(SB.client.from('profiles').update(profilePatch(p)).eq('id', p.id))
-      .catch(e => console.warn('[Drift] profile sync failed', e.message));
+      .catch(e => console.warn('[Zeek] profile sync failed', e.message));
   }
   function touchProfile() { profileDirty = true; save(); }
 

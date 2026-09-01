@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Drift · Design Tokens — the single source of truth for the visual system
-   Theme: dark (default) / light · Accents: violet, cyan, emerald, amber, rose
+   Zeek · Design Tokens — the single source of truth for the visual system
+   Theme: dark (default) / light · Accents: neon, matrix, cyber, chrome, acid
    ========================================================================== */
 
 :root {
@@ -67,15 +67,15 @@
 }
 
 /* ---------- Accent palettes ---------- */
-:root[data-accent='violet'], :root {
-  --ac1: #7c5cff; --ac2: #22d3ee; --ac3: #f472b6;
+:root[data-accent='neon'], :root {
+  --ac1: #00ff88; --ac2: #00cc66; --ac3: #33ffaa;
   --grad: linear-gradient(120deg, var(--ac1), var(--ac2));
-  --ring: rgba(124, 92, 255, .3);
+  --ring: rgba(0, 255, 136, .3);
 }
-:root[data-accent='cyan']   { --ac1:#0ea5e9; --ac2:#22d3ee; --ac3:#818cf8; --grad:linear-gradient(120deg,#0ea5e9,#22d3ee); --ring:rgba(14,165,233,.32); }
-:root[data-accent='emerald']{ --ac1:#10b981; --ac2:#84cc16; --ac3:#22d3ee; --grad:linear-gradient(120deg,#10b981,#84cc16); --ring:rgba(16,185,129,.32); }
-:root[data-accent='amber']  { --ac1:#f59e0b; --ac2:#fb7185; --ac3:#fbbf24; --grad:linear-gradient(120deg,#f59e0b,#fb7185); --ring:rgba(245,158,11,.32); }
-:root[data-accent='rose']   { --ac1:#f43f5e; --ac2:#f472b6; --ac3:#a78bfa; --grad:linear-gradient(120deg,#f43f5e,#f472b6); --ring:rgba(244,63,94,.32); }
+:root[data-accent='matrix']  { --ac1:#00ff41; --ac2:#00cc33; --ac3:#33ff66; --grad:linear-gradient(120deg,#00ff41,#00cc33); --ring:rgba(0,255,65,.32); }
+:root[data-accent='cyber']   { --ac1:#00ffff; --ac2:#00cccc; --ac3:#33ffff; --grad:linear-gradient(120deg,#00ffff,#00cccc); --ring:rgba(0,255,255,.32); }
+:root[data-accent='chrome']  { --ac1:#c0c0c0; --ac2:#a0a0a0; --ac3:#e0e0e0; --grad:linear-gradient(120deg,#c0c0c0,#a0a0a0); --ring:rgba(192,192,192,.32); }
+:root[data-accent='acid']    { --ac1:#ccff00; --ac2:#aaff00; --ac3:#eeff33; --grad:linear-gradient(120deg,#ccff00,#aaff00); --ring:rgba(204,255,0,.32); }
 
 /* ---------- Font scale ---------- */
 :root[data-font='s'] { font-size: 14.5px; }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · rooms.js — REAL room discovery, creation, membership & settings.
+   Zeek · rooms.js — REAL room discovery, creation, membership & settings.
    Rooms live in Postgres; joining/leaving/creating hits the database and
    realtime keeps every connected client in sync.
    ========================================================================== */
@@ -229,7 +229,7 @@ window.Rooms = (() => {
     room.memberCount += 1;
     // Newly joined public rooms had no messages hydrated (refreshRooms skips non-members).
     // Fetch them now so Chat.mount's second render shows history instead of empty.
-    try { await Store.hydrateMessages(room); } catch (e) { console.warn('[Drift] hydrate after join failed', e.message); }
+    try { await Store.hydrateMessages(room); } catch (e) { console.warn('[Zeek] hydrate after join failed', e.message); }
     Store.emit('room:update', room);
     Notifs.push('system', { title: `Welcome to ${room.name}`, body: 'Say hi — first messages get the best seats.', roomId, silent: false });
     Store.addXP(10, 'Joined a new community');
@@ -269,8 +269,8 @@ window.Rooms = (() => {
           <div class="field" style="flex:1;">
             <label>Description</label>
             <textarea class="input" id="crDesc" rows="3" maxlength="160" placeholder="What's the vibe?"></textarea>
-            ${DriftConfig.AI_ENABLED ? `<div class="input-hint row" style="justify-content:flex-end;">
-              <button class="lnk" id="crAI" style="color:var(--ac2);font-weight:600;font-size:.8rem;">✨ Generate with Zephyr</button>
+            ${ZeekConfig.AI_ENABLED ? `<div class="input-hint row" style="justify-content:flex-end;">
+              <button class="lnk" id="crAI" style="color:var(--ac2);font-weight:600;font-size:.8rem;">✨ Generate with Zeek AI</button>
             </div>` : ''}
           </div>
           <div class="field" style="width:120px;">
@@ -343,7 +343,7 @@ window.Rooms = (() => {
         const rows = await SB.unwrap(
           SB.client.from('rooms').insert({
             name: form.name.trim(),
-            description: form.desc.trim() || 'A brand-new Drift room.',
+            description: form.desc.trim() || 'A brand-new Zeek room.',
             icon: form.icon,
             category: form.category,
             visibility: form.visibility,

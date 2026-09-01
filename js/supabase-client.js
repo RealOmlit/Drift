@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · supabase-client.js
+   Zeek · supabase-client.js
    Single shared Supabase client + a light setup reminder.
 
    Loads after the supabase-js CDN script (see HTML). When credentials are
@@ -10,7 +10,7 @@
 
 window.SB = (() => {
   'use strict';
-  const CFG = window.DriftConfig;
+  const CFG = window.ZeekConfig;
   const DISMISS_KEY = CFG.STORAGE_PREFIX + 'setupDismissed';
 
   const isLanding = () =>

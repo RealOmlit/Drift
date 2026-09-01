@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · Base — reset, typography, scrollbars, focus, shared primitives
+   Zeek · Base — reset, typography, scrollbars, focus, shared primitives
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

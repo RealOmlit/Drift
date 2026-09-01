@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · email.js — real outgoing mail via the send-email Edge Function.
+   Zeek · email.js — real outgoing mail via the send-email Edge Function.
    The browser never touches Gmail credentials: it asks Supabase to invoke
    the function, which verifies the caller's session server-side, applies a
    rate limit and relays through Gmail SMTP. See SETUP.md → "Real emails".
@@ -36,11 +36,11 @@ window.Email = (() => {
     const name = esc(displayName || username || 'there');
     const handle = esc(username ? '@' + username : '');
     return {
-      subject: 'Welcome to Drift ✦ your room key is ready',
+      subject: 'Welcome to Zeek ✦ your room key is ready',
       text:
-        `Welcome to Drift, ${displayName || username}!\n\n` +
+        `Welcome to Zeek, ${displayName || username}!\n\n` +
         `Your account is live — jump into a room, say hi, and meet people drifting in real time.\n` +
-        `${location.origin}/app.html\n\n— The Drift team`,
+        `${location.origin}/app.html\n\n— The Zeek team`,
       html: `
 <!DOCTYPE html><html><body style="margin:0;padding:0;background:#05060c;font-family:Inter,Segoe UI,Arial,sans-serif;">
   <div style="max-width:520px;margin:0 auto;padding:32px 24px;">
@@ -49,22 +49,22 @@ window.Email = (() => {
       <h1 style="color:#fff;font-size:22px;margin:24px 0 10px;">Welcome aboard, ${name}! 👋</h1>
       <p style="color:#c7cbf0;font-size:15px;line-height:1.65;margin:0 0 8px;">
         ${handle ? `<b style="color:#fff;">${handle}</b> is live and ready.` : 'Your account is live and ready.'}
-        Drift is real people in real rooms — messages sync instantly, presence is genuine,
-        and Zephyr AI is around whenever the chat goes quiet.
+        Zeek is real people in real rooms — messages sync instantly, presence is genuine,
+        and Zeek AI AI is around whenever the chat goes quiet.
       </p>
       <p style="margin:26px 0;">
         <a href="${esc(location.origin)}/app.html"
            style="display:inline-block;background:linear-gradient(135deg,#7C5CFF,#F472B6);color:#fff;
                   text-decoration:none;font-weight:700;font-size:15px;padding:13px 28px;border-radius:12px;">
-          Open Drift →
+          Open Zeek →
         </a>
       </p>
       <p style="color:#9aa0c3;font-size:12.5px;line-height:1.6;margin:28px 0 0;border-top:1px solid #2a2d45;padding-top:18px;">
-        You received this because someone created a Drift account with this address.
+        You received this because someone created a Zeek account with this address.
         Not you? Just ignore it — nothing else will be sent unless you use the app.
       </p>
     </div>
-    <p style="color:#666c92;font-size:11.5px;text-align:center;margin:18px 0 0;">© ${new Date().getFullYear()} Drift · conversations in motion</p>
+    <p style="color:#666c92;font-size:11.5px;text-align:center;margin:18px 0 0;">© ${new Date().getFullYear()} Zeek · conversations in motion</p>
   </div>
 </body></html>`
     };
@@ -78,7 +78,7 @@ window.Email = (() => {
       await send({ to: profile.email, subject, html, text });
       return true;
     } catch (e) {
-      console.warn('[Drift] welcome email skipped:', e.message);
+      console.warn('[Zeek] welcome email skipped:', e.message);
       return false;
     }
   }

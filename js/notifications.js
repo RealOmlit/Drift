@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Drift · notifications.js — notification center, bell dropdown, badges.
+   Zeek · notifications.js — notification center, bell dropdown, badges.
    Rows come from the notifications table (SQL triggers on follows/joins),
    streamed live by backend.js. Local events (mentions) are pushed here too.
    ========================================================================== */
